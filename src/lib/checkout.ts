@@ -2,13 +2,12 @@ import Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { ValidationError } from '@/lib/errors'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-02-25.clover',
-})
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-
 export async function createCheckoutSession(orderId: string) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2026-02-25.clover',
+  })
+
+  const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
   const order = await db.order.findUniqueOrThrow({
     where: { id: orderId },
     include: { items: true },
