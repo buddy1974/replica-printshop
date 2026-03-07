@@ -1,0 +1,254 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Button from '@/components/Button'
+
+interface OptionValue {
+  id: string
+  name: string
+  priceModifier: number
+}
+
+interface Option {
+  id: string
+  name: string
+  values: OptionValue[]
+}
+
+interface Variant {
+  id: string
+  name: string
+  material: string
+  basePrice: number
+}
+
+interface ProductConfig {
+  hasCustomSize: boolean
+  hasFixedSizes: boolean
+  hasVariants: boolean
+  hasOptions: boolean
+  fixedSizes: string | null
+  minWidth: number | null
+  maxWidth: number | null
+  minHeight: number | null
+  maxHeight: number | null
+  pickupAllowed: boolean | null
+}
+
+interface Product {
+  id: string
+  name: string
+  variants: Variant[]
+  options: Option[]
+  pricingRules: { pricePerM2: number; minPrice: number; expressMultiplier: number }[]
+  config: ProductConfig | null
+}
+
+interface PriceResult {
+  unitPrice: number
+  totalPrice: number
+  shippingPrice: number
+}
+
+const inputCls = 'rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full'
+const labelCls = 'flex flex-col gap-1'
+const labelTextCls = 'text-sm font-medium text-gray-700'
+
+export default function ConfiguratorForm({ product }: { product: Product }) {
+  const cfg = product.config
+
+  const fixedSizeOptions: { label: string; w: number; h: number }[] = cfg?.fixedSizes
+    ? cfg.fixedSizes.split(',').map((s) => {
+        const [w, h] = s.trim().split('x').map(Number)
+        return { label: `${w} × ${h} cm`, w, h }
+      })
+    : []
+
+  const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
+  const [optionValueIds, setOptionValueIds] = useState<string[]>([])
+  const [width, setWidth] = useState(fixedSizeOptions[0]?.w ?? 100)
+  const [height, setHeight] = useState(fixedSizeOptions[0]?.h ?? 100)
+  const [quantity, setQuantity] = useState(1)
+  const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS' | 'PICKUP'>('STANDARD')
+  const [price, setPrice] = useState<PriceResult | null>(null)
+  const [userId, setUserId] = useState('')
+  const [addedToCart, setAddedToCart] = useState(false)
+
+  const showVariants = cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0
+  const showOptions = cfg ? cfg.hasOptions && product.options.length > 0 : product.options.length > 0
+  const showCustomSize = cfg ? cfg.hasCustomSize : true
+  const showFixedSizes = cfg ? cfg.hasFixedSizes && fixedSizeOptions.length > 0 : false
+
+  const minW = cfg?.minWidth ?? 1
+  const maxW = cfg?.maxWidth ?? 500
+  const minH = cfg?.minHeight ?? 1
+  const maxH = cfg?.maxHeight ?? 500
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      const res = await fetch('/api/configurator/price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          variantId: variantId || undefined,
+          width: (showCustomSize || showFixedSizes) ? width : undefined,
+          height: (showCustomSize || showFixedSizes) ? height : undefined,
+          quantity,
+          deliveryType,
+          optionValueIds,
+        }),
+      })
+      if (res.ok) setPrice(await res.json())
+    }
+    fetchPrice()
+  }, [product.id, variantId, optionValueIds, width, height, quantity, deliveryType])
+
+  const toggleOptionValue = (valueId: string, optionId: string) => {
+    const option = product.options.find((o) => o.id === optionId)
+    const optionValueSet = new Set(option?.values.map((v) => v.id) ?? [])
+    setOptionValueIds((prev) => {
+      const withoutThisOption = prev.filter((id) => !optionValueSet.has(id))
+      return prev.includes(valueId) ? withoutThisOption : [...withoutThisOption, valueId]
+    })
+  }
+
+  const handleAddToCart = async () => {
+    if (!userId) {
+      alert('Enter a user ID to add to cart')
+      return
+    }
+    const res = await fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        productId: product.id,
+        variantId: variantId || undefined,
+        width: (showCustomSize || showFixedSizes) ? width : undefined,
+        height: (showCustomSize || showFixedSizes) ? height : undefined,
+        quantity,
+        express: deliveryType === 'EXPRESS',
+        optionValueIds,
+      }),
+    })
+    if (res.ok) {
+      setAddedToCart(true)
+      setTimeout(() => setAddedToCart(false), 2000)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-5 max-w-md">
+      {showVariants && (
+        <label className={labelCls}>
+          <span className={labelTextCls}>Variant</span>
+          <select value={variantId} onChange={(e) => setVariantId(e.target.value)} className={inputCls}>
+            {product.variants.map((v) => (
+              <option key={v.id} value={v.id}>{v.name} — {v.material}</option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {showOptions && product.options.map((option) => (
+        <div key={option.id} className="flex flex-col gap-1.5">
+          <span className={labelTextCls}>{option.name}</span>
+          <div className="flex flex-wrap gap-2">
+            {option.values.map((val) => (
+              <label key={val.id} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  name={option.id}
+                  checked={optionValueIds.includes(val.id)}
+                  onChange={() => toggleOptionValue(val.id, option.id)}
+                  className="accent-gray-900"
+                />
+                {val.name}
+                {Number(val.priceModifier) !== 0 && (
+                  <span className="text-gray-500">(+€{Number(val.priceModifier).toFixed(2)})</span>
+                )}
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {showFixedSizes && (
+        <label className={labelCls}>
+          <span className={labelTextCls}>Size</span>
+          <select
+            className={inputCls}
+            onChange={(e) => {
+              const opt = fixedSizeOptions[Number(e.target.value)]
+              if (opt) { setWidth(opt.w); setHeight(opt.h) }
+            }}
+          >
+            {fixedSizeOptions.map((opt, i) => (
+              <option key={i} value={i}>{opt.label}</option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {showCustomSize && (
+        <div className="grid grid-cols-2 gap-3">
+          <label className={labelCls}>
+            <span className={labelTextCls}>Width (cm)</span>
+            <input type="number" min={minW} max={maxW} value={width} onChange={(e) => setWidth(Number(e.target.value))} className={inputCls} />
+          </label>
+          <label className={labelCls}>
+            <span className={labelTextCls}>Height (cm)</span>
+            <input type="number" min={minH} max={maxH} value={height} onChange={(e) => setHeight(Number(e.target.value))} className={inputCls} />
+          </label>
+        </div>
+      )}
+
+      <label className={labelCls}>
+        <span className={labelTextCls}>Quantity</span>
+        <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className={inputCls} />
+      </label>
+
+      <div className="flex flex-col gap-1.5">
+        <span className={labelTextCls}>Delivery</span>
+        <div className="flex flex-wrap gap-3">
+          {(['STANDARD', 'EXPRESS'] as const).map((type) => (
+            <label key={type} className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="radio" name="delivery" checked={deliveryType === type} onChange={() => setDeliveryType(type)} className="accent-gray-900" />
+              {type.charAt(0) + type.slice(1).toLowerCase()}
+            </label>
+          ))}
+          {cfg?.pickupAllowed && (
+            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="radio" name="delivery" checked={deliveryType === 'PICKUP'} onChange={() => setDeliveryType('PICKUP')} className="accent-gray-900" />
+              Pickup
+            </label>
+          )}
+        </div>
+      </div>
+
+      {price && (
+        <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm flex flex-col gap-1">
+          <div className="flex justify-between text-gray-600">
+            <span>Unit price</span><span>€{price.unitPrice.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-gray-600">
+            <span>Shipping</span><span>€{price.shippingPrice.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between font-semibold border-t border-gray-200 pt-2 mt-1">
+            <span>Total</span><span>€{price.totalPrice.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
+
+      <label className={labelCls}>
+        <span className={labelTextCls}>User ID <span className="text-gray-400 font-normal">(temporary)</span></span>
+        <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user-id" className={inputCls} />
+      </label>
+
+      <Button onClick={handleAddToCart}>
+        {addedToCart ? 'Added to cart!' : 'Add to cart'}
+      </Button>
+    </div>
+  )
+}
