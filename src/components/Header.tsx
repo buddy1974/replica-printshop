@@ -1,20 +1,34 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import Logo from '@/components/Logo'
 
 const links = [
-  { href: '/', label: 'Home' },
   { href: '/shop', label: 'Shop' },
+  { href: '/orders', label: 'Orders' },
   { href: '/admin', label: 'Admin' },
-  { href: '/login', label: 'Login' },
 ]
 
 export default function Header() {
+  const pathname = usePathname()
+
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto max-w-5xl px-4 flex items-center gap-6 h-14">
-        <span className="font-bold text-sm tracking-wide uppercase">printshop</span>
-        <nav className="flex gap-4 text-sm">
+    <header style={{ borderBottom: '1px solid #e5e7eb', background: '#fff', padding: '0 24px' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+        <Logo />
+        <nav style={{ display: 'flex', gap: 24 }}>
           {links.map(({ href, label }) => (
-            <Link key={href} href={href} className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link
+              key={href}
+              href={href}
+              style={{
+                fontSize: 14,
+                textDecoration: 'none',
+                color: '#374151',
+                fontWeight: pathname.startsWith(href) ? 700 : 400,
+              }}
+            >
               {label}
             </Link>
           ))}
