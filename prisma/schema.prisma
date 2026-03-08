@@ -349,16 +349,18 @@ model MockupTemplate {
 // ---------------------------------------------------------------------------
 
 model UploadFile {
-  id          String     @id @default(cuid())
-  orderItemId String
-  filename    String
-  filePath    String?
-  size        Int?
-  mime        String?
-  dpi         Int?
-  widthPx     Int?
-  heightPx    Int?
-  status      FileStatus @default(PENDING)
+  id           String     @id @default(cuid())
+  orderItemId  String
+  filename     String
+  filePath     String?
+  size         Int?
+  mime         String?
+  dpi          Int?
+  widthPx      Int?
+  heightPx     Int?
+  status       FileStatus @default(PENDING)
+  uploadType   String?
+  uploadIndex  Int?
 
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
 

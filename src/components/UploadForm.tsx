@@ -11,6 +11,7 @@ interface Upload {
   dpi: number | null
   widthPx: number | null
   heightPx: number | null
+  uploadType: string | null
 }
 
 interface ValidationResult {
@@ -30,6 +31,7 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
   const [uploads, setUploads] = useState<Upload[]>([])
   const [validations, setValidations] = useState<Record<string, ValidationResult>>({})
   const [file, setFile] = useState<File | null>(null)
+  const [uploadType, setUploadType] = useState('ARTWORK')
   const [uploading, setUploading] = useState(false)
   const [skipped, setSkipped] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialPreviewUrl ?? null)
@@ -48,6 +50,7 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
     const formData = new FormData()
     formData.append('orderItemId', orderItemId)
     formData.append('file', file)
+    formData.append('uploadType', uploadType)
 
     const createRes = await fetch('/api/upload', {
       method: 'POST',
@@ -105,7 +108,15 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
           <p className="text-xs font-medium text-gray-500">Uploaded files</p>
           {uploads.map((u) => (
             <div key={u.id} className="rounded border border-gray-200 bg-gray-50 p-3">
-              <p className="text-sm font-medium text-gray-700 mb-1">{u.filename}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-medium text-gray-700">{u.filename}</p>
+                {u.uploadType && (
+                  <span className="text-xs bg-gray-200 text-gray-600 rounded px-1.5 py-0.5">{u.uploadType}</span>
+                )}
+              </div>
+              {u.uploadType === 'PREVIEW' && u.id && (
+                <img src={`/api/admin/files/${u.id}`} alt="Preview" className="max-w-xs rounded border border-gray-200 mb-2" />
+              )}
               {validations[u.id] ? (
                 <UploadStatus
                   status={validations[u.id].status}
@@ -123,6 +134,20 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
       )}
 
       <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-500 font-medium">Type</label>
+          <select
+            value={uploadType}
+            onChange={(e) => setUploadType(e.target.value)}
+            className="rounded border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+          >
+            <option value="ARTWORK">Artwork</option>
+            <option value="FRONT">Front</option>
+            <option value="BACK">Back</option>
+            <option value="PREVIEW">Preview</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
         <input
           type="file"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}

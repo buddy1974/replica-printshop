@@ -21,7 +21,13 @@ const STATUS_MESSAGES: Record<string, { text: string; color: string }> = {
 export default async function OrderDetailPage({ params }: { params: { orderId: string } }) {
   const order = await db.order.findUnique({
     where: { id: params.orderId },
-    include: { items: true },
+    include: {
+      items: {
+        include: {
+          uploadFiles: { orderBy: { uploadType: 'asc' } },
+        },
+      },
+    },
   })
   if (!order) notFound()
 
@@ -58,20 +64,47 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
 
       <h2 className="mb-3">Items</h2>
       <div className="flex flex-col gap-3 mb-6">
-        {order.items.map((item) => (
-          <div key={item.id} className="rounded border border-gray-200 bg-white p-4 flex justify-between items-start gap-4">
-            <div>
-              <p className="font-medium text-sm">{item.productName}</p>
-              {item.variantName && <p className="text-xs text-gray-500">{item.variantName}</p>}
-              <p className="text-xs text-gray-400 mt-0.5">
-                {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity}
-              </p>
+        {order.items.map((item) => {
+          const previews = item.uploadFiles.filter((u) => u.uploadType === 'PREVIEW')
+          const artFiles = item.uploadFiles.filter((u) => u.uploadType !== 'PREVIEW')
+          return (
+            <div key={item.id} className="rounded border border-gray-200 bg-white p-4">
+              <div className="flex justify-between items-start gap-4 mb-3">
+                <div>
+                  <p className="font-medium text-sm">{item.productName}</p>
+                  {item.variantName && <p className="text-xs text-gray-500">{item.variantName}</p>}
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity}
+                  </p>
+                </div>
+                <p className="text-sm font-medium text-gray-700 shrink-0">
+                  €{Number(item.priceSnapshot).toFixed(2)}
+                </p>
+              </div>
+
+              {previews.map((u) => (
+                <div key={u.id} className="mb-3">
+                  <p className="text-xs text-gray-500 mb-1">Preview</p>
+                  <img src={`/api/admin/files/${u.id}`} alt="Preview" className="max-w-xs rounded border border-gray-200" />
+                </div>
+              ))}
+
+              {artFiles.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  {artFiles.map((u) => (
+                    <div key={u.id} className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-700 truncate max-w-[200px]">{u.filename}</span>
+                      {u.uploadType && (
+                        <span className="text-gray-400 bg-gray-100 rounded px-1">{u.uploadType}</span>
+                      )}
+                      <Badge label={u.status} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <p className="text-sm font-medium text-gray-700 shrink-0">
-              €{Number(item.priceSnapshot).toFixed(2)}
-            </p>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {order.status === 'CONFIRMED' && (

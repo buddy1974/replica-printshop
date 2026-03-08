@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { AppError, ValidationError } from '@/lib/errors'
 import { assertExists } from '@/lib/assert'
 import { sendApproved } from '@/lib/email'
+import { createProductionJob } from '@/lib/production'
 
 interface Params {
   params: { id: string }
@@ -15,7 +16,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       include: {
         user: { select: { email: true } },
         items: {
-          include: { uploadFiles: { select: { id: true, status: true } } },
+          include: { uploadFiles: { select: { id: true, status: true, uploadType: true } } },
         },
       },
     })
@@ -28,34 +29,25 @@ export async function POST(_req: NextRequest, { params }: Params) {
       )
     }
 
-    // Safety: every item must have at least one upload, and all uploads must be APPROVED
+    // Safety: every item must have at least one non-preview upload, and all non-preview uploads must be APPROVED
     for (const item of order.items) {
-      if (item.uploadFiles.length === 0) {
-        throw new ValidationError(`Order item has no uploaded files.`)
+      const artFiles = item.uploadFiles.filter((f) => f.uploadType !== 'PREVIEW')
+      if (artFiles.length === 0) {
+        throw new ValidationError(`Order item "${item.id}" has no uploaded artwork files.`)
       }
-      const allApproved = item.uploadFiles.every((f) => f.status === 'APPROVED')
+      const allApproved = artFiles.every((f) => f.status === 'APPROVED')
       if (!allApproved) {
-        throw new ValidationError(`All uploaded files must be approved before production.`)
+        throw new ValidationError(`All artwork files must be approved before production.`)
       }
     }
 
-    await db.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: params.id },
-        data: { status: 'APPROVED' },
-      })
+    await db.order.update({ where: { id: params.id }, data: { status: 'APPROVED' } })
 
-      for (const item of order.items) {
-        await tx.productionJob.create({
-          data: { orderItemId: item.id, status: 'QUEUED' },
-        })
-      }
+    for (const item of order.items) {
+      await createProductionJob(item.id)
+    }
 
-      await tx.order.update({
-        where: { id: params.id },
-        data: { status: 'READY' },
-      })
-    })
+    await db.order.update({ where: { id: params.id }, data: { status: 'READY' } })
 
     // Fire email (non-blocking)
     sendApproved(params.id, order.user.email).catch(() => {})
