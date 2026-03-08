@@ -2,6 +2,9 @@ import { notFound } from 'next/navigation'
 import UploadForm from '@/components/UploadForm'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
+import { db } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 interface ProductGuide {
   guideText: string | null
@@ -11,35 +14,6 @@ interface ProductGuide {
   safeMarginMm: number | null
   allowedFormats: string | null
   notes: string | null
-}
-
-interface OrderItem {
-  id: string
-  productName: string
-  variantName: string | null
-  width: number
-  height: number
-  quantity: number
-  previewUrl: string | null
-}
-
-interface Order {
-  id: string
-  status: string
-  items: OrderItem[]
-}
-
-async function getOrder(orderId: string): Promise<Order | null> {
-  const res = await fetch(`http://localhost:3000/api/orders/${orderId}`, { cache: 'no-store' })
-  if (!res.ok) return null
-  return res.json()
-}
-
-async function getProductGuide(productName: string): Promise<ProductGuide | null> {
-  const res = await fetch('http://localhost:3000/api/products', { cache: 'no-store' })
-  if (!res.ok) return null
-  const products: (ProductGuide & { name: string })[] = await res.json()
-  return products.find((p) => p.name === productName) ?? null
 }
 
 function GuidePanel({ guide }: { guide: ProductGuide }) {
@@ -60,10 +34,20 @@ function GuidePanel({ guide }: { guide: ProductGuide }) {
 }
 
 export default async function UploadPage({ params }: { params: { orderId: string } }) {
-  const order = await getOrder(params.orderId)
+  const order = await db.order.findUnique({
+    where: { id: params.orderId },
+    include: { items: true },
+  })
   if (!order) notFound()
 
-  const guides = await Promise.all(order.items.map((item) => getProductGuide(item.productName)))
+  const guides = await Promise.all(
+    order.items.map((item) =>
+      db.product.findFirst({
+        where: { name: item.productName },
+        select: { guideText: true, minDpi: true, recommendedDpi: true, bleedMm: true, safeMarginMm: true, allowedFormats: true, notes: true },
+      })
+    )
+  )
 
   return (
     <Container>

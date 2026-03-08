@@ -1,23 +1,12 @@
 import Link from 'next/link'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
+import { db } from '@/lib/db'
 
-interface Product {
-  id: string
-  name: string
-  slug: string
-  category: string
-  active: boolean
-}
-
-async function getProducts(): Promise<Product[]> {
-  const res = await fetch('http://localhost:3000/api/products', { cache: 'no-store' })
-  if (!res.ok) return []
-  return res.json()
-}
+export const dynamic = 'force-dynamic'
 
 export default async function ProductsPage() {
-  const products = await getProducts()
+  const products = await db.product.findMany({ orderBy: { name: 'asc' } })
 
   return (
     <Container>

@@ -1,32 +1,15 @@
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
 import Link from 'next/link'
+import { db } from '@/lib/db'
 
-interface OrderItem {
-  id: string
-  productName: string
-  quantity: number
-  priceSnapshot: number
-}
-
-interface Order {
-  id: string
-  total: number
-  status: string
-  paymentStatus: string
-  deliveryType: string
-  createdAt: string
-  items: OrderItem[]
-}
-
-async function getOrders(): Promise<Order[]> {
-  const res = await fetch('http://localhost:3000/api/orders', { cache: 'no-store' })
-  if (!res.ok) return []
-  return res.json()
-}
+export const dynamic = 'force-dynamic'
 
 export default async function OrdersPage() {
-  const orders = await getOrders()
+  const orders = await db.order.findMany({
+    include: { items: true },
+    orderBy: { createdAt: 'desc' },
+  })
 
   return (
     <Container>
