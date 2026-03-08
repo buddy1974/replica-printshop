@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation'
 import ConfiguratorForm from '@/components/ConfiguratorForm'
 import Container from '@/components/Container'
+import { db } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 interface Option {
   id: string
@@ -45,9 +48,30 @@ interface Product {
 }
 
 async function getProduct(productId: string): Promise<Product | null> {
-  const res = await fetch(`http://localhost:3000/api/configurator/product/${productId}`, { cache: 'no-store' })
-  if (!res.ok) return null
-  return res.json()
+  const p = await db.product.findUnique({
+    where: { id: productId, active: true },
+    include: {
+      variants: true,
+      options: { include: { values: true } },
+      pricingRules: true,
+      config: true,
+    },
+  })
+  if (!p) return null
+  return {
+    ...p,
+    variants: p.variants.map((v) => ({ ...v, basePrice: Number(v.basePrice) })),
+    options: p.options.map((o) => ({
+      ...o,
+      values: o.values.map((val) => ({ ...val, priceModifier: Number(val.priceModifier) })),
+    })),
+    pricingRules: p.pricingRules.map((r) => ({
+      ...r,
+      pricePerM2: Number(r.pricePerM2),
+      minPrice: Number(r.minPrice),
+      expressMultiplier: Number(r.expressMultiplier),
+    })),
+  }
 }
 
 function ProductGuide({ product }: { product: Product }) {
