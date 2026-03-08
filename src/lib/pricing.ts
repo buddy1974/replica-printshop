@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { Decimal } from '@prisma/client/runtime/client'
 import { calculateShipping } from '@/lib/shipping'
 import { assert, assertExists } from '@/lib/assert'
+import { validateProductSize } from '@/lib/productRules'
+import { ValidationError } from '@/lib/errors'
 
 export interface PricingInput {
   productId: string
@@ -73,6 +75,23 @@ export async function calculatePrice(input: PricingInput): Promise<PricingResult
 
   const product = await db.product.findUnique({ where: { id: productId }, select: { id: true } })
   assertExists(product, `Product not found: ${productId}`)
+
+  // Validate product size rules
+  if (width != null && height != null) {
+    const config = await db.productConfig.findUnique({ where: { productId }, select: { maxWidthCm: true, maxHeightCm: true, dtfMaxWidthCm: true, rollWidthCm: true, printAreaWidthCm: true, printAreaHeightCm: true } })
+    if (config) {
+      const rules = {
+        maxWidthCm: config.maxWidthCm != null ? Number(config.maxWidthCm) : null,
+        maxHeightCm: config.maxHeightCm != null ? Number(config.maxHeightCm) : null,
+        dtfMaxWidthCm: config.dtfMaxWidthCm != null ? Number(config.dtfMaxWidthCm) : null,
+        rollWidthCm: config.rollWidthCm != null ? Number(config.rollWidthCm) : null,
+        printAreaWidthCm: config.printAreaWidthCm != null ? Number(config.printAreaWidthCm) : null,
+        printAreaHeightCm: config.printAreaHeightCm != null ? Number(config.printAreaHeightCm) : null,
+      }
+      const result = validateProductSize(rules, width, height)
+      if (!result.ok) throw new ValidationError(result.message)
+    }
+  }
 
   const [variant, pricingRule, pricingTables, optionValues] = await Promise.all([
     variantId

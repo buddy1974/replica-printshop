@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Button from '@/components/Button'
+import ProductPreview from '@/components/ProductPreview'
 
 interface OptionValue {
   id: string
@@ -33,6 +34,13 @@ interface ProductConfig {
   minHeight: number | null
   maxHeight: number | null
   pickupAllowed: boolean | null
+  maxWidthCm: number | null
+  maxHeightCm: number | null
+  rollWidthCm: number | null
+  dtfMaxWidthCm: number | null
+  printAreaWidthCm: number | null
+  printAreaHeightCm: number | null
+  placementMode: string | null
 }
 
 interface Product {
@@ -71,8 +79,12 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1)
   const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS' | 'PICKUP'>('STANDARD')
   const [price, setPrice] = useState<PriceResult | null>(null)
+  const [sizeError, setSizeError] = useState<string | null>(null)
+  const [placement, setPlacement] = useState<'front' | 'back'>('front')
   const [userId, setUserId] = useState('')
   const [addedToCart, setAddedToCart] = useState(false)
+
+  const showPlacement = cfg?.placementMode && cfg.placementMode !== 'none'
 
   const showVariants = cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0
   const showOptions = cfg ? cfg.hasOptions && product.options.length > 0 : product.options.length > 0
@@ -99,7 +111,14 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
           optionValueIds,
         }),
       })
-      if (res.ok) setPrice(await res.json())
+      if (res.ok) {
+        setSizeError(null)
+        setPrice(await res.json())
+      } else {
+        const body = await res.json().catch(() => ({}))
+        setSizeError(body.error ?? 'Invalid size')
+        setPrice(null)
+      }
     }
     fetchPrice()
   }, [product.id, variantId, optionValueIds, width, height, quantity, deliveryType])
@@ -130,6 +149,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         quantity,
         express: deliveryType === 'EXPRESS',
         optionValueIds,
+        placement: showPlacement ? placement : undefined,
       }),
     })
     if (res.ok) {
@@ -192,15 +212,18 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       )}
 
       {showCustomSize && (
-        <div className="grid grid-cols-2 gap-3">
-          <label className={labelCls}>
-            <span className={labelTextCls}>Width (cm)</span>
-            <input type="number" min={minW} max={maxW} value={width} onChange={(e) => setWidth(Number(e.target.value))} className={inputCls} />
-          </label>
-          <label className={labelCls}>
-            <span className={labelTextCls}>Height (cm)</span>
-            <input type="number" min={minH} max={maxH} value={height} onChange={(e) => setHeight(Number(e.target.value))} className={inputCls} />
-          </label>
+        <div className="flex flex-col gap-1.5">
+          <div className="grid grid-cols-2 gap-3">
+            <label className={labelCls}>
+              <span className={labelTextCls}>Width (cm)</span>
+              <input type="number" min={minW} max={maxW} value={width} onChange={(e) => setWidth(Number(e.target.value))} className={inputCls} />
+            </label>
+            <label className={labelCls}>
+              <span className={labelTextCls}>Height (cm)</span>
+              <input type="number" min={minH} max={maxH} value={height} onChange={(e) => setHeight(Number(e.target.value))} className={inputCls} />
+            </label>
+          </div>
+          {sizeError && <p className="text-red-600 text-sm">{sizeError}</p>}
         </div>
       )}
 
@@ -226,6 +249,21 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
           )}
         </div>
       </div>
+
+      {showPlacement && (
+        <div className="flex flex-col gap-1.5">
+          <span className={labelTextCls}>Placement</span>
+          <div className="flex gap-3">
+            {(['front', 'back'] as const).map((p) => (
+              <label key={p} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="placement" checked={placement === p} onChange={() => setPlacement(p)} className="accent-gray-900" />
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </label>
+            ))}
+          </div>
+          <ProductPreview placement={placement} width={width} height={height} />
+        </div>
+      )}
 
       {price && (
         <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm flex flex-col gap-1">

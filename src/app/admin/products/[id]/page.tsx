@@ -19,6 +19,17 @@ interface ProductConfig {
   pricingType: string | null
   pickupAllowed: boolean | null
   notes: string | null
+  maxWidthCm: number | null
+  maxHeightCm: number | null
+  rollWidthCm: number | null
+  dtfMaxWidthCm: number | null
+  cutOnly: boolean
+  printAndCut: boolean
+  needsUpload: boolean
+  priceMode: string | null
+  printAreaWidthCm: number | null
+  printAreaHeightCm: number | null
+  placementMode: string | null
 }
 
 interface PricingTableRow {
@@ -96,6 +107,17 @@ export default function ProductEditPage() {
             pricingType: c.pricingType ?? '',
             pickupAllowed: c.pickupAllowed ?? false,
             notes: c.notes ?? '',
+            maxWidthCm: c.maxWidthCm ?? undefined,
+            maxHeightCm: c.maxHeightCm ?? undefined,
+            rollWidthCm: c.rollWidthCm ?? undefined,
+            dtfMaxWidthCm: c.dtfMaxWidthCm ?? undefined,
+            cutOnly: c.cutOnly,
+            printAndCut: c.printAndCut,
+            needsUpload: c.needsUpload,
+            priceMode: c.priceMode ?? '',
+            printAreaWidthCm: c.printAreaWidthCm ?? undefined,
+            printAreaHeightCm: c.printAreaHeightCm ?? undefined,
+            placementMode: c.placementMode ?? '',
           })
         }
       })
@@ -256,6 +278,58 @@ export default function ProductEditPage() {
       </div>
       <div>
         <label><input type="checkbox" checked={configForm.pickupAllowed ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, pickupAllowed: e.target.checked }))} /> Pickup allowed</label>
+      </div>
+
+      <h3>Print constraints</h3>
+      <div>
+        <label>Max width (cm) — hard limit<br /><input type="number" value={configForm.maxWidthCm ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, maxWidthCm: e.target.value ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <div>
+        <label>Max height (cm) — hard limit<br /><input type="number" value={configForm.maxHeightCm ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, maxHeightCm: e.target.value ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <div>
+        <label>Roll width (cm)<br /><input type="number" value={configForm.rollWidthCm ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, rollWidthCm: e.target.value ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <div>
+        <label>DTF max width (cm)<br /><input type="number" value={configForm.dtfMaxWidthCm ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, dtfMaxWidthCm: e.target.value ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.cutOnly ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, cutOnly: e.target.checked }))} /> Cut only</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.printAndCut ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, printAndCut: e.target.checked }))} /> Print and cut</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.needsUpload ?? true} onChange={(e) => setConfigForm((p) => ({ ...p, needsUpload: e.target.checked }))} /> Needs file upload</label>
+      </div>
+      <div>
+        <label>Price mode<br />
+          <select value={configForm.priceMode ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, priceMode: e.target.value }))}>
+            <option value="">— default —</option>
+            <option value="area">area</option>
+            <option value="fixed">fixed</option>
+            <option value="quantity">quantity</option>
+          </select>
+        </label>
+      </div>
+
+      <h3>Textile / garment</h3>
+      <div>
+        <label>Print area width (cm)<br /><input type="number" value={configForm.printAreaWidthCm ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, printAreaWidthCm: e.target.value ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <div>
+        <label>Print area height (cm)<br /><input type="number" value={configForm.printAreaHeightCm ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, printAreaHeightCm: e.target.value ? Number(e.target.value) : undefined }))} /></label>
+      </div>
+      <div>
+        <label>Placement mode<br />
+          <select value={configForm.placementMode ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, placementMode: e.target.value }))}>
+            <option value="">— none —</option>
+            <option value="front">front</option>
+            <option value="back">back</option>
+            <option value="front_back">front + back</option>
+            <option value="custom">custom</option>
+          </select>
+        </label>
       </div>
       <div>
         <label>Notes<br /><textarea value={configForm.notes ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, notes: e.target.value }))} rows={2} /></label>

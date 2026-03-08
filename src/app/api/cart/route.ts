@@ -20,13 +20,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { userId, productId, variantId, width, height, quantity, express, optionValueIds } = body
+    const { userId, productId, variantId, width, height, quantity, express, optionValueIds, placement } = body
 
     if (!userId || !productId || !quantity) {
       return NextResponse.json({ error: 'userId, productId and quantity are required' }, { status: 400 })
     }
 
-    const cart = await addToCart({ userId, productId, variantId, width, height, quantity, express, optionValueIds })
+    const cart = await addToCart({ userId, productId, variantId, width, height, quantity, express, optionValueIds, placement })
     return NextResponse.json(cart, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })

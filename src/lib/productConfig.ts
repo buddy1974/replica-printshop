@@ -23,6 +23,17 @@ export async function upsertProductConfig(
     printHeight?: number
     pricingType?: string
     pickupAllowed?: boolean
+    maxWidthCm?: number
+    maxHeightCm?: number
+    rollWidthCm?: number
+    dtfMaxWidthCm?: number
+    cutOnly?: boolean
+    printAndCut?: boolean
+    needsUpload?: boolean
+    priceMode?: string
+    printAreaWidthCm?: number
+    printAreaHeightCm?: number
+    placementMode?: string
     notes?: string
   },
 ) {

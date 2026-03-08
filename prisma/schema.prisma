@@ -117,6 +117,19 @@ model ProductConfig {
   pricingType     String?
   pickupAllowed   Boolean?
 
+  maxWidthCm      Decimal? @db.Decimal(8, 2)
+  maxHeightCm     Decimal? @db.Decimal(8, 2)
+  rollWidthCm     Decimal? @db.Decimal(8, 2)
+  dtfMaxWidthCm   Decimal? @db.Decimal(8, 2)
+  cutOnly         Boolean  @default(false)
+  printAndCut     Boolean  @default(false)
+  needsUpload     Boolean  @default(true)
+  priceMode       String?
+
+  printAreaWidthCm  Decimal? @db.Decimal(8, 2)
+  printAreaHeightCm Decimal? @db.Decimal(8, 2)
+  placementMode     String?
+
   notes           String?
 
   product Product @relation(fields: [productId], references: [id])
@@ -234,6 +247,7 @@ model CartItem {
   quantity      Int
   priceSnapshot Decimal @db.Decimal(10, 2)
   express       Boolean @default(false)
+  placement     String?
 
   cart    Cart            @relation(fields: [cartId], references: [id])
   product Product         @relation(fields: [productId], references: [id])

@@ -29,6 +29,13 @@ interface ProductConfig {
   minHeight: number | null
   maxHeight: number | null
   pickupAllowed: boolean | null
+  maxWidthCm: number | null
+  maxHeightCm: number | null
+  rollWidthCm: number | null
+  dtfMaxWidthCm: number | null
+  printAreaWidthCm: number | null
+  printAreaHeightCm: number | null
+  placementMode: string | null
 }
 
 interface Product {
@@ -71,6 +78,25 @@ async function getProduct(productId: string): Promise<Product | null> {
       minPrice: Number(r.minPrice),
       expressMultiplier: Number(r.expressMultiplier),
     })),
+    config: p.config ? {
+      hasCustomSize: p.config.hasCustomSize,
+      hasFixedSizes: p.config.hasFixedSizes,
+      hasVariants: p.config.hasVariants,
+      hasOptions: p.config.hasOptions,
+      fixedSizes: p.config.fixedSizes,
+      minWidth: p.config.minWidth,
+      maxWidth: p.config.maxWidth,
+      minHeight: p.config.minHeight,
+      maxHeight: p.config.maxHeight,
+      pickupAllowed: p.config.pickupAllowed,
+      maxWidthCm: p.config.maxWidthCm != null ? Number(p.config.maxWidthCm) : null,
+      maxHeightCm: p.config.maxHeightCm != null ? Number(p.config.maxHeightCm) : null,
+      rollWidthCm: p.config.rollWidthCm != null ? Number(p.config.rollWidthCm) : null,
+      dtfMaxWidthCm: p.config.dtfMaxWidthCm != null ? Number(p.config.dtfMaxWidthCm) : null,
+      printAreaWidthCm: p.config.printAreaWidthCm != null ? Number(p.config.printAreaWidthCm) : null,
+      printAreaHeightCm: p.config.printAreaHeightCm != null ? Number(p.config.printAreaHeightCm) : null,
+      placementMode: p.config.placementMode,
+    } : null,
   }
 }
 
