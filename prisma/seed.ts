@@ -292,18 +292,18 @@ async function seedCategories() {
   console.log('Seeding product categories...')
 
   const categories = [
-    { name: 'Textile print', slug: 'textile-print', sortOrder: 1 },
-    { name: 'Vinyl plot',    slug: 'vinyl-plot',    sortOrder: 2 },
-    { name: 'Stickers',     slug: 'stickers',      sortOrder: 3 },
-    { name: 'Banner',       slug: 'banner',        sortOrder: 4 },
-    { name: 'Rigid',        slug: 'rigid',         sortOrder: 5 },
+    { name: 'Textile print', slug: 'textile-print', sortOrder: 1, defaultPriceMode: 'PIECE' },
+    { name: 'Vinyl plot',    slug: 'vinyl-plot',    sortOrder: 2, defaultPriceMode: 'METER' },
+    { name: 'Stickers',     slug: 'stickers',      sortOrder: 3, defaultPriceMode: 'AREA'  },
+    { name: 'Banner',       slug: 'banner',        sortOrder: 4, defaultPriceMode: 'AREA'  },
+    { name: 'Rigid',        slug: 'rigid',         sortOrder: 5, defaultPriceMode: 'FIXED' },
   ]
 
   for (const cat of categories) {
     await db.productCategory.upsert({
       where: { slug: cat.slug },
       create: cat,
-      update: { name: cat.name, sortOrder: cat.sortOrder },
+      update: { name: cat.name, sortOrder: cat.sortOrder, defaultPriceMode: cat.defaultPriceMode },
     })
     console.log(`  ✓ ${cat.name}`)
   }

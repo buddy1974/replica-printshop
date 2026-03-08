@@ -23,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function POST(req: NextRequest, { params }: Params) {
   try {
     const body = await req.json()
-    const { type, minQty, maxQty, minWidth, maxWidth, minHeight, maxHeight, price, pricePerM2 } = body
+    const { type, minQty, maxQty, minWidth, maxWidth, minHeight, maxHeight, price, pricePerM2, pricePerMeter } = body
 
     if (!type || price === undefined) {
       return NextResponse.json({ error: 'type and price are required' }, { status: 400 })
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest, { params }: Params) {
         maxHeight: maxHeight ?? null,
         price,
         pricePerM2: pricePerM2 ?? null,
+        pricePerMeter: pricePerMeter ?? null,
       },
     })
     return NextResponse.json(row, { status: 201 })

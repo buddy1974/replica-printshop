@@ -41,6 +41,7 @@ export async function upsertProductConfig(
     isDTF?: boolean
     needsPlacement?: boolean
     productionType?: string
+    setupPrice?: number
     notes?: string
   },
 ) {
