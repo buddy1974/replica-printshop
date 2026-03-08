@@ -30,6 +30,18 @@ interface ProductConfig {
   printAreaWidthCm: number | null
   printAreaHeightCm: number | null
   placementMode: string | null
+  isTextile: boolean
+  isRoll: boolean
+  isCut: boolean
+  isPrintCut: boolean
+  isDTF: boolean
+  needsPlacement: boolean
+}
+
+interface Category {
+  id: string
+  name: string
+  slug: string
 }
 
 interface PricingTableRow {
@@ -60,6 +72,7 @@ interface Product {
   name: string
   slug: string
   category: string
+  categoryId: string | null
   active: boolean
   guideText: string | null
   minDpi: number | null
@@ -81,9 +94,14 @@ export default function ProductEditPage() {
   const [configSaved, setConfigSaved] = useState(false)
   const [pricingRows, setPricingRows] = useState<PricingTableRow[]>([])
   const [priceForm, setPriceForm] = useState({ type: 'AREA', minQty: '', maxQty: '', minWidth: '', maxWidth: '', minHeight: '', maxHeight: '', price: '', pricePerM2: '' })
+  const [categories, setCategories] = useState<Category[]>([])
   const [templates, setTemplates] = useState<MockupTemplate[]>([])
   const [mockupForm, setMockupForm] = useState({ name: '', imageUrl: '', printAreaX: '', printAreaY: '', printAreaWidth: '', printAreaHeight: '' })
   const [mockupSaved, setMockupSaved] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/categories').then((r) => r.json()).then(setCategories)
+  }, [])
 
   useEffect(() => {
     fetch(`/api/products/${id}/config`)
@@ -118,6 +136,12 @@ export default function ProductEditPage() {
             printAreaWidthCm: c.printAreaWidthCm ?? undefined,
             printAreaHeightCm: c.printAreaHeightCm ?? undefined,
             placementMode: c.placementMode ?? '',
+            isTextile: c.isTextile,
+            isRoll: c.isRoll,
+            isCut: c.isCut,
+            isPrintCut: c.isPrintCut,
+            isDTF: c.isDTF,
+            needsPlacement: c.needsPlacement,
           })
         }
       })
@@ -144,6 +168,7 @@ export default function ProductEditPage() {
           name: p.name,
           slug: p.slug,
           category: p.category,
+          categoryId: p.categoryId,
           active: p.active,
           guideText: p.guideText ?? '',
           minDpi: p.minDpi ?? undefined,
@@ -195,7 +220,17 @@ export default function ProductEditPage() {
         <label>Slug<br /><input name="slug" value={form.slug ?? ''} onChange={handleChange} /></label>
       </div>
       <div>
-        <label>Category<br /><input name="category" value={form.category ?? ''} onChange={handleChange} /></label>
+        <label>Category (legacy string)<br /><input name="category" value={form.category ?? ''} onChange={handleChange} /></label>
+      </div>
+      <div>
+        <label>Category<br />
+          <select value={form.categoryId ?? ''} onChange={(e) => setForm((p) => ({ ...p, categoryId: e.target.value || null }))}>
+            <option value="">— unassigned —</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <h2>File guide</h2>
@@ -330,6 +365,25 @@ export default function ProductEditPage() {
             <option value="custom">custom</option>
           </select>
         </label>
+      </div>
+      <h3>Product type flags</h3>
+      <div>
+        <label><input type="checkbox" checked={configForm.isTextile ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, isTextile: e.target.checked }))} /> Textile</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.isRoll ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, isRoll: e.target.checked }))} /> Roll</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.isCut ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, isCut: e.target.checked }))} /> Cut</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.isPrintCut ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, isPrintCut: e.target.checked }))} /> Print &amp; Cut</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.isDTF ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, isDTF: e.target.checked }))} /> DTF</label>
+      </div>
+      <div>
+        <label><input type="checkbox" checked={configForm.needsPlacement ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, needsPlacement: e.target.checked }))} /> Needs placement</label>
       </div>
       <div>
         <label>Notes<br /><textarea value={configForm.notes ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, notes: e.target.value }))} rows={2} /></label>

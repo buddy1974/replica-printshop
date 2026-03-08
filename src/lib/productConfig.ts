@@ -34,6 +34,12 @@ export async function upsertProductConfig(
     printAreaWidthCm?: number
     printAreaHeightCm?: number
     placementMode?: string
+    isTextile?: boolean
+    isRoll?: boolean
+    isCut?: boolean
+    isPrintCut?: boolean
+    isDTF?: boolean
+    needsPlacement?: boolean
     notes?: string
   },
 ) {

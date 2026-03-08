@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const body = await req.json()
-    const { name, slug, category, active } = body
+    const { name, slug, category, categoryId, active } = body
 
     const product = await db.product.update({
       where: { id: params.id },
@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(name !== undefined && { name }),
         ...(slug !== undefined && { slug }),
         ...(category !== undefined && { category }),
+        ...(categoryId !== undefined && { categoryId: categoryId || null }),
         ...(active !== undefined && { active }),
       },
       include: productInclude,

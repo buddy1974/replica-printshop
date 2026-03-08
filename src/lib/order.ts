@@ -9,7 +9,9 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
     include: {
       items: {
         include: {
-          product: true,
+          product: {
+            include: { productCategory: true },
+          },
           variant: true,
         },
       },
@@ -38,6 +40,7 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
           create: cart.items.map((item) => ({
             productName: item.product.name,
             variantName: item.variant?.name ?? null,
+            categoryName: item.product.productCategory?.name ?? item.product.category ?? null,
             width: item.width,
             height: item.height,
             quantity: item.quantity,

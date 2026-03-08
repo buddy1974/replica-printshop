@@ -93,7 +93,7 @@ export async function calculatePrice(input: PricingInput): Promise<PricingResult
     }
   }
 
-  const [variant, pricingRule, pricingTables, optionValues] = await Promise.all([
+  const [variant, pricingRule, pricingTables, optionValues, flags] = await Promise.all([
     variantId
       ? db.productVariant.findUnique({ where: { id: variantId } })
       : null,
@@ -102,6 +102,7 @@ export async function calculatePrice(input: PricingInput): Promise<PricingResult
     optionValueIds.length > 0
       ? db.productOptionValue.findMany({ where: { id: { in: optionValueIds } } })
       : [],
+    db.productConfig.findUnique({ where: { productId }, select: { isCut: true, isRoll: true, isTextile: true } }),
   ])
 
   if (variantId) assertExists(variant, `Variant not found: ${variantId}`)
@@ -119,9 +120,13 @@ export async function calculatePrice(input: PricingInput): Promise<PricingResult
     const minPrice = pricingRule ? toNum(pricingRule.minPrice) : 0
     if (resolved < minPrice) resolved = minPrice
     unitPrice += resolved
-  } else if (pricingRule && width != null && height != null) {
-    // Fallback: classic area pricing
-    const areaSqm = (width * height) / 10_000
+  } else if (pricingRule && width != null) {
+    // Fallback: area pricing, adjusted by product type flags
+    // isCut: height-less roll — price per linear metre (width only, height = 100cm unit)
+    // isRoll: same linear approach
+    // otherwise: area m²
+    const effectiveHeight = (flags?.isCut || flags?.isRoll) ? 100 : (height ?? 100)
+    const areaSqm = (width * effectiveHeight) / 10_000
     let areaPrice = areaSqm * toNum(pricingRule.pricePerM2)
     const minPrice = toNum(pricingRule.minPrice)
     if (areaPrice < minPrice) areaPrice = minPrice

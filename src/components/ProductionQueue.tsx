@@ -11,6 +11,7 @@ interface Job {
   orderItem: {
     id: string
     productName: string
+    categoryName: string | null
     width: number
     height: number
     quantity: number

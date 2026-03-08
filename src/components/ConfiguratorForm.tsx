@@ -41,6 +41,10 @@ interface ProductConfig {
   printAreaWidthCm: number | null
   printAreaHeightCm: number | null
   placementMode: string | null
+  isTextile: boolean
+  isRoll: boolean
+  isCut: boolean
+  needsPlacement: boolean
 }
 
 interface Product {
@@ -84,7 +88,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const [userId, setUserId] = useState('')
   const [addedToCart, setAddedToCart] = useState(false)
 
-  const showPlacement = cfg?.placementMode && cfg.placementMode !== 'none'
+  const showPlacement = cfg?.needsPlacement || (cfg?.placementMode && cfg.placementMode !== 'none')
 
   const showVariants = cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0
   const showOptions = cfg ? cfg.hasOptions && product.options.length > 0 : product.options.length > 0

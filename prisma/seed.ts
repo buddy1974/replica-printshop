@@ -285,10 +285,36 @@ async function seedMug() {
 }
 
 // ---------------------------------------------------------------------------
+// Product categories
+// ---------------------------------------------------------------------------
+
+async function seedCategories() {
+  console.log('Seeding product categories...')
+
+  const categories = [
+    { name: 'Textile print', slug: 'textile-print', sortOrder: 1 },
+    { name: 'Vinyl plot',    slug: 'vinyl-plot',    sortOrder: 2 },
+    { name: 'Stickers',     slug: 'stickers',      sortOrder: 3 },
+    { name: 'Banner',       slug: 'banner',        sortOrder: 4 },
+    { name: 'Rigid',        slug: 'rigid',         sortOrder: 5 },
+  ]
+
+  for (const cat of categories) {
+    await db.productCategory.upsert({
+      where: { slug: cat.slug },
+      create: cat,
+      update: { name: cat.name, sortOrder: cat.sortOrder },
+    })
+    console.log(`  ✓ ${cat.name}`)
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function main() {
+  await seedCategories()
   await seedDTF()
   await seedSticker()
   await seedMug()

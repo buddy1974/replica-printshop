@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npm install:*)",
+      "Bash(winget install:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(sed:*)"
+    ]
+  }
+}

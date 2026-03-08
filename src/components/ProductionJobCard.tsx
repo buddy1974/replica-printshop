@@ -27,6 +27,7 @@ interface Job {
     height: number
     quantity: number
     previewUrl: string | null
+    categoryName: string | null
     order: { id: string; deliveryType: string }
   }
 }
@@ -52,7 +53,12 @@ export default function ProductionJobCard({
     <div className="rounded border border-gray-200 bg-white p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <p className="font-medium text-sm">{job.orderItem.productName}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm">{job.orderItem.productName}</p>
+            {job.orderItem.categoryName && (
+              <span className="text-xs text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">{job.orderItem.categoryName}</span>
+            )}
+          </div>
           <p className="text-xs text-gray-500">
             {Number(job.orderItem.width)} × {Number(job.orderItem.height)} cm &middot; Qty {job.orderItem.quantity}
           </p>

@@ -36,6 +36,10 @@ interface ProductConfig {
   printAreaWidthCm: number | null
   printAreaHeightCm: number | null
   placementMode: string | null
+  isTextile: boolean
+  isRoll: boolean
+  isCut: boolean
+  needsPlacement: boolean
 }
 
 interface Product {
@@ -96,6 +100,10 @@ async function getProduct(productId: string): Promise<Product | null> {
       printAreaWidthCm: p.config.printAreaWidthCm != null ? Number(p.config.printAreaWidthCm) : null,
       printAreaHeightCm: p.config.printAreaHeightCm != null ? Number(p.config.printAreaHeightCm) : null,
       placementMode: p.config.placementMode,
+      isTextile: p.config.isTextile,
+      isRoll: p.config.isRoll,
+      isCut: p.config.isCut,
+      needsPlacement: p.config.needsPlacement,
     } : null,
   }
 }

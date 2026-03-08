@@ -67,15 +67,29 @@ model User {
 }
 
 // ---------------------------------------------------------------------------
+// Product categories
+// ---------------------------------------------------------------------------
+
+model ProductCategory {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  sortOrder Int       @default(0)
+
+  products  Product[]
+}
+
+// ---------------------------------------------------------------------------
 // Product catalogue
 // ---------------------------------------------------------------------------
 
 model Product {
-  id       String  @id @default(cuid())
-  name     String
-  slug     String  @unique
-  category String
-  active   Boolean @default(true)
+  id         String  @id @default(cuid())
+  name       String
+  slug       String  @unique
+  category   String
+  categoryId String?
+  active     Boolean @default(true)
 
   guideText        String?
   minDpi           Int?
@@ -92,6 +106,7 @@ model Product {
   cartItems        CartItem[]
   mockupTemplates  MockupTemplate[]
   config           ProductConfig?
+  productCategory  ProductCategory? @relation(fields: [categoryId], references: [id])
 }
 
 // ---------------------------------------------------------------------------
@@ -132,6 +147,13 @@ model ProductConfig {
   printAreaWidthCm  Decimal? @db.Decimal(8, 2)
   printAreaHeightCm Decimal? @db.Decimal(8, 2)
   placementMode     String?
+
+  isTextile      Boolean @default(false)
+  isRoll         Boolean @default(false)
+  isCut          Boolean @default(false)
+  isPrintCut     Boolean @default(false)
+  isDTF          Boolean @default(false)
+  needsPlacement Boolean @default(false)
 
   notes           String?
 
@@ -286,6 +308,7 @@ model OrderItem {
   orderId       String
   productName   String
   variantName   String?
+  categoryName  String?
   width         Decimal @db.Decimal(8, 2)
   height        Decimal @db.Decimal(8, 2)
   quantity      Int
