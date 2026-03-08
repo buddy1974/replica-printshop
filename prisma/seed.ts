@@ -310,11 +310,37 @@ async function seedCategories() {
 }
 
 // ---------------------------------------------------------------------------
+// Shipping methods
+// ---------------------------------------------------------------------------
+
+async function seedShippingMethods() {
+  console.log('Seeding shipping methods...')
+
+  const methods = [
+    { type: 'PICKUP',   name: 'Pickup',           price: 0 },
+    { type: 'DELIVERY', name: 'Standard shipping', price: 5.95 },
+    { type: 'EXPRESS',  name: 'Express shipping',  price: 12.95 },
+    { type: 'MANUAL',   name: 'Manual shipping',   price: 0 },
+  ]
+
+  for (const m of methods) {
+    const existing = await db.shippingMethod.findFirst({ where: { type: m.type } })
+    if (!existing) {
+      await db.shippingMethod.create({ data: m })
+      console.log(`  ✓ ${m.name}`)
+    } else {
+      console.log(`  - ${m.name} (already exists)`)
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function main() {
   await seedCategories()
+  await seedShippingMethods()
   await seedDTF()
   await seedSticker()
   await seedMug()

@@ -24,7 +24,7 @@ const MACHINE_TYPE_MAP: Record<string, string> = {
 const jobInclude = {
   orderItem: {
     include: {
-      order: true,
+      order: { include: { shippingMethod: true } },
       uploadFiles: true,
     },
   },

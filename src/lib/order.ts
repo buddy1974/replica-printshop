@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { DeliveryType } from '@/generated/prisma/client'
-import { calculateShipping } from '@/lib/shipping'
+import { calculateShipping, validateShippingRestrictions, resolveShippingMethod, hasLargeFormatItem } from '@/lib/shipping'
 import { ValidationError } from '@/lib/errors'
 
 export async function createOrderFromCart(userId: string, deliveryType: DeliveryType) {
@@ -10,7 +10,10 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
       items: {
         include: {
           product: {
-            include: { productCategory: true, config: true },
+            include: {
+              productCategory: true,
+              config: true,
+            },
           },
           variant: true,
         },
@@ -22,12 +25,19 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
     throw new ValidationError('Cannot create order: cart is empty')
   }
 
+  // Validate shipping restrictions (steps 154, 156, 158)
+  validateShippingRestrictions(deliveryType, cart.items)
+
   const itemsSubtotal = cart.items.reduce((sum, item) => {
     return sum + parseFloat(item.priceSnapshot.toString()) * item.quantity
   }, 0)
 
+  const isLargeFormat = hasLargeFormatItem(cart.items)
   const shippingPrice = await calculateShipping(itemsSubtotal, deliveryType)
   const total = itemsSubtotal + shippingPrice
+
+  // Resolve which shipping method to attach to the order
+  const shippingMethod = await resolveShippingMethod(deliveryType, isLargeFormat)
 
   const order = await db.$transaction(async (tx) => {
     const newOrder = await tx.order.create({
@@ -36,6 +46,7 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
         total,
         shippingPrice,
         deliveryType,
+        shippingMethodId: shippingMethod?.id ?? null,
         items: {
           create: cart.items.map((item) => ({
             productName: item.product.name,

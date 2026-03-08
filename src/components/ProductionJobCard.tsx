@@ -29,7 +29,7 @@ interface Job {
     quantity: number
     previewUrl: string | null
     categoryName: string | null
-    order: { id: string; deliveryType: string }
+    order: { id: string; deliveryType: string; shippingMethod: { name: string } | null }
   }
 }
 
@@ -64,7 +64,7 @@ export default function ProductionJobCard({
             {Number(job.orderItem.width)} × {Number(job.orderItem.height)} cm &middot; Qty {job.orderItem.quantity}
           </p>
           <p className="text-xs text-gray-400">
-            Order <span className="font-mono">{job.orderItem.order.id.slice(0, 8)}</span> &middot; {job.orderItem.order.deliveryType}
+            Order <span className="font-mono">{job.orderItem.order.id.slice(0, 8)}</span> &middot; {job.orderItem.order.shippingMethod?.name ?? job.orderItem.order.deliveryType}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5">

@@ -17,7 +17,7 @@ interface Job {
     height: number
     quantity: number
     previewUrl: string | null
-    order: { id: string; deliveryType: string }
+    order: { id: string; deliveryType: string; shippingMethod: { name: string } | null }
   }
 }
 

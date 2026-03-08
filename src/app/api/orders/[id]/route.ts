@@ -12,6 +12,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const order = await db.order.findUnique({
       where: { id: params.id },
       include: {
+        shippingMethod: true,
         items: {
           include: {
             uploadFiles: true,

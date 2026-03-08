@@ -76,6 +76,8 @@ model ProductCategory {
   slug             String    @unique
   sortOrder        Int       @default(0)
   defaultPriceMode String?
+  allowShipping    Boolean   @default(true)
+  allowPickup      Boolean   @default(true)
 
   products  Product[]
 }
@@ -156,10 +158,11 @@ model ProductConfig {
   isDTF          Boolean @default(false)
   needsPlacement Boolean @default(false)
 
-  productionType  String?
-  setupPrice      Decimal? @db.Decimal(10, 2)
+  productionType   String?
+  setupPrice       Decimal? @db.Decimal(10, 2)
+  shippingRequired Boolean  @default(true)
 
-  notes           String?
+  notes            String?
 
   product Product @relation(fields: [productId], references: [id])
 }
@@ -245,7 +248,7 @@ model PricingRule {
 }
 
 // ---------------------------------------------------------------------------
-// Shipping rules
+// Shipping rules + methods
 // ---------------------------------------------------------------------------
 
 model ShippingRule {
@@ -254,6 +257,16 @@ model ShippingRule {
   minTotal   Decimal? @db.Decimal(10, 2)
   price      Decimal? @db.Decimal(10, 2)
   multiplier Decimal? @db.Decimal(4, 2)
+}
+
+model ShippingMethod {
+  id     String  @id @default(cuid())
+  name   String
+  price  Decimal @default(0) @db.Decimal(10, 2)
+  type   String
+  active Boolean @default(true)
+
+  orders Order[]
 }
 
 // ---------------------------------------------------------------------------
@@ -301,10 +314,12 @@ model Order {
   status            OrderStatus   @default(PENDING)
   paymentStatus     PaymentStatus @default(UNPAID)
   deliveryType      DeliveryType  @default(STANDARD)
+  shippingMethodId  String?
   createdAt         DateTime      @default(now())
 
-  user  User        @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user           User            @relation(fields: [userId], references: [id])
+  shippingMethod ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
+  items          OrderItem[]
 
   @@index([userId])
 }
