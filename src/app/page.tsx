@@ -1,7 +1,19 @@
 import Link from 'next/link'
 import Container from '@/components/Container'
+import { db } from '@/lib/db'
 
-export default function Home() {
+export default async function Home() {
+  try {
+    await db.$queryRaw`SELECT 1`
+  } catch (e) {
+    console.error('[home] DB connection failed:', e)
+    return (
+      <Container>
+        <p className="text-red-600 text-sm">DB error — check server logs.</p>
+      </Container>
+    )
+  }
+
   return (
     <Container>
       <div className="flex flex-col gap-4">
