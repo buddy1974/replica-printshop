@@ -36,6 +36,7 @@ interface ProductConfig {
   isPrintCut: boolean
   isDTF: boolean
   needsPlacement: boolean
+  productionType: string | null
 }
 
 interface Category {
@@ -142,6 +143,7 @@ export default function ProductEditPage() {
             isPrintCut: c.isPrintCut,
             isDTF: c.isDTF,
             needsPlacement: c.needsPlacement,
+            productionType: c.productionType ?? '',
           })
         }
       })
@@ -366,6 +368,21 @@ export default function ProductEditPage() {
           </select>
         </label>
       </div>
+      <h3>Production routing</h3>
+      <div>
+        <label>Production type<br />
+          <select value={configForm.productionType ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, productionType: e.target.value }))}>
+            <option value="">— unset —</option>
+            <option value="DTF">DTF</option>
+            <option value="ROLL_PRINT">ROLL_PRINT</option>
+            <option value="PRINT_CUT">PRINT_CUT</option>
+            <option value="CUT">CUT</option>
+            <option value="TEXTILE">TEXTILE</option>
+            <option value="MANUAL">MANUAL</option>
+          </select>
+        </label>
+      </div>
+
       <h3>Product type flags</h3>
       <div>
         <label><input type="checkbox" checked={configForm.isTextile ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, isTextile: e.target.checked }))} /> Textile</label>

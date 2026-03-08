@@ -12,6 +12,15 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   DONE:        [], // terminal — no transitions allowed
 }
 
+const MACHINE_TYPE_MAP: Record<string, string> = {
+  DTF:        'DTF',
+  ROLL_PRINT: 'MIMAKI',
+  PRINT_CUT:  'MIMAKI',
+  CUT:        'PLOTTER',
+  TEXTILE:    'PRESS',
+  MANUAL:     'MANUAL',
+}
+
 const jobInclude = {
   orderItem: {
     include: {
@@ -22,10 +31,19 @@ const jobInclude = {
 } as const
 
 export async function createProductionJob(orderItemId: string) {
+  const item = await db.orderItem.findUnique({
+    where: { id: orderItemId },
+    select: { productionTypeSnapshot: true },
+  })
+  const machineType = item?.productionTypeSnapshot
+    ? (MACHINE_TYPE_MAP[item.productionTypeSnapshot] ?? null)
+    : null
+
   return db.productionJob.create({
     data: {
       orderItemId,
       status: 'QUEUED',
+      machineType,
     },
     include: jobInclude,
   })
@@ -34,7 +52,11 @@ export async function createProductionJob(orderItemId: string) {
 export async function getQueue() {
   return db.productionJob.findMany({
     include: jobInclude,
-    orderBy: { orderItem: { order: { createdAt: 'asc' } } },
+    orderBy: [
+      { machineType: 'asc' },
+      { status: 'asc' },
+      { createdAt: 'asc' },
+    ],
   })
 }
 

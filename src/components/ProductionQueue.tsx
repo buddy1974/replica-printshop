@@ -8,6 +8,7 @@ interface Job {
   id: string
   status: JobStatus
   machine: string | null
+  machineType: string | null
   orderItem: {
     id: string
     productName: string

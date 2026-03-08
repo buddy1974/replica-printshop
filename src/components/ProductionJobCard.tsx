@@ -20,6 +20,7 @@ interface Job {
   id: string
   status: JobStatus
   machine: string | null
+  machineType: string | null
   orderItem: {
     id: string
     productName: string
@@ -68,6 +69,9 @@ export default function ProductionJobCard({
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <Badge label={job.status} />
+          {job.machineType && (
+            <span className="text-xs font-medium text-gray-600 bg-gray-100 rounded px-1.5 py-0.5">{job.machineType}</span>
+          )}
           {job.machine && <span className="text-xs text-gray-400">{job.machine}</span>}
         </div>
       </div>

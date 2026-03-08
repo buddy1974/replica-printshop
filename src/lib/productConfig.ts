@@ -40,6 +40,7 @@ export async function upsertProductConfig(
     isPrintCut?: boolean
     isDTF?: boolean
     needsPlacement?: boolean
+    productionType?: string
     notes?: string
   },
 ) {

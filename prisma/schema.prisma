@@ -155,6 +155,8 @@ model ProductConfig {
   isDTF          Boolean @default(false)
   needsPlacement Boolean @default(false)
 
+  productionType  String?
+
   notes           String?
 
   product Product @relation(fields: [productId], references: [id])
@@ -304,16 +306,17 @@ model Order {
 }
 
 model OrderItem {
-  id            String  @id @default(cuid())
-  orderId       String
-  productName   String
-  variantName   String?
-  categoryName  String?
-  width         Decimal @db.Decimal(8, 2)
-  height        Decimal @db.Decimal(8, 2)
-  quantity      Int
-  priceSnapshot Decimal @db.Decimal(10, 2)
-  previewUrl    String?
+  id                      String  @id @default(cuid())
+  orderId                 String
+  productName             String
+  variantName             String?
+  categoryName            String?
+  productionTypeSnapshot  String?
+  width                   Decimal @db.Decimal(8, 2)
+  height                  Decimal @db.Decimal(8, 2)
+  quantity                Int
+  priceSnapshot           Decimal @db.Decimal(10, 2)
+  previewUrl              String?
 
   order         Order          @relation(fields: [orderId], references: [id])
   uploadFiles   UploadFile[]
@@ -371,7 +374,9 @@ model ProductionJob {
   orderItemId String    @unique
   status      JobStatus @default(QUEUED)
   machine     String?
+  machineType String?
   notes       String?
+  createdAt   DateTime  @default(now())
 
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
 }

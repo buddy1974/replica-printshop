@@ -10,7 +10,7 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
       items: {
         include: {
           product: {
-            include: { productCategory: true },
+            include: { productCategory: true, config: true },
           },
           variant: true,
         },
@@ -41,6 +41,7 @@ export async function createOrderFromCart(userId: string, deliveryType: Delivery
             productName: item.product.name,
             variantName: item.variant?.name ?? null,
             categoryName: item.product.productCategory?.name ?? item.product.category ?? null,
+            productionTypeSnapshot: item.product.config?.productionType ?? null,
             width: item.width,
             height: item.height,
             quantity: item.quantity,
