@@ -3,6 +3,7 @@ import UploadForm from '@/components/UploadForm'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
 import { db } from '@/lib/db'
+import { orderStatusLabel } from '@/lib/statusLabel'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +54,7 @@ export default async function UploadPage({ params }: { params: { orderId: string
     <Container>
       <div className="mb-6 flex items-center gap-3">
         <h1>Upload files</h1>
-        <Badge label={order.status} />
+        <Badge label={orderStatusLabel(order.status)} statusKey={order.status} />
         <span className="text-sm text-gray-500 font-mono">{order.id.slice(0, 8)}</span>
       </div>
 

@@ -22,9 +22,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const userId = req.nextUrl.searchParams.get('userId')
     const orders = await db.order.findMany({
+      where: userId ? { userId } : undefined,
       include: { items: true },
       orderBy: { createdAt: 'desc' },
     })
