@@ -1,5 +1,6 @@
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
+import ApproveButton from '@/components/ApproveButton'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 
@@ -21,7 +22,7 @@ export default async function OrdersPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
-                {['ID', 'Status', 'Payment', 'Delivery', 'Total', 'Items', 'Created'].map((h) => (
+                {['ID', 'Status', 'Payment', 'Delivery', 'Total', 'Items', 'Created', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -36,6 +37,9 @@ export default async function OrdersPage() {
                   <td className="px-4 py-3 font-medium">€{Number(o.total).toFixed(2)}</td>
                   <td className="px-4 py-3 text-gray-600">{o.items.length}</td>
                   <td className="px-4 py-3 text-gray-500">{new Date(o.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    {o.status === 'UPLOADED' && <ApproveButton orderId={o.id} />}
+                  </td>
                 </tr>
               ))}
             </tbody>

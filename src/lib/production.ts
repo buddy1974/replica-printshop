@@ -48,11 +48,36 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
     )
   }
 
-  return db.productionJob.update({
+  const updated = await db.productionJob.update({
     where: { id: jobId },
     data: { status },
     include: jobInclude,
   })
+
+  const orderId = updated.orderItem.order.id
+
+  if (status === 'IN_PROGRESS') {
+    await db.order.update({
+      where: { id: orderId },
+      data: { status: 'IN_PRODUCTION' },
+    })
+  } else if (status === 'DONE') {
+    // Only mark order DONE when all jobs for this order are finished
+    const pendingJobs = await db.productionJob.count({
+      where: {
+        orderItem: { orderId },
+        status: { notIn: ['DONE'] },
+      },
+    })
+    if (pendingJobs === 0) {
+      await db.order.update({
+        where: { id: orderId },
+        data: { status: 'DONE' },
+      })
+    }
+  }
+
+  return updated
 }
 
 export async function assignMachine(jobId: string, machineName: string) {

@@ -75,5 +75,20 @@ export async function validateUpload(uploadId: string): Promise<ValidationResult
     data: { status },
   })
 
+  // When approved, transition order to UPLOADED
+  if (status === 'APPROVED') {
+    const orderId = upload.orderItem.orderId
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      select: { status: true },
+    })
+    if (order && order.status === 'CONFIRMED') {
+      await db.order.update({
+        where: { id: orderId },
+        data: { status: 'UPLOADED' },
+      })
+    }
+  }
+
   return { status, dpi, widthCm, heightCm, message }
 }

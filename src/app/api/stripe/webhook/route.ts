@@ -35,25 +35,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing orderId in metadata' }, { status: 400 })
     }
 
-    const orderItems = await db.orderItem.findMany({
-      where: { orderId },
-      select: { id: true },
+    await db.order.update({
+      where: { id: orderId },
+      data: {
+        paymentStatus: 'PAID',
+        status: 'CONFIRMED',
+      },
     })
-
-    await db.$transaction([
-      db.order.update({
-        where: { id: orderId },
-        data: {
-          paymentStatus: 'PAID',
-          status: 'CONFIRMED',
-        },
-      }),
-      ...orderItems.map((item) =>
-        db.productionJob.create({
-          data: { orderItemId: item.id },
-        }),
-      ),
-    ])
   }
 
   return NextResponse.json({ received: true })
