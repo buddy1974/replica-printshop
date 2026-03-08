@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { JobStatus } from '@/generated/prisma/client'
 import { assertExists } from '@/lib/assert'
 import { ValidationError } from '@/lib/errors'
+import { sendProductionStarted, sendDone } from '@/lib/email'
 
 // Valid status transitions
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -57,12 +58,13 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
   const orderId = updated.orderItem.order.id
 
   if (status === 'IN_PROGRESS') {
-    await db.order.update({
+    const order = await db.order.update({
       where: { id: orderId },
       data: { status: 'IN_PRODUCTION' },
+      include: { user: { select: { email: true } } },
     })
+    sendProductionStarted(orderId, order.user.email).catch(() => {})
   } else if (status === 'DONE') {
-    // Only mark order DONE when all jobs for this order are finished
     const pendingJobs = await db.productionJob.count({
       where: {
         orderItem: { orderId },
@@ -70,10 +72,12 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
       },
     })
     if (pendingJobs === 0) {
-      await db.order.update({
+      const order = await db.order.update({
         where: { id: orderId },
         data: { status: 'DONE' },
+        include: { user: { select: { email: true } } },
       })
+      sendDone(orderId, order.user.email).catch(() => {})
     }
   }
 

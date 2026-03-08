@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { db } from '@/lib/db'
+import { sendOrderConfirmed, sendUploadNeeded } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,13 +36,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing orderId in metadata' }, { status: 400 })
     }
 
-    await db.order.update({
+    const order = await db.order.update({
       where: { id: orderId },
-      data: {
-        paymentStatus: 'PAID',
-        status: 'CONFIRMED',
-      },
+      data: { paymentStatus: 'PAID', status: 'CONFIRMED' },
+      include: { user: { select: { email: true } } },
     })
+
+    // Non-blocking email hooks
+    sendOrderConfirmed(orderId, order.user.email).catch(() => {})
+    sendUploadNeeded(orderId, order.user.email).catch(() => {})
   }
 
   return NextResponse.json({ received: true })

@@ -30,7 +30,9 @@ export default async function OrdersPage() {
             <tbody className="divide-y divide-gray-100">
               {orders.map((o) => (
                 <tr key={o.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{o.id.slice(0, 8)}</td>
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-blue-600 hover:underline">{o.id.slice(0, 8)}</Link>
+                  </td>
                   <td className="px-4 py-3"><Badge label={o.status} /></td>
                   <td className="px-4 py-3"><Badge label={o.paymentStatus} /></td>
                   <td className="px-4 py-3 text-gray-600">{o.deliveryType}</td>
