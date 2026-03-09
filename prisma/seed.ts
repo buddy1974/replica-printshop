@@ -1999,6 +1999,392 @@ async function seedCatalogLock() {
 }
 
 // ---------------------------------------------------------------------------
+// Catalog rebuild — final 8-category structure (before steps 321-330)
+// ---------------------------------------------------------------------------
+
+async function seedCatalogRebuild() {
+  console.log('Seeding catalog rebuild — final 8-category structure...')
+
+  // ── Phase 1: Category structure ──────────────────────────────────────────
+
+  // Rename / re-sort existing categories
+  await db.productCategory.update({ where: { slug: 'display-systems' }, data: { sortOrder: 0 } })
+  await db.productCategory.update({ where: { slug: 'banner' },         data: { name: 'Banner', sortOrder: 1 } })
+  await db.productCategory.update({ where: { slug: 'foil' },           data: { name: 'Foil / Adhesive', sortOrder: 2 } })
+  await db.productCategory.update({ where: { slug: 'vinyl-plot' },     data: { sortOrder: 3 } })
+  await db.productCategory.update({ where: { slug: 'textile-print' },  data: { sortOrder: 4 } })
+  await db.productCategory.update({ where: { slug: 'stickers' },       data: { sortOrder: 7 } })
+
+  // Push obsolete categories to high sortOrder (not deleted — products reference them)
+  await db.productCategory.update({ where: { slug: 'large-format' },         data: { sortOrder: 100 } })
+  await db.productCategory.update({ where: { slug: 'magnets' },              data: { sortOrder: 101 } })
+  await db.productCategory.update({ where: { slug: 'embroidery' },           data: { sortOrder: 102 } })
+  await db.productCategory.update({ where: { slug: 'construction-signage' }, data: { sortOrder: 103 } })
+  await db.productCategory.update({ where: { slug: 'special' },              data: { sortOrder: 104 } })
+
+  // Add new categories
+  await db.productCategory.upsert({
+    where: { slug: 'dtf-gang-sheet' },
+    create: {
+      name: 'DTF gang sheet', slug: 'dtf-gang-sheet', sortOrder: 5, defaultPriceMode: 'AREA',
+      description: 'Fill the 55 cm roll with your designs — gang up multiple artworks on one sheet to minimise waste and reduce cost.',
+    },
+    update: { name: 'DTF gang sheet', sortOrder: 5 },
+  })
+
+  await db.productCategory.upsert({
+    where: { slug: 'sublimation' },
+    create: {
+      name: 'Sublimation print', slug: 'sublimation', sortOrder: 6, defaultPriceMode: 'PIECE',
+      description: 'Sublimation-printed mugs, bottles, and accessories. Vibrant permanent prints on specially coated items.',
+    },
+    update: { name: 'Sublimation print', sortOrder: 6 },
+  })
+
+  // Re-fetch category map
+  const catRows = await db.productCategory.findMany({ select: { id: true, slug: true } })
+  const cats: Record<string, string> = {}
+  for (const c of catRows) cats[c.slug] = c.id
+
+  console.log('  ✓ Categories restructured (8 final + legacy pushed out)')
+
+  // ── Phase 2: Deactivate obsolete products ────────────────────────────────
+
+  await db.product.updateMany({
+    where: { slug: { in: ['canvas-print', 'backlit-film', 'photo-print-large', 'display-print', 'forex-board', 'dibond-sign', 'acrylic-sign'] } },
+    data: { active: false },
+  })
+  await db.product.updateMany({
+    where: { slug: { in: ['construction-banner', 'pvc-sign', 'site-sign', 'warning-sign'] } },
+    data: { active: false },
+  })
+  await db.product.updateMany({
+    where: { slug: { in: ['car-magnet-schild', 'mug', 'dtf-transfer', 'dtf'] } },
+    data: { active: false },
+  })
+  console.log('  ✓ Obsolete products deactivated')
+
+  // ── Phase 3: Move products to correct categories ──────────────────────────
+
+  // Magnets → Foil / Adhesive
+  const foilCatId = cats['foil'] ?? null
+  await db.product.updateMany({
+    where: { slug: { in: ['magnetfolie', 'car-magnet', 'car-magnet-schild'] } },
+    data: { categoryId: foilCatId, category: 'Foil / Adhesive' },
+  })
+
+  // Embroidery products → Textile print
+  const textileCatId = cats['textile-print'] ?? null
+  await db.product.updateMany({
+    where: { slug: { in: ['embroidery', 'patches', 'logo-embroidery', 'cap-embroidery', 'woven-patch'] } },
+    data: { categoryId: textileCatId, category: 'Textile print' },
+  })
+  console.log('  ✓ Products moved (Magnets→Foil, Embroidery→Textile print)')
+
+  // ── Phase 4: Update textile garment products with print method + positions ─
+
+  const garmentSlugs = ['t-shirt-print', 'hoodie-print', 'polo-print', 'workwear-print', 'sport-jersey']
+  const garmentPositions: Record<string, string[]> = {
+    't-shirt-print':  ['front', 'back', 'left-chest', 'right-chest'],
+    'hoodie-print':   ['front', 'back', 'left-chest', 'right-chest', 'sleeve'],
+    'polo-print':     ['front', 'back', 'left-chest', 'right-chest'],
+    'workwear-print': ['front', 'back', 'left-chest', 'right-chest', 'sleeve'],
+    'sport-jersey':   ['front', 'back', 'left-chest', 'right-chest', 'sleeve'],
+  }
+
+  for (const slug of garmentSlugs) {
+    const p = await db.product.findUnique({ where: { slug } })
+    if (!p) { console.log(`  - ${slug} not found, skipping`); continue }
+
+    // Add "Print method" option
+    await upsertOption(p.id, 'Print method', [
+      { name: 'DTF',  priceModifier: 0 },
+      { name: 'Flex', priceModifier: 2 },
+      { name: 'Flock', priceModifier: 4 },
+    ])
+
+    // Add "Position" option
+    const posList = garmentPositions[slug] ?? ['front', 'back']
+    await upsertOption(p.id, 'Position', posList.map((pos) => ({
+      name: pos.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      priceModifier: 0,
+    })))
+
+    // Update allowedPositions in ProductConfig
+    await db.productConfig.update({
+      where: { productId: p.id },
+      data: { allowedPositions: JSON.stringify(posList) },
+    })
+
+    console.log(`  ✓ ${slug}: print method + position options added`)
+  }
+
+  // Also add allowed positions to cap-embroidery
+  {
+    const p = await db.product.findUnique({ where: { slug: 'cap-embroidery' } })
+    if (p) {
+      await db.productConfig.update({
+        where: { productId: p.id },
+        data: { allowedPositions: JSON.stringify(['cap-front', 'cap-side']) },
+      })
+    }
+  }
+
+  // ── Phase 5: New Display systems products ────────────────────────────────
+
+  const displayCatId = cats['display-systems'] ?? null
+
+  const displayDefs = [
+    {
+      slug: 'x-banner', name: 'X-Banner',
+      shortDescription: 'Freestanding X-frame display — lightweight, fast to set up.',
+      description: 'X-frame banner stands for indoor events, trade shows, and retail. Lightweight aluminium frame with printed banner included. Quick to assemble, easy to transport. Available in 60 × 160 cm and 80 × 180 cm.',
+      guideText: 'PDF or high-res PNG. Include 30 mm bleed at bottom. Minimum 72 DPI at full size.',
+      bleedMm: 30, safeMarginMm: 30, minDpi: 72, recommendedDpi: 100,
+      variants: [
+        { name: '60 × 160 cm', bp: 39.00 },
+        { name: '80 × 180 cm', bp: 49.00 },
+      ],
+    },
+    {
+      slug: 'l-banner', name: 'L-Banner',
+      shortDescription: 'Slim L-frame display stands — economical and eye-catching.',
+      description: 'L-frame banner displays — a simple, economical alternative to roll-ups. Lightweight aluminium frame with printed banner. Available in 60 × 160 cm and 80 × 200 cm. No cassette mechanism — banner attaches with clips.',
+      guideText: 'PDF or high-res PNG. Include 30 mm bleed at bottom. Minimum 72 DPI at full size.',
+      bleedMm: 30, safeMarginMm: 30, minDpi: 72, recommendedDpi: 100,
+      variants: [
+        { name: '60 × 160 cm', bp: 29.00 },
+        { name: '80 × 200 cm', bp: 39.00 },
+      ],
+    },
+    {
+      slug: 'kundenstopper-outdoor', name: 'Kundenstopper outdoor',
+      shortDescription: 'Weather-resistant outdoor A-frame pavement signs.',
+      description: 'Heavy-duty outdoor A-frame pavement signs with weather-resistant construction. Suitable for all-year outdoor use. Weighted base prevents tipping in wind. Double-sided, printed inserts included. Available in A1 and A0 format.',
+      guideText: 'PDF or high-res PNG. A1: 594 × 841 mm, A0: 841 × 1189 mm. Include 5 mm bleed. Minimum 150 DPI.',
+      bleedMm: 5, safeMarginMm: 10, minDpi: 150, recommendedDpi: 200,
+      variants: [
+        { name: 'A1 (594 × 841 mm)', bp: 189.00 },
+        { name: 'A0 (841 × 1189 mm)', bp: 249.00 },
+      ],
+    },
+  ]
+
+  for (const def of displayDefs) {
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: displayCatId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Display systems', categoryId: displayCatId, active: true,
+        imageUrl: '/images/products/rollup.svg',
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: def.guideText,
+        minDpi: def.minDpi, recommendedDpi: def.recommendedDpi, bleedMm: def.bleedMm, safeMarginMm: def.safeMarginMm,
+        allowedFormats: 'PDF,PNG,TIFF', notes: 'Print, frame, and carry bag included.',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { needsUpload: true, priceMode: 'PIECE', hasVariants: true, productionType: 'ROLL_PRINT' },
+      create: {
+        productId: p.id, type: 'DISPLAY', hasCustomSize: false, hasFixedSizes: false, hasVariants: true, hasOptions: false,
+        needsUpload: true, priceMode: 'PIECE', productionType: 'ROLL_PRINT',
+        helpText: 'Select your display size. Print, frame, and carry bag are all included in the price.',
+        uploadInstructions: 'Upload PDF or high-res PNG at minimum 72 DPI. Include 30 mm bleed at the bottom. Keep text and logos at least 30 mm from all edges.',
+      },
+    })
+    await upsertPricingTable(p.id, 'FIXED', { price: 0 })
+    for (const v of def.variants) await upsertVariant(p.id, v.name, 'Display', v.bp)
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ── Phase 6: DTF gang sheet product ──────────────────────────────────────
+
+  const dtfGangCatId = cats['dtf-gang-sheet'] ?? null
+  const dtfGang = await db.product.upsert({
+    where: { slug: 'dtf-gang-sheet' },
+    update: { categoryId: dtfGangCatId, active: true },
+    create: {
+      name: 'DTF gang sheet', slug: 'dtf-gang-sheet', category: 'DTF gang sheet', categoryId: dtfGangCatId, active: true,
+      imageUrl: '/images/products/textile.svg',
+      shortDescription: 'DTF gang sheets — fill the 55 cm roll, cut to size, heat-press your prints.',
+      description: 'Gang up multiple designs on a single 55 cm wide DTF roll to minimise waste. You specify the width and height of the film area. We print and cut — you heat-press onto any fabric. Vibrant colours, soft hand feel. Works on cotton, polyester, nylon, and blends.',
+      guideText: 'PNG with transparent background. Minimum 150 DPI. Max width 55 cm. Arrange multiple designs in one file to fill the sheet.',
+      minDpi: 150, recommendedDpi: 300, bleedMm: 0, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+      notes: 'Max width 55 cm. Gang multiple designs on one file to reduce per-piece cost.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: dtfGang.id },
+    update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, rollWidthCm: 55, maxWidthCm: 55, isDTF: true, productionType: 'DTF' },
+    create: {
+      productId: dtfGang.id, type: 'DTF_GANG', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      isPrintCut: true, isRoll: true, isDTF: true, needsUpload: true, priceMode: 'AREA',
+      rollWidthCm: 55, maxWidthCm: 55, dtfMaxWidthCm: 55,
+      minWidth: 5, maxWidth: 55, minHeight: 5, maxHeight: 500, productionType: 'DTF',
+      helpText: 'Enter the total width and height of your gang sheet. Max width 55 cm. Price is per dm² — fill the sheet to minimise cost per design.',
+      uploadInstructions: 'Upload a single PNG (transparent background) containing all your designs arranged in the sheet area. Minimum 150 DPI. Avoid white space between designs to save cost.',
+    },
+  })
+  await upsertPricingTable(dtfGang.id, 'AREA', { pricePerM2: 40.00 })
+  console.log(`  ✓ DTF gang sheet: ${dtfGang.id}`)
+
+  // ── Phase 7: Sublimation products ────────────────────────────────────────
+
+  const sublimCatId = cats['sublimation'] ?? null
+
+  // Standard + magic mug (replace legacy mug product)
+  const sublimMug = await db.product.upsert({
+    where: { slug: 'sublimation-mug' },
+    update: { categoryId: sublimCatId, active: true },
+    create: {
+      name: 'Sublimation mug', slug: 'sublimation-mug', category: 'Sublimation print', categoryId: sublimCatId, active: true,
+      imageUrl: '/images/products/mug.svg',
+      shortDescription: 'Custom printed mugs — standard white and colour-changing magic mugs.',
+      description: 'Sublimation-printed ceramic mugs. Vibrant, permanent prints that won\'t fade, peel, or crack. Available as standard white mug or colour-changing magic mug (reveals print when filled with hot liquid). Dishwasher safe. Capacity 330 ml.',
+      guideText: 'PNG or PDF. Print area 238 × 117 mm. Minimum 200 DPI. Bleed 3 mm on all sides.',
+      minDpi: 200, recommendedDpi: 300, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+      notes: 'Print area 238 × 117 mm. Ceramic, 330 ml.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: sublimMug.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: true, type: 'MUG', printAreaWidthCm: 23.8, printAreaHeightCm: 11.7, productionType: 'TEXTILE' },
+    create: {
+      productId: sublimMug.id, type: 'MUG', hasCustomSize: false, hasFixedSizes: false, hasVariants: true, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', printAreaWidthCm: 23.8, printAreaHeightCm: 11.7, productionType: 'TEXTILE',
+      helpText: 'Upload your design for the mug. Print area is 238 × 117 mm. Select mug type below.',
+      uploadInstructions: 'Upload PNG or PDF. Print area 238 × 117 mm. Include 3 mm bleed. Minimum 200 DPI.',
+    },
+  })
+  await upsertPricingTable(sublimMug.id, 'FIXED', { price: 0 })
+  await upsertVariant(sublimMug.id, 'White mug',  'Ceramic white',  8.50)
+  await upsertVariant(sublimMug.id, 'Magic mug',  'Ceramic magic', 12.00)
+  await upsertVariant(sublimMug.id, 'Colour mug', 'Ceramic colour',  9.50)
+  console.log(`  ✓ Sublimation mug: ${sublimMug.id}`)
+
+  // Bottles + accessories
+  type SublimItem = {
+    slug: string; name: string; shortDescription: string; description: string
+    printAreaW: number; printAreaH: number; price: number
+  }
+  const sublimItems: SublimItem[] = [
+    {
+      slug: 'sublimation-bottle', name: 'Stainless steel bottle',
+      shortDescription: 'Custom printed stainless steel water bottles — 500 ml.',
+      description: 'Sublimation-printed stainless steel insulated bottle. Double-walled, keeps drinks hot or cold for hours. Custom full-wrap print. Capacity 500 ml.',
+      printAreaW: 24.5, printAreaH: 19.5, price: 18.00,
+    },
+    {
+      slug: 'sublimation-thermo', name: 'Thermo travel cup',
+      shortDescription: 'Printed stainless thermo travel cups with lid — 350 ml.',
+      description: 'Sublimation-printed thermo travel cup with leak-proof lid. Insulated stainless steel. Full-wrap custom print. Capacity 350 ml.',
+      printAreaW: 19.0, printAreaH: 18.0, price: 14.00,
+    },
+    {
+      slug: 'sublimation-aluminium', name: 'Aluminium bottle',
+      shortDescription: 'Printed aluminium sports bottles — lightweight, 600 ml.',
+      description: 'Sublimation-printed aluminium sports bottle with screw cap. Lightweight and recyclable. Full-wrap custom print. Capacity 600 ml.',
+      printAreaW: 25.5, printAreaH: 20.0, price: 12.00,
+    },
+  ]
+
+  for (const def of sublimItems) {
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: sublimCatId, active: true, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Sublimation print', categoryId: sublimCatId, active: true,
+        imageUrl: '/images/products/mug.svg',
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: `PNG or PDF. Print area ${Math.round(def.printAreaW * 10)} × ${Math.round(def.printAreaH * 10)} mm. Minimum 200 DPI.`,
+        minDpi: 200, recommendedDpi: 300, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { needsUpload: true, priceMode: 'PIECE', type: 'MUG', printAreaWidthCm: def.printAreaW, printAreaHeightCm: def.printAreaH, productionType: 'TEXTILE' },
+      create: {
+        productId: p.id, type: 'MUG', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        needsUpload: true, priceMode: 'PIECE', printAreaWidthCm: def.printAreaW, printAreaHeightCm: def.printAreaH, productionType: 'TEXTILE',
+        helpText: 'Upload your wrap design. Price is per piece.',
+        uploadInstructions: `Upload PNG or PDF. Include 3 mm bleed. Print area ${Math.round(def.printAreaW * 10)} × ${Math.round(def.printAreaH * 10)} mm.`,
+      },
+    })
+    await upsertPricingTable(p.id, 'FIXED', { price: def.price })
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ── Phase 8: Foil / Adhesive — printed graphics ───────────────────────────
+
+  type FoilGraphicDef = {
+    slug: string; name: string; shortDescription: string; description: string
+    pricePerM2: number; maxWidth: number
+  }
+  const foilGraphicDefs: FoilGraphicDef[] = [
+    {
+      slug: 'car-graphics', name: 'Car graphics',
+      shortDescription: 'Printed vinyl graphics for vehicles — full colour, contour cut.',
+      description: 'Full-colour printed vinyl graphics for vehicles, vans, and car body wraps. High-opacity, weather-resistant cast vinyl. Contour cut available. Ideal for company branding, event vehicles, and fleet marking.',
+      pricePerM2: 38.00, maxWidth: 137,
+    },
+    {
+      slug: 'logo-foil', name: 'Logo foil',
+      shortDescription: 'Printed logo foil — digitally printed, contour cut to shape.',
+      description: 'Digitally printed logo foil cut to the exact shape of your design. Perfect for shop fronts, reception walls, product packaging, and brand collateral. Available in matt, gloss, or metallic finishes.',
+      pricePerM2: 32.00, maxWidth: 137,
+    },
+    {
+      slug: 'opening-hours-print', name: 'Opening hours print',
+      shortDescription: 'Printed opening hours and info signs for shop windows.',
+      description: 'Professionally printed vinyl panels for shop window information — opening hours, contact details, and messages. Easy to apply and remove without residue. Clear background or opaque white available.',
+      pricePerM2: 28.00, maxWidth: 137,
+    },
+    {
+      slug: 'window-graphics', name: 'Window graphics',
+      shortDescription: 'Large format window graphics — frosted, clear, or printed.',
+      description: 'Large format window graphic panels for retail, office, and hospitality environments. Full colour print on self-adhesive film. Contour cut or straight cut. Available in clear, opaque, frosted, or perforated film.',
+      pricePerM2: 30.00, maxWidth: 137,
+    },
+  ]
+
+  for (const def of foilGraphicDefs) {
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: foilCatId, active: true, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Foil / Adhesive', categoryId: foilCatId, active: true,
+        imageUrl: '/images/products/foil.svg',
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: `PDF or high-res PNG. Include 3 mm bleed. Minimum 100 DPI. Max width ${def.maxWidth} cm.`,
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG,SVG',
+        notes: `Max width ${def.maxWidth} cm.`,
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, productionType: 'PRINT_CUT' },
+      create: {
+        productId: p.id, type: 'FOIL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+        isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA',
+        rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, minWidth: 5, maxWidth: def.maxWidth, minHeight: 5, maxHeight: 500,
+        productionType: 'PRINT_CUT',
+        helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`,
+        uploadInstructions: 'Upload PDF or high-res PNG. Include 3 mm bleed on all sides. Minimum 100 DPI at final print size.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    await upsertOption(p.id, 'Finish', [
+      { name: 'Gloss', priceModifier: 0 },
+      { name: 'Matte', priceModifier: 2 },
+    ])
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  console.log('  Catalog rebuild complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2026,6 +2412,9 @@ async function main() {
 
   // Catalog lock — complete product catalog
   await seedCatalogLock()
+
+  // Catalog rebuild — final 8-category structure
+  await seedCatalogRebuild()
 
   console.log('\nAll seeds complete.')
 }

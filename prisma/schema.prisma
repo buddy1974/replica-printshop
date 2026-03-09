@@ -199,6 +199,8 @@ model ProductConfig {
   helpText           String?
   uploadInstructions String?
 
+  allowedPositions String?  // JSON: ["front","back","left-chest","right-chest","sleeve"]
+
   notes            String?
 
   product Product @relation(fields: [productId], references: [id])
