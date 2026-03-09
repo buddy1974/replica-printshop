@@ -101,6 +101,7 @@ model ProductCategory {
   defaultPriceMode String?
   allowShipping    Boolean   @default(true)
   allowPickup      Boolean   @default(true)
+  description      String?
 
   products  Product[]
 }
@@ -117,6 +118,8 @@ model Product {
   categoryId String?
   active     Boolean @default(true)
 
+  description      String?
+  shortDescription String?
   guideText        String?
   minDpi           Int?
   recommendedDpi   Int?
@@ -181,9 +184,11 @@ model ProductConfig {
   isDTF          Boolean @default(false)
   needsPlacement Boolean @default(false)
 
-  productionType   String?
-  setupPrice       Decimal? @db.Decimal(10, 2)
-  shippingRequired Boolean  @default(true)
+  productionType     String?
+  setupPrice         Decimal? @db.Decimal(10, 2)
+  shippingRequired   Boolean  @default(true)
+  helpText           String?
+  uploadInstructions String?
 
   notes            String?
 

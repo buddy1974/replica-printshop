@@ -32,7 +32,11 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const body = await req.json()
-    const { name, slug, category, categoryId, active } = body
+    const {
+      name, slug, category, categoryId, active,
+      description, shortDescription,
+      guideText, minDpi, recommendedDpi, bleedMm, safeMarginMm, allowedFormats, notes,
+    } = body
 
     const product = await db.product.update({
       where: { id: params.id },
@@ -42,6 +46,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(category !== undefined && { category }),
         ...(categoryId !== undefined && { categoryId: categoryId || null }),
         ...(active !== undefined && { active }),
+        ...(description !== undefined && { description: description || null }),
+        ...(shortDescription !== undefined && { shortDescription: shortDescription || null }),
+        ...(guideText !== undefined && { guideText: guideText || null }),
+        ...(minDpi !== undefined && { minDpi: minDpi || null }),
+        ...(recommendedDpi !== undefined && { recommendedDpi: recommendedDpi || null }),
+        ...(bleedMm !== undefined && { bleedMm: bleedMm || null }),
+        ...(safeMarginMm !== undefined && { safeMarginMm: safeMarginMm || null }),
+        ...(allowedFormats !== undefined && { allowedFormats: allowedFormats || null }),
+        ...(notes !== undefined && { notes: notes || null }),
       },
       include: productInclude,
     })

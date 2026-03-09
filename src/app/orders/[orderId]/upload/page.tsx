@@ -45,7 +45,11 @@ export default async function UploadPage({ params }: { params: { orderId: string
     order.items.map((item) =>
       db.product.findFirst({
         where: { name: item.productName },
-        select: { guideText: true, minDpi: true, recommendedDpi: true, bleedMm: true, safeMarginMm: true, allowedFormats: true, notes: true },
+        select: {
+          guideText: true, minDpi: true, recommendedDpi: true, bleedMm: true,
+          safeMarginMm: true, allowedFormats: true, notes: true,
+          config: { select: { uploadInstructions: true } },
+        },
       })
     )
   )
@@ -65,6 +69,11 @@ export default async function UploadPage({ params }: { params: { orderId: string
             <p className="text-sm text-gray-500 mb-3">
               {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity}
             </p>
+            {guides[i]?.config?.uploadInstructions && (
+              <div className="rounded border border-amber-200 bg-amber-50 px-3 py-2 mt-3 text-xs text-amber-800">
+                {guides[i]!.config!.uploadInstructions}
+              </div>
+            )}
             {guides[i] && <GuidePanel guide={guides[i]!} />}
             <div className="mt-4">
               <UploadForm orderItemId={item.id} initialPreviewUrl={item.previewUrl} />

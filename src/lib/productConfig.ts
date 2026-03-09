@@ -42,6 +42,8 @@ export async function upsertProductConfig(
     needsPlacement?: boolean
     productionType?: string
     setupPrice?: number
+    helpText?: string
+    uploadInstructions?: string
     notes?: string
   },
 ) {

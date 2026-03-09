@@ -6,6 +6,7 @@ const links = [
   { href: '/admin/orders', label: 'Orders', desc: 'View all orders' },
   { href: '/admin/production', label: 'Production', desc: 'Production queue' },
   { href: '/admin/shipping', label: 'Shipping rules', desc: 'Configure shipping prices' },
+  { href: '/admin/categories', label: 'Categories', desc: 'Edit category names and descriptions' },
 ]
 
 export default function AdminPage() {

@@ -40,6 +40,7 @@ interface ProductConfig {
   isRoll: boolean
   isCut: boolean
   needsPlacement: boolean
+  helpText: string | null
 }
 
 interface Product {
@@ -49,6 +50,7 @@ interface Product {
   options: Option[]
   pricingRules: { pricePerM2: number; minPrice: number; expressMultiplier: number }[]
   config: ProductConfig | null
+  description: string | null
   guideText: string | null
   minDpi: number | null
   recommendedDpi: number | null
@@ -104,6 +106,7 @@ async function getProduct(productId: string): Promise<Product | null> {
       isRoll: p.config.isRoll,
       isCut: p.config.isCut,
       needsPlacement: p.config.needsPlacement,
+      helpText: p.config.helpText,
     } : null,
   }
 }
@@ -145,6 +148,14 @@ export default async function ConfiguratorPage({ params }: { params: { productId
   return (
     <Container>
       <h1 className="mb-2">{product.name}</h1>
+      {product.description && (
+        <p className="text-sm text-gray-600 mb-4 leading-relaxed">{product.description}</p>
+      )}
+      {product.config?.helpText && (
+        <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {product.config.helpText}
+        </div>
+      )}
       <ProductGuide product={product} />
       <ConfiguratorForm product={product} />
     </Container>

@@ -37,6 +37,8 @@ interface ProductConfig {
   isDTF: boolean
   needsPlacement: boolean
   productionType: string | null
+  helpText: string | null
+  uploadInstructions: string | null
 }
 
 interface Category {
@@ -75,6 +77,8 @@ interface Product {
   category: string
   categoryId: string | null
   active: boolean
+  description: string | null
+  shortDescription: string | null
   guideText: string | null
   minDpi: number | null
   recommendedDpi: number | null
@@ -144,6 +148,8 @@ export default function ProductEditPage() {
             isDTF: c.isDTF,
             needsPlacement: c.needsPlacement,
             productionType: c.productionType ?? '',
+            helpText: c.helpText ?? '',
+            uploadInstructions: c.uploadInstructions ?? '',
           })
         }
       })
@@ -172,6 +178,8 @@ export default function ProductEditPage() {
           category: p.category,
           categoryId: p.categoryId,
           active: p.active,
+          description: p.description ?? '',
+          shortDescription: p.shortDescription ?? '',
           guideText: p.guideText ?? '',
           minDpi: p.minDpi ?? undefined,
           recommendedDpi: p.recommendedDpi ?? undefined,
@@ -232,6 +240,17 @@ export default function ProductEditPage() {
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
+        </label>
+      </div>
+
+      <div>
+        <label>Short description (shop list)<br />
+          <input name="shortDescription" value={form.shortDescription ?? ''} onChange={handleChange} />
+        </label>
+      </div>
+      <div>
+        <label>Description (configurator page)<br />
+          <textarea name="description" value={form.description ?? ''} onChange={handleChange} rows={3} />
         </label>
       </div>
 
@@ -401,6 +420,16 @@ export default function ProductEditPage() {
       </div>
       <div>
         <label><input type="checkbox" checked={configForm.needsPlacement ?? false} onChange={(e) => setConfigForm((p) => ({ ...p, needsPlacement: e.target.checked }))} /> Needs placement</label>
+      </div>
+      <div>
+        <label>Help text (shown in configurator)<br />
+          <textarea value={configForm.helpText ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, helpText: e.target.value }))} rows={2} />
+        </label>
+      </div>
+      <div>
+        <label>Upload instructions (shown on upload page)<br />
+          <textarea value={configForm.uploadInstructions ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, uploadInstructions: e.target.value }))} rows={2} />
+        </label>
       </div>
       <div>
         <label>Notes<br /><textarea value={configForm.notes ?? ''} onChange={(e) => setConfigForm((p) => ({ ...p, notes: e.target.value }))} rows={2} /></label>

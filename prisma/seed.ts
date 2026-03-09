@@ -73,18 +73,33 @@ async function seedCategories() {
   console.log('Seeding product categories...')
 
   const categories = [
-    { name: 'Textile print', slug: 'textile-print', sortOrder: 1, defaultPriceMode: 'PIECE' },
-    { name: 'Vinyl plot',    slug: 'vinyl-plot',    sortOrder: 2, defaultPriceMode: 'METER' },
-    { name: 'Stickers',     slug: 'stickers',      sortOrder: 3, defaultPriceMode: 'AREA'  },
-    { name: 'Banner',       slug: 'banner',        sortOrder: 4, defaultPriceMode: 'AREA'  },
-    { name: 'Rigid',        slug: 'rigid',         sortOrder: 5, defaultPriceMode: 'FIXED' },
+    {
+      name: 'Textile print', slug: 'textile-print', sortOrder: 1, defaultPriceMode: 'PIECE',
+      description: 'High-quality DTF (Direct-to-Film) transfers heat-pressed onto your garments. Suitable for t-shirts, hoodies, tote bags, and more.',
+    },
+    {
+      name: 'Vinyl plot', slug: 'vinyl-plot', sortOrder: 2, defaultPriceMode: 'METER',
+      description: 'Precision-cut vinyl lettering and shapes from our plotter. Ideal for signs, windows, vehicles, and equipment marking.',
+    },
+    {
+      name: 'Stickers', slug: 'stickers', sortOrder: 3, defaultPriceMode: 'AREA',
+      description: 'Full-colour stickers printed and cut to shape. Available in gloss, matte, or laminated finish. Square cut or contour cut.',
+    },
+    {
+      name: 'Banner', slug: 'banner', sortOrder: 4, defaultPriceMode: 'AREA',
+      description: 'Large format banners printed on durable PVC or mesh material. Finished with hemmed edges and eyelets for easy mounting.',
+    },
+    {
+      name: 'Rigid', slug: 'rigid', sortOrder: 5, defaultPriceMode: 'FIXED',
+      description: 'Printing on rigid substrates such as forex, dibond, and acrylic. Suitable for outdoor signage and display.',
+    },
   ]
 
   for (const cat of categories) {
     await db.productCategory.upsert({
       where: { slug: cat.slug },
       create: cat,
-      update: { name: cat.name, sortOrder: cat.sortOrder, defaultPriceMode: cat.defaultPriceMode },
+      update: { name: cat.name, sortOrder: cat.sortOrder, defaultPriceMode: cat.defaultPriceMode, description: cat.description },
     })
     console.log(`  ✓ ${cat.name}`)
   }
@@ -126,13 +141,15 @@ async function seedTextilePrint() {
 
   const product = await db.product.upsert({
     where: { slug: 'textile-print' },
-    update: { categoryId: cat?.id ?? null },
+    update: { categoryId: cat?.id ?? null, shortDescription: 'DTF print on your own garments — choose size and colour.', description: 'Send us your garment and we\'ll apply a high-quality DTF transfer. Works on cotton, polyester, and blends. Vibrant colours, soft hand feel, washable at 40°C.' },
     create: {
       name: 'Textile print',
       slug: 'textile-print',
       category: 'Textile print',
       categoryId: cat?.id ?? null,
       active: true,
+      shortDescription: 'DTF print on your own garments — choose size and colour.',
+      description: 'Send us your garment and we\'ll apply a high-quality DTF transfer. Works on cotton, polyester, and blends. Vibrant colours, soft hand feel, washable at 40°C.',
       guideText: 'PNG with transparent background. Minimum 150 DPI. Design will be printed as DTF transfer and heat-pressed.',
       minDpi: 150,
       recommendedDpi: 300,
@@ -155,6 +172,8 @@ async function seedTextilePrint() {
       printAreaHeightCm: 40,
       dtfMaxWidthCm: 55,
       productionType: 'TEXTILE',
+      helpText: 'Select your garment size and colour. The print area is 30 × 40 cm max (front or back). Your design will be scaled to fit.',
+      uploadInstructions: 'Upload a PNG with transparent background. The design should be at least 150 DPI at print size. For best results use 300 DPI.',
     },
     create: {
       productId: product.id,
@@ -210,13 +229,15 @@ async function seedVinylLettering() {
 
   const product = await db.product.upsert({
     where: { slug: 'vinyl-lettering' },
-    update: { categoryId: cat?.id ?? null },
+    update: { categoryId: cat?.id ?? null, shortDescription: 'Precision-cut vinyl letters and shapes. Choose your colour.', description: 'Single-colour vinyl lettering cut on our precision plotter. Supplied pre-masked and ready to apply. Ideal for shop windows, vehicles, walls, and equipment.' },
     create: {
       name: 'Vinyl lettering',
       slug: 'vinyl-lettering',
       category: 'Vinyl plot',
       categoryId: cat?.id ?? null,
       active: true,
+      shortDescription: 'Precision-cut vinyl letters and shapes. Choose your colour.',
+      description: 'Single-colour vinyl lettering cut on our precision plotter. Supplied pre-masked and ready to apply. Ideal for shop windows, vehicles, walls, and equipment.',
       guideText: 'Vector file required. Single-color design. Width limited to 61 cm (roll width).',
       minDpi: null,
       recommendedDpi: null,
@@ -237,6 +258,8 @@ async function seedVinylLettering() {
       rollWidthCm: 61,
       maxWidthCm: 61,
       productionType: 'CUT',
+      helpText: 'Enter width (max 61 cm) and the length of vinyl you need. Price is per linear metre.',
+      uploadInstructions: 'Upload a vector file (SVG, PDF, AI, or EPS). Single colour only — the cut will follow the outlines of your design. Minimum line thickness 2 mm.',
     },
     create: {
       productId: product.id,
@@ -286,13 +309,15 @@ async function seedStickers() {
 
   const product = await db.product.upsert({
     where: { slug: 'stickers' },
-    update: { categoryId: cat?.id ?? null },
+    update: { categoryId: cat?.id ?? null, shortDescription: 'Full-colour print & cut stickers. Any shape, any size.', description: 'Full-colour stickers printed on premium vinyl and cut to your shape. Available in matte or gloss lamination. Waterproof, UV-resistant, and suitable for both indoor and outdoor use.' },
     create: {
       name: 'Stickers',
       slug: 'stickers',
       category: 'Stickers',
       categoryId: cat?.id ?? null,
       active: true,
+      shortDescription: 'Full-colour print & cut stickers. Any shape, any size.',
+      description: 'Full-colour stickers printed on premium vinyl and cut to your shape. Available in matte or gloss lamination. Waterproof, UV-resistant, and suitable for both indoor and outdoor use.',
       guideText: 'PDF or PNG. Minimum 150 DPI. Include 2 mm bleed. Contour cut supported.',
       minDpi: 150,
       recommendedDpi: 300,
@@ -313,6 +338,8 @@ async function seedStickers() {
       rollWidthCm: 137,
       maxWidthCm: 137,
       productionType: 'PRINT_CUT',
+      helpText: 'Enter the dimensions of your sticker. Max width 137 cm. Price is per m² based on the bounding box of your design.',
+      uploadInstructions: 'Upload PDF or PNG at minimum 150 DPI. Include 2 mm bleed on all sides. If contour cut is selected, include a spot colour named "CutContour" in your PDF.',
     },
     create: {
       productId: product.id,
@@ -365,13 +392,15 @@ async function seedBanner() {
 
   const product = await db.product.upsert({
     where: { slug: 'banner' },
-    update: { categoryId: cat?.id ?? null },
+    update: { categoryId: cat?.id ?? null, shortDescription: 'PVC banners printed to size, hemmed and eyeleted.', description: 'Durable PVC banners for indoor and outdoor use. Printed at high resolution and finished with hemmed edges and brass eyelets every 50 cm. Max width 160 cm.' },
     create: {
       name: 'Banner',
       slug: 'banner',
       category: 'Banner',
       categoryId: cat?.id ?? null,
       active: true,
+      shortDescription: 'PVC banners printed to size, hemmed and eyeleted.',
+      description: 'Durable PVC banners for indoor and outdoor use. Printed at high resolution and finished with hemmed edges and brass eyelets every 50 cm. Max width 160 cm.',
       guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 20 mm bleed on all sides.',
       minDpi: 72,
       recommendedDpi: 100,
@@ -391,6 +420,8 @@ async function seedBanner() {
       rollWidthCm: 160,
       maxWidthCm: 160,
       productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max width 160 cm. Price is per m² of printed area.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 20 mm bleed on all sides. Set background colour to full bleed — do not leave white borders.',
     },
     create: {
       productId: product.id,
@@ -409,6 +440,8 @@ async function seedBanner() {
       minHeight: 30,
       maxHeight: 1000,
       productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max width 160 cm. Price is per m² of printed area.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 20 mm bleed on all sides. Set background colour to full bleed — do not leave white borders.',
     },
   })
 
@@ -436,13 +469,15 @@ async function seedMeshBanner() {
 
   const product = await db.product.upsert({
     where: { slug: 'mesh-banner' },
-    update: { categoryId: cat?.id ?? null },
+    update: { categoryId: cat?.id ?? null, shortDescription: 'Wind-through mesh banners for outdoor and scaffolding use.', description: 'Printed mesh banners allow wind to pass through — ideal for scaffolding, fences, and exposed outdoor locations. Finished with hemmed edges and brass eyelets. Max width 160 cm.' },
     create: {
       name: 'Mesh banner',
       slug: 'mesh-banner',
       category: 'Banner',
       categoryId: cat?.id ?? null,
       active: true,
+      shortDescription: 'Wind-through mesh banners for outdoor and scaffolding use.',
+      description: 'Printed mesh banners allow wind to pass through — ideal for scaffolding, fences, and exposed outdoor locations. Finished with hemmed edges and brass eyelets. Max width 160 cm.',
       guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Mesh material allows wind to pass through.',
       minDpi: 72,
       recommendedDpi: 100,
@@ -462,6 +497,8 @@ async function seedMeshBanner() {
       rollWidthCm: 160,
       maxWidthCm: 160,
       productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max width 160 cm. Mesh material allows wind through — suitable for exposed outdoor locations.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 20 mm bleed. Note: colours may appear slightly less saturated on mesh material.',
     },
     create: {
       productId: product.id,
@@ -480,6 +517,8 @@ async function seedMeshBanner() {
       minHeight: 30,
       maxHeight: 1000,
       productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max width 160 cm. Mesh material allows wind through — suitable for exposed outdoor locations.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 20 mm bleed. Note: colours may appear slightly less saturated on mesh material.',
     },
   })
 
