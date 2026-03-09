@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUserByEmail } from '@/lib/user'
 import { AppError } from '@/lib/errors'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    // Step 307 — rate limit login/register (20 req/min per IP)
+    if (!checkRateLimit(getClientIp(req), 20, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 })
+    }
+
     const body = await req.json()
     const { email, name } = body
 

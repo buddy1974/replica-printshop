@@ -3,7 +3,10 @@ import path from 'path'
 import { ValidationError } from '@/lib/errors'
 
 const STORAGE_DIR = path.join(process.cwd(), 'storage', 'uploads')
-const MAX_SIZE_BYTES = 100 * 1024 * 1024 // 100 MB
+// Step 305 — configurable via MAX_UPLOAD_SIZE env (bytes), default 100 MB
+const MAX_SIZE_BYTES = process.env.MAX_UPLOAD_SIZE
+  ? parseInt(process.env.MAX_UPLOAD_SIZE, 10)
+  : 100 * 1024 * 1024
 
 const ALLOWED_MIMES: Record<string, string> = {
   'image/png': 'png',
@@ -15,7 +18,8 @@ const ALLOWED_MIMES: Record<string, string> = {
 
 export function validateFileInput(file: File) {
   if (file.size > MAX_SIZE_BYTES) {
-    throw new ValidationError(`File too large. Maximum size is 100 MB.`)
+    const mb = Math.round(MAX_SIZE_BYTES / 1024 / 1024)
+    throw new ValidationError(`File too large. Maximum size is ${mb} MB.`)
   }
   if (!ALLOWED_MIMES[file.type]) {
     throw new ValidationError(

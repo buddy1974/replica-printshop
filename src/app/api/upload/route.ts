@@ -6,13 +6,20 @@ import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
 import { logInfo, logError } from '@/lib/logger'
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100 MB (step 267)
-const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg']) // step 266
+// Step 305 — env-configurable size limit
+const MAX_FILE_SIZE = process.env.MAX_UPLOAD_SIZE
+  ? parseInt(process.env.MAX_UPLOAD_SIZE, 10)
+  : 100 * 1024 * 1024
+const MAX_FILE_SIZE_MB = Math.round(MAX_FILE_SIZE / 1024 / 1024)
+
+// Steps 306 — allowed types: pdf, png, jpg, jpeg, svg, tiff
+const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg', 'tif', 'tiff'])
 const ALLOWED_MIMES = new Set([
   'image/png',
   'image/jpeg',
   'application/pdf',
   'image/svg+xml',
+  'image/tiff',
 ])
 
 export async function POST(req: NextRequest) {
@@ -38,7 +45,7 @@ export async function POST(req: NextRequest) {
       const cookieUserId = req.cookies.get('replica_uid')?.value ?? ''
       const item = await db.orderItem.findUnique({
         where: { id: orderItemId },
-        select: { order: { select: { userId: true } } },
+        select: { order: { select: { userId: true, status: true } } },
       })
       if (!item) {
         return NextResponse.json({ error: 'Order item not found' }, { status: 404 })
@@ -57,14 +64,23 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Step 304 — order status must allow uploads
+      const UPLOAD_ALLOWED = ['CONFIRMED', 'UPLOADED']
+      if (!UPLOAD_ALLOWED.includes(item.order.status)) {
+        return NextResponse.json(
+          { error: `Uploads are not allowed for orders with status ${item.order.status}.` },
+          { status: 400 }
+        )
+      }
+
       if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json({ error: 'File too large. Maximum size is 100 MB.' }, { status: 400 })
+        return NextResponse.json({ error: `File too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.` }, { status: 400 })
       }
 
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
       if (!ALLOWED_EXTENSIONS.has(ext) && !ALLOWED_MIMES.has(file.type)) {
         return NextResponse.json(
-          { error: 'File type not allowed. Accepted: PDF, PNG, JPG, JPEG, SVG.' },
+          { error: 'File type not allowed. Accepted: PDF, PNG, JPG, JPEG, SVG, TIFF.' },
           { status: 400 }
         )
       }

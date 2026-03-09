@@ -6,6 +6,7 @@ import { sendApproved } from '@/lib/email'
 import { createProductionJob } from '@/lib/production'
 import { requireAdmin } from '@/lib/adminAuth'
 import { logInfo } from '@/lib/logger'
+import { assertValidOrderTransition } from '@/lib/orderStatus'
 
 interface Params {
   params: { id: string }
@@ -50,12 +51,15 @@ export async function POST(req: NextRequest, { params }: Params) {
       }
     }
 
+    // Step 309 — guard order status transitions
+    assertValidOrderTransition(order.status, 'APPROVED')
     await db.order.update({ where: { id: params.id }, data: { status: 'APPROVED' } })
 
     for (const item of order.items) {
       await createProductionJob(item.id)
     }
 
+    assertValidOrderTransition('APPROVED', 'READY')
     await db.order.update({ where: { id: params.id }, data: { status: 'READY' } })
 
     logInfo('Order approved', { orderId: params.id }) // step 279

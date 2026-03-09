@@ -4,6 +4,7 @@ import { assertExists } from '@/lib/assert'
 import { ValidationError } from '@/lib/errors'
 import { sendProductionStarted, sendDone } from '@/lib/email'
 import { logInfo } from '@/lib/logger'
+import { assertValidOrderTransition } from '@/lib/orderStatus'
 
 // Step 278 — Valid status transitions (guards against illegal transitions)
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -81,6 +82,8 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
   const orderId = updated.orderItem.order.id
 
   if (status === 'IN_PROGRESS') {
+    // Step 309 — guard order status transition
+    assertValidOrderTransition(updated.orderItem.order.status, 'IN_PRODUCTION')
     const order = await db.order.update({
       where: { id: orderId },
       data: { status: 'IN_PRODUCTION' },
@@ -96,6 +99,8 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
       },
     })
     if (pendingJobs === 0) {
+      // Step 309 — guard order status transition
+      assertValidOrderTransition(updated.orderItem.order.status, 'DONE')
       const order = await db.order.update({
         where: { id: orderId },
         data: { status: 'DONE' },

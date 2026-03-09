@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCart, addToCart } from '@/lib/cart'
 import { AppError } from '@/lib/errors'
-import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
+
+// Step 302 — verify cookie userId matches requested userId (if cookie is set)
+function cartAccessDenied(req: NextRequest, userId: string): boolean {
+  const cookieUserId = req.cookies.get('replica_uid')?.value
+  return !!cookieUserId && cookieUserId !== userId
+}
 
 export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get('userId')
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+    }
+    if (cartAccessDenied(req, userId)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
     const cart = await getCart(userId)
     return NextResponse.json(cart)
@@ -20,7 +29,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!checkRateLimit(getClientIp(req), 30, 60_000)) {
+    if (!checkRateLimit(getClientKey(req), 30, 60_000)) {
       return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 })
     }
 
@@ -29,6 +38,9 @@ export async function POST(req: NextRequest) {
 
     if (!userId || !productId || !quantity) {
       return NextResponse.json({ error: 'userId, productId and quantity are required' }, { status: 400 })
+    }
+    if (cartAccessDenied(req, userId)) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
     const cart = await addToCart({ userId, productId, variantId, width, height, quantity, express, optionValueIds, placement })
