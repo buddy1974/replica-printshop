@@ -2398,7 +2398,7 @@ async function seedDisplayFix() {
   if (catId) {
     await db.productCategory.update({
       where: { id: catId },
-      data: { imageUrl: '/images/display/category.jpg' },
+      data: { imageUrl: '/products/display-system-banner.png' },
     })
   }
 
