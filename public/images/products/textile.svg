@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- T-shirt body -->
+  <path d="M60 40 L20 70 L42 80 L40 170 L160 170 L158 80 L180 70 L140 40 Q120 56 100 56 Q80 56 60 40 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <!-- Left sleeve -->
+  <path d="M60 40 L20 70 L42 80 L62 56 Z" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+  <!-- Right sleeve -->
+  <path d="M140 40 L180 70 L158 80 L138 56 Z" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1.5"/>
+  <!-- Collar -->
+  <path d="M60 40 Q80 58 100 58 Q120 58 140 40" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+  <!-- Print area (dashed) -->
+  <rect x="66" y="70" width="68" height="76" rx="2" fill="#dbeafe" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <!-- Design in print area -->
+  <path d="M80 100 L90 82 L100 92 L110 82 L120 100 L108 106 L100 118 L92 106 Z" fill="#3b82f6" opacity="0.7"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" fill="none">
+  <!-- Eyelet holes -->
+  <circle cx="30" cy="28" r="6" fill="#cbd5e1"/>
+  <circle cx="30" cy="28" r="3" fill="#94a3b8"/>
+  <circle cx="210" cy="28" r="6" fill="#cbd5e1"/>
+  <circle cx="210" cy="28" r="3" fill="#94a3b8"/>
+  <circle cx="30" cy="132" r="6" fill="#cbd5e1"/>
+  <circle cx="30" cy="132" r="3" fill="#94a3b8"/>
+  <circle cx="210" cy="132" r="6" fill="#cbd5e1"/>
+  <circle cx="210" cy="132" r="3" fill="#94a3b8"/>
+  <!-- Banner body -->
+  <rect x="20" y="18" width="200" height="124" rx="2" fill="#f0f9ff" stroke="#bae6fd" stroke-width="2"/>
+  <!-- Hemmed edge -->
+  <rect x="20" y="18" width="200" height="12" rx="2" fill="#e0f2fe"/>
+  <rect x="20" y="130" width="200" height="12" rx="2" fill="#e0f2fe"/>
+  <!-- Rope left -->
+  <path d="M30 22 C 10 10 10 0 20 -4" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Rope right -->
+  <path d="M210 22 C 230 10 230 0 220 -4" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Image/design area -->
+  <rect x="40" y="36" width="160" height="88" rx="2" fill="#dbeafe"/>
+  <path d="M40 96 L80 70 L110 86 L148 60 L200 80 L200 124 L40 124 Z" fill="#bfdbfe"/>
+  <circle cx="170" cy="52" r="14" fill="#fde68a"/>
+  <!-- Company name placeholder -->
+  <rect x="60" y="106" width="80" height="8" rx="4" fill="#93c5fd"/>
+  <rect x="100" y="118" width="40" height="5" rx="2.5" fill="#bfdbfe"/>
+</svg>

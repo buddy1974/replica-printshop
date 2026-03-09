@@ -74,6 +74,10 @@ async function seedCategories() {
 
   const categories = [
     {
+      name: 'Display systems', slug: 'display-systems', sortOrder: 0, defaultPriceMode: 'PIECE',
+      description: 'Roll-ups, kundestoppere, frames, and display stands — ready to print and delivered fast.',
+    },
+    {
       name: 'Textile print', slug: 'textile-print', sortOrder: 1, defaultPriceMode: 'PIECE',
       description: 'High-quality DTF (Direct-to-Film) transfers heat-pressed onto your garments. Suitable for t-shirts, hoodies, tote bags, and more.',
     },
@@ -141,7 +145,7 @@ async function seedTextilePrint() {
 
   const product = await db.product.upsert({
     where: { slug: 'textile-print' },
-    update: { categoryId: cat?.id ?? null, shortDescription: 'DTF print on your own garments — choose size and colour.', description: 'Send us your garment and we\'ll apply a high-quality DTF transfer. Works on cotton, polyester, and blends. Vibrant colours, soft hand feel, washable at 40°C.' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'DTF print on your own garments — choose size and colour.', description: 'Send us your garment and we\'ll apply a high-quality DTF transfer. Works on cotton, polyester, and blends. Vibrant colours, soft hand feel, washable at 40°C.' },
     create: {
       name: 'Textile print',
       slug: 'textile-print',
@@ -229,7 +233,7 @@ async function seedVinylLettering() {
 
   const product = await db.product.upsert({
     where: { slug: 'vinyl-lettering' },
-    update: { categoryId: cat?.id ?? null, shortDescription: 'Precision-cut vinyl letters and shapes. Choose your colour.', description: 'Single-colour vinyl lettering cut on our precision plotter. Supplied pre-masked and ready to apply. Ideal for shop windows, vehicles, walls, and equipment.' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/vinyl.svg', shortDescription: 'Precision-cut vinyl letters and shapes. Choose your colour.', description: 'Single-colour vinyl lettering cut on our precision plotter. Supplied pre-masked and ready to apply. Ideal for shop windows, vehicles, walls, and equipment.' },
     create: {
       name: 'Vinyl lettering',
       slug: 'vinyl-lettering',
@@ -309,7 +313,7 @@ async function seedStickers() {
 
   const product = await db.product.upsert({
     where: { slug: 'stickers' },
-    update: { categoryId: cat?.id ?? null, shortDescription: 'Full-colour print & cut stickers. Any shape, any size.', description: 'Full-colour stickers printed on premium vinyl and cut to your shape. Available in matte or gloss lamination. Waterproof, UV-resistant, and suitable for both indoor and outdoor use.' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/sticker.svg', shortDescription: 'Full-colour print & cut stickers. Any shape, any size.', description: 'Full-colour stickers printed on premium vinyl and cut to your shape. Available in matte or gloss lamination. Waterproof, UV-resistant, and suitable for both indoor and outdoor use.' },
     create: {
       name: 'Stickers',
       slug: 'stickers',
@@ -392,7 +396,7 @@ async function seedBanner() {
 
   const product = await db.product.upsert({
     where: { slug: 'banner' },
-    update: { categoryId: cat?.id ?? null, shortDescription: 'PVC banners printed to size, hemmed and eyeleted.', description: 'Durable PVC banners for indoor and outdoor use. Printed at high resolution and finished with hemmed edges and brass eyelets every 50 cm. Max width 160 cm.' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/banner.svg', shortDescription: 'PVC banners printed to size, hemmed and eyeleted.', description: 'Durable PVC banners for indoor and outdoor use. Printed at high resolution and finished with hemmed edges and brass eyelets every 50 cm. Max width 160 cm.' },
     create: {
       name: 'Banner',
       slug: 'banner',
@@ -469,7 +473,7 @@ async function seedMeshBanner() {
 
   const product = await db.product.upsert({
     where: { slug: 'mesh-banner' },
-    update: { categoryId: cat?.id ?? null, shortDescription: 'Wind-through mesh banners for outdoor and scaffolding use.', description: 'Printed mesh banners allow wind to pass through — ideal for scaffolding, fences, and exposed outdoor locations. Finished with hemmed edges and brass eyelets. Max width 160 cm.' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/banner.svg', shortDescription: 'Wind-through mesh banners for outdoor and scaffolding use.', description: 'Printed mesh banners allow wind to pass through — ideal for scaffolding, fences, and exposed outdoor locations. Finished with hemmed edges and brass eyelets. Max width 160 cm.' },
     create: {
       name: 'Mesh banner',
       slug: 'mesh-banner',
@@ -533,6 +537,152 @@ async function seedMeshBanner() {
   ])
 
   console.log(`  ✓ Mesh banner: ${product.id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Roll-Up (Display systems)
+// ---------------------------------------------------------------------------
+
+async function seedRollUp() {
+  console.log('Seeding Roll-Up...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'display-systems' } })
+
+  const product = await db.product.upsert({
+    where: { slug: 'roll-up' },
+    update: {
+      categoryId: cat?.id ?? null,
+      imageUrl: '/images/products/rollup.svg',
+      shortDescription: 'Retractable roll-up banner stands — print, assemble, display.',
+      description: 'High-quality retractable roll-up banner stands for trade shows, events, retail, and offices. Print is included — just upload your artwork. Available in two widths. Assembled and ready to use.',
+    },
+    create: {
+      name: 'Roll-Up',
+      slug: 'roll-up',
+      category: 'Display systems',
+      categoryId: cat?.id ?? null,
+      active: true,
+      imageUrl: '/images/products/rollup.svg',
+      shortDescription: 'Retractable roll-up banner stands — print, assemble, display.',
+      description: 'High-quality retractable roll-up banner stands for trade shows, events, retail, and offices. Print is included — just upload your artwork. Available in two widths. Assembled and ready to use.',
+      guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 30 mm bleed at bottom (hidden in cassette). Keep important content 50 mm from all edges.',
+      minDpi: 72,
+      recommendedDpi: 100,
+      bleedMm: 30,
+      safeMarginMm: 50,
+      allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Bleed at bottom is hidden in cassette. Pole and carry bag included.',
+    },
+  })
+
+  await db.productConfig.upsert({
+    where: { productId: product.id },
+    update: {
+      needsUpload: true,
+      priceMode: 'PIECE',
+      hasVariants: true,
+      hasFixedSizes: false,
+      hasCustomSize: false,
+      productionType: 'ROLL_PRINT',
+      helpText: 'Select your roll-up size. Print, stand, pole and carry bag are all included in the price.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 30 mm bleed at the bottom (this part rolls into the cassette). Keep text and logos at least 50 mm from all edges.',
+    },
+    create: {
+      productId: product.id,
+      type: 'ROLLUP',
+      hasCustomSize: false,
+      hasFixedSizes: false,
+      hasVariants: true,
+      hasOptions: false,
+      needsUpload: true,
+      priceMode: 'PIECE',
+      productionType: 'ROLL_PRINT',
+      helpText: 'Select your roll-up size. Print, stand, pole and carry bag are all included in the price.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 30 mm bleed at the bottom (this part rolls into the cassette). Keep text and logos at least 50 mm from all edges.',
+    },
+  })
+
+  // PIECE pricing — base price is in the variant; config FIXED table is 0 (no extra print cost)
+  await upsertPricingTable(product.id, 'FIXED', { price: 0 })
+
+  // Size variants (stand price + print included)
+  await upsertVariant(product.id, '85 × 200 cm',  'Roll-Up', 89.00)
+  await upsertVariant(product.id, '100 × 200 cm', 'Roll-Up', 109.00)
+
+  console.log(`  ✓ Roll-Up: ${product.id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Kundestopper (Display systems)
+// ---------------------------------------------------------------------------
+
+async function seedKundestopper() {
+  console.log('Seeding Kundestopper...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'display-systems' } })
+
+  const product = await db.product.upsert({
+    where: { slug: 'kundestopper' },
+    update: {
+      categoryId: cat?.id ?? null,
+      imageUrl: '/images/products/kundestopper.svg',
+      shortDescription: 'A-frame pavement signs — double-sided, printed and ready.',
+      description: 'Double-sided A-frame pavement signs (kundestoppere) in A1 or A2 format. Durable aluminium frame with printed inserts included. Ideal for entrances, pavements, and retail environments. Folds flat for storage.',
+    },
+    create: {
+      name: 'Kundestopper',
+      slug: 'kundestopper',
+      category: 'Display systems',
+      categoryId: cat?.id ?? null,
+      active: true,
+      imageUrl: '/images/products/kundestopper.svg',
+      shortDescription: 'A-frame pavement signs — double-sided, printed and ready.',
+      description: 'Double-sided A-frame pavement signs (kundestoppere) in A1 or A2 format. Durable aluminium frame with printed inserts included. Ideal for entrances, pavements, and retail environments. Folds flat for storage.',
+      guideText: 'PDF or high-res PNG. A1: 594 × 841 mm. A2: 420 × 594 mm. Minimum 150 DPI. Include 5 mm bleed on all sides.',
+      minDpi: 150,
+      recommendedDpi: 200,
+      bleedMm: 5,
+      safeMarginMm: 10,
+      allowedFormats: 'PDF,PNG',
+      notes: 'Double-sided — upload two pages or two files (front and back). Frame and printed inserts included.',
+    },
+  })
+
+  await db.productConfig.upsert({
+    where: { productId: product.id },
+    update: {
+      needsUpload: true,
+      priceMode: 'PIECE',
+      hasVariants: true,
+      hasFixedSizes: false,
+      hasCustomSize: false,
+      productionType: 'ROLL_PRINT',
+      helpText: 'Select your frame size. Price includes aluminium frame and printed inserts (both sides). Upload your design — 2 pages or 2 files for front and back.',
+      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files for front and back. A1: 594 × 841 mm, A2: 420 × 594 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
+    },
+    create: {
+      productId: product.id,
+      type: 'FIXED',
+      hasCustomSize: false,
+      hasFixedSizes: false,
+      hasVariants: true,
+      hasOptions: false,
+      needsUpload: true,
+      priceMode: 'PIECE',
+      productionType: 'ROLL_PRINT',
+      helpText: 'Select your frame size. Price includes aluminium frame and printed inserts (both sides). Upload your design — 2 pages or 2 files for front and back.',
+      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files for front and back. A1: 594 × 841 mm, A2: 420 × 594 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
+    },
+  })
+
+  // PIECE pricing — base price is in the variant
+  await upsertPricingTable(product.id, 'FIXED', { price: 0 })
+
+  // Size variants
+  await upsertVariant(product.id, 'A1 (594 × 841 mm)', 'Kundestopper', 149.00)
+  await upsertVariant(product.id, 'A2 (420 × 594 mm)', 'Kundestopper', 119.00)
+
+  console.log(`  ✓ Kundestopper: ${product.id}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -742,7 +892,9 @@ async function main() {
   await seedCategories()
   await seedShippingMethods()
 
-  // Real shop products (steps 192–199)
+  // Real shop products (steps 192–199, display systems added in fix block)
+  await seedRollUp()
+  await seedKundestopper()
   await seedTextilePrint()
   await seedVinylLettering()
   await seedStickers()

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Cassette base -->
+  <rect x="40" y="200" width="120" height="14" rx="7" fill="#475569"/>
+  <!-- Pole -->
+  <rect x="97" y="172" width="6" height="30" fill="#64748b"/>
+  <!-- Banner body -->
+  <rect x="30" y="20" width="140" height="152" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+  <!-- Top rail -->
+  <rect x="28" y="16" width="144" height="10" rx="3" fill="#475569"/>
+  <!-- Bottom cassette rail -->
+  <rect x="28" y="168" width="144" height="10" rx="3" fill="#64748b"/>
+  <!-- Image area -->
+  <rect x="44" y="32" width="112" height="90" rx="2" fill="#dbeafe"/>
+  <!-- Landscape inside image area -->
+  <path d="M44 100 L80 72 L104 86 L130 62 L156 78 L156 122 L44 122 Z" fill="#bfdbfe"/>
+  <circle cx="120" cy="52" r="12" fill="#fde68a"/>
+  <!-- Text lines below image -->
+  <rect x="50" y="136" width="100" height="7" rx="3.5" fill="#cbd5e1"/>
+  <rect x="62" y="150" width="76" height="5" rx="2.5" fill="#e2e8f0"/>
+  <rect x="70" y="161" width="60" height="4" rx="2" fill="#e2e8f0"/>
+</svg>

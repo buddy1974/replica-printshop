@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const body = await req.json()
     const {
       name, slug, category, categoryId, active,
-      description, shortDescription, metaTitle, metaDescription,
+      description, shortDescription, imageUrl, metaTitle, metaDescription,
       guideText, minDpi, recommendedDpi, bleedMm, safeMarginMm, allowedFormats, notes,
     } = body
 
@@ -48,6 +48,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(active !== undefined && { active }),
         ...(description !== undefined && { description: description || null }),
         ...(shortDescription !== undefined && { shortDescription: shortDescription || null }),
+        ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
         ...(metaTitle !== undefined && { metaTitle: metaTitle || null }),
         ...(metaDescription !== undefined && { metaDescription: metaDescription || null }),
         ...(guideText !== undefined && { guideText: guideText || null }),

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
 }
 
-type ShopProduct = { id: string; name: string; slug: string; category: string; active: boolean; shortDescription: string | null }
+type ShopProduct = { id: string; name: string; slug: string; category: string; active: boolean; shortDescription: string | null; imageUrl: string | null }
 type ShopCategory = { id: string; name: string; slug: string; description: string | null; products: ShopProduct[] }
 
 export default async function ShopPage() {
@@ -26,14 +26,14 @@ export default async function ShopPage() {
           products: {
             where: { active: true },
             orderBy: { name: 'asc' },
-            select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true },
+            select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true, imageUrl: true },
           },
         },
       }),
       db.product.findMany({
         where: { active: true, categoryId: null },
         orderBy: { name: 'asc' },
-        select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true },
+        select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true, imageUrl: true },
       }),
     ])
   } catch {
@@ -54,7 +54,7 @@ export default async function ShopPage() {
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {cat.products.map((p) => (
-              <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} shortDescription={p.shortDescription} />
+              <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
             ))}
           </div>
         </section>
@@ -65,7 +65,7 @@ export default async function ShopPage() {
           <h2 className="text-base font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">Other</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {uncategorised.map((p) => (
-              <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={p.category} shortDescription={p.shortDescription} />
+              <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={p.category} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
             ))}
           </div>
         </section>

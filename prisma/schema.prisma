@@ -122,6 +122,7 @@ model Product {
 
   description      String?
   shortDescription String?
+  imageUrl         String?
   metaTitle        String?
   metaDescription  String?
   guideText        String?

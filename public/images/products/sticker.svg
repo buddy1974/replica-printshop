@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Background sticker stack (shadow effect) -->
+  <rect x="38" y="44" width="124" height="124" rx="16" fill="#e2e8f0" transform="rotate(8 100 106)"/>
+  <rect x="36" y="40" width="128" height="128" rx="16" fill="#f1f5f9" transform="rotate(-4 100 104)"/>
+  <!-- Main sticker -->
+  <rect x="32" y="36" width="136" height="136" rx="16" fill="#fefce8" stroke="#fde68a" stroke-width="2"/>
+  <!-- Sticker content: star shape -->
+  <path d="M100 56 L108 82 L136 82 L114 98 L122 124 L100 108 L78 124 L86 98 L64 82 L92 82 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="1.5"/>
+  <!-- Cut line (dashed border) -->
+  <rect x="24" y="28" width="152" height="152" rx="20" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <!-- Corner mark -->
+  <circle cx="32" cy="36" r="3" fill="#94a3b8"/>
+</svg>

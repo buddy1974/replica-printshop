@@ -30,7 +30,7 @@ export default async function CategoryShopPage({ params }: { params: { categoryS
       products: {
         where: { active: true },
         orderBy: { name: 'asc' },
-        select: { id: true, name: true, slug: true, category: true, shortDescription: true },
+        select: { id: true, name: true, slug: true, category: true, shortDescription: true, imageUrl: true },
       },
     },
   })
@@ -45,7 +45,7 @@ export default async function CategoryShopPage({ params }: { params: { categoryS
       {cat.products.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {cat.products.map((p) => (
-            <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} shortDescription={p.shortDescription} />
+            <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
           ))}
         </div>
       ) : (

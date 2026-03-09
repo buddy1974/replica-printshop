@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Background surface (e.g. window) -->
+  <rect x="20" y="20" width="160" height="160" rx="4" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.5"/>
+  <!-- Grid lines to suggest glass/window -->
+  <line x1="100" y1="20" x2="100" y2="180" stroke="#e0f2fe" stroke-width="1"/>
+  <line x1="20" y1="100" x2="180" y2="100" stroke="#e0f2fe" stroke-width="1"/>
+  <!-- Vinyl lettering: stylized "ABC" -->
+  <text x="100" y="90" font-family="Arial Black, sans-serif" font-size="38" font-weight="900" fill="#1e3a5f" text-anchor="middle" letter-spacing="2">ABC</text>
+  <!-- Vinyl lettering second line -->
+  <text x="100" y="132" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#1e3a5f" text-anchor="middle" letter-spacing="4">VINYL</text>
+  <!-- Cut line effect -->
+  <rect x="34" y="56" width="132" height="92" rx="2" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4 3" fill="none"/>
+  <!-- Corner marks -->
+  <path d="M34 56 L34 64 M34 56 L42 56" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M166 56 L166 64 M166 56 L158 56" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M34 148 L34 140 M34 148 L42 148" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M166 148 L166 140 M166 148 L158 148" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

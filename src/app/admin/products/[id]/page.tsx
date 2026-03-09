@@ -79,6 +79,7 @@ interface Product {
   active: boolean
   description: string | null
   shortDescription: string | null
+  imageUrl: string | null
   metaTitle: string | null
   metaDescription: string | null
   guideText: string | null
@@ -182,6 +183,7 @@ export default function ProductEditPage() {
           active: p.active,
           description: p.description ?? '',
           shortDescription: p.shortDescription ?? '',
+          imageUrl: p.imageUrl ?? '',
           metaTitle: p.metaTitle ?? '',
           metaDescription: p.metaDescription ?? '',
           guideText: p.guideText ?? '',
@@ -250,6 +252,11 @@ export default function ProductEditPage() {
       <div>
         <label>Short description (shop list)<br />
           <input name="shortDescription" value={form.shortDescription ?? ''} onChange={handleChange} />
+        </label>
+      </div>
+      <div>
+        <label>Image URL (shown in shop card)<br />
+          <input name="imageUrl" value={form.imageUrl ?? ''} onChange={handleChange} placeholder="/images/products/rollup.svg" />
         </label>
       </div>
       <div>

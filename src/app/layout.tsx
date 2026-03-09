@@ -13,16 +13,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-gray-50">
         <Header />
         <main>{children}</main>
-        <footer
-          style={{
-            marginTop: 40,
-            padding: 20,
-            textAlign: 'center',
-            fontSize: 12,
-            opacity: 0.7,
-          }}
-        >
-          Developed by www.maxpromo.digital
+        <footer className="mt-10 py-5 border-t border-gray-200 text-center text-xs text-gray-400">
+          Developed by{' '}
+          <a href="https://maxpromo.digital" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700 underline underline-offset-2">
+            maxpromo.digital
+          </a>
         </footer>
       </body>
     </html>

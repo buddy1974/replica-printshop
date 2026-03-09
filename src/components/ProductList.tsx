@@ -5,6 +5,8 @@ interface Product {
   slug: string
   name: string
   category: string
+  shortDescription?: string | null
+  imageUrl?: string | null
 }
 
 export default function ProductList({ products }: { products: Product[] }) {
@@ -15,7 +17,7 @@ export default function ProductList({ products }: { products: Product[] }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {products.map((p) => (
-        <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={p.category} />
+        <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={p.category} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
       ))}
     </div>
   )
