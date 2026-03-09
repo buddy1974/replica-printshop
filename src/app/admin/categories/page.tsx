@@ -12,6 +12,8 @@ interface Category {
   sortOrder: number
   defaultPriceMode: string | null
   description: string | null
+  metaTitle: string | null
+  metaDescription: string | null
 }
 
 const inputCls = 'rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full'
@@ -40,6 +42,8 @@ export default function AdminCategoriesPage() {
         description: cat.description,
         sortOrder: cat.sortOrder,
         defaultPriceMode: cat.defaultPriceMode,
+        metaTitle: cat.metaTitle,
+        metaDescription: cat.metaDescription,
       }),
     })
     if (res.ok) {
@@ -106,6 +110,25 @@ export default function AdminCategoriesPage() {
                   value={cat.description ?? ''}
                   onChange={(e) => handleChange(cat.id, 'description', e.target.value)}
                   placeholder="Short description shown above products in this category…"
+                />
+              </div>
+              <div className="mb-3">
+                <label className={labelCls}>Meta title</label>
+                <input
+                  className={inputCls}
+                  value={cat.metaTitle ?? ''}
+                  onChange={(e) => handleChange(cat.id, 'metaTitle', e.target.value)}
+                  placeholder={cat.name}
+                />
+              </div>
+              <div className="mb-3">
+                <label className={labelCls}>Meta description</label>
+                <textarea
+                  className={inputCls}
+                  rows={2}
+                  value={cat.metaDescription ?? ''}
+                  onChange={(e) => handleChange(cat.id, 'metaDescription', e.target.value)}
+                  placeholder="Shown in search engine results…"
                 />
               </div>
               <Button variant="secondary" onClick={() => handleSave(cat)}>

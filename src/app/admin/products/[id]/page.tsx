@@ -79,6 +79,8 @@ interface Product {
   active: boolean
   description: string | null
   shortDescription: string | null
+  metaTitle: string | null
+  metaDescription: string | null
   guideText: string | null
   minDpi: number | null
   recommendedDpi: number | null
@@ -180,6 +182,8 @@ export default function ProductEditPage() {
           active: p.active,
           description: p.description ?? '',
           shortDescription: p.shortDescription ?? '',
+          metaTitle: p.metaTitle ?? '',
+          metaDescription: p.metaDescription ?? '',
           guideText: p.guideText ?? '',
           minDpi: p.minDpi ?? undefined,
           recommendedDpi: p.recommendedDpi ?? undefined,
@@ -251,6 +255,16 @@ export default function ProductEditPage() {
       <div>
         <label>Description (configurator page)<br />
           <textarea name="description" value={form.description ?? ''} onChange={handleChange} rows={3} />
+        </label>
+      </div>
+
+      <h2>SEO</h2>
+      <div>
+        <label>Meta title<br /><input name="metaTitle" value={form.metaTitle ?? ''} onChange={handleChange} /></label>
+      </div>
+      <div>
+        <label>Meta description<br />
+          <textarea name="metaDescription" value={form.metaDescription ?? ''} onChange={handleChange} rows={2} />
         </label>
       </div>
 

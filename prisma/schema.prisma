@@ -101,7 +101,9 @@ model ProductCategory {
   defaultPriceMode String?
   allowShipping    Boolean   @default(true)
   allowPickup      Boolean   @default(true)
-  description      String?
+  description     String?
+  metaTitle       String?
+  metaDescription String?
 
   products  Product[]
 }
@@ -120,6 +122,8 @@ model Product {
 
   description      String?
   shortDescription String?
+  metaTitle        String?
+  metaDescription  String?
   guideText        String?
   minDpi           Int?
   recommendedDpi   Int?

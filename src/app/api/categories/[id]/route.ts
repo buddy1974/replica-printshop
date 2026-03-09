@@ -8,7 +8,7 @@ interface Params {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
-    const { name, description, sortOrder, defaultPriceMode } = await req.json()
+    const { name, description, sortOrder, defaultPriceMode, metaTitle, metaDescription } = await req.json()
     const category = await db.productCategory.update({
       where: { id: params.id },
       data: {
@@ -16,6 +16,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         ...(description !== undefined && { description: description || null }),
         ...(sortOrder !== undefined && { sortOrder }),
         ...(defaultPriceMode !== undefined && { defaultPriceMode: defaultPriceMode || null }),
+        ...(metaTitle !== undefined && { metaTitle: metaTitle || null }),
+        ...(metaDescription !== undefined && { metaDescription: metaDescription || null }),
       },
     })
     return NextResponse.json(category)
