@@ -2721,6 +2721,214 @@ async function seedSublimationFix() {
 }
 
 // ---------------------------------------------------------------------------
+// Textile print rebuild — garments only, print methods inside configurator
+// ---------------------------------------------------------------------------
+
+async function seedTextileRebuild() {
+  console.log('Seeding Textile print rebuild...')
+
+  const catRow = await db.productCategory.findUnique({ where: { slug: 'textile-print' }, select: { id: true } })
+  const catId = catRow?.id ?? null
+
+  // Deactivate print-method-as-product and other non-garment products
+  await db.product.updateMany({
+    where: {
+      slug: {
+        in: [
+          'flex-print', 'flock-print',          // print methods, not products
+          'embroidery', 'patches',               // old embroidery products
+          'workwear-print', 'sport-jersey',      // removed from lineup
+          'logo-embroidery', 'woven-patch',      // removed
+          'textile-print',                       // old generic product
+        ],
+      },
+    },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated non-garment products')
+
+  // Rename / update existing garment products
+  await db.product.updateMany({
+    where: { slug: 't-shirt-print' },
+    data: { name: 'T-shirt standard', imageUrl: '/products/t-shirt-front-1.png', shortDescription: 'Classic crew-neck t-shirt with custom print — choose size, colour and print method.' },
+  })
+  await db.product.updateMany({
+    where: { slug: 'hoodie-print' },
+    data: { name: 'Hoodie', imageUrl: '/products/hoodie-front.png', shortDescription: 'Premium hoodies with custom print — front, back, chest, or sleeve placement.' },
+  })
+  await db.product.updateMany({
+    where: { slug: 'polo-print' },
+    data: { name: 'Polo shirt', imageUrl: '/products/polo-front.png', shortDescription: 'Classic polo shirts with embroidery or DTF print — corporate and sportswear.' },
+  })
+  await db.product.updateMany({
+    where: { slug: 'cap-embroidery' },
+    data: { name: 'Cap', imageUrl: '/products/cap.png', shortDescription: 'Custom printed or embroidered caps — structured and unstructured styles.' },
+  })
+  console.log('  ✓ Renamed and updated existing garment products')
+
+  // T-shirt V-neck (new)
+  const tshirtV = await db.product.upsert({
+    where: { slug: 'tshirt-v-neck' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/t-shirt-front-2.png' },
+    create: {
+      name: 'T-shirt V-neck', slug: 'tshirt-v-neck', category: 'Textile print', categoryId: catId, active: true,
+      imageUrl: '/products/t-shirt-front-2.png',
+      shortDescription: 'V-neck t-shirt with custom print — soft fit, available in multiple colours.',
+      description: 'Classic V-neck t-shirt (we supply) with custom DTF, flex, or flock print. Soft 100% cotton. Available in multiple colours and sizes from XS to XXL.',
+      guideText: 'PNG with transparent background. Minimum 150 DPI.', minDpi: 150, recommendedDpi: 300, bleedMm: 0, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: tshirtV.id },
+    update: { isTextile: true, needsPlacement: true, needsUpload: true, priceMode: 'PIECE', hasVariants: true, hasOptions: true, allowedPositions: JSON.stringify(['front', 'back', 'left-chest', 'right-chest']), productionType: 'TEXTILE', placementMode: 'front_back', printAreaWidthCm: 30, printAreaHeightCm: 40, dtfMaxWidthCm: 55 },
+    create: {
+      productId: tshirtV.id, type: 'TEXTILE', hasCustomSize: false, hasFixedSizes: false, hasVariants: true, hasOptions: true,
+      isTextile: true, needsPlacement: true, needsUpload: true, priceMode: 'PIECE',
+      allowedPositions: JSON.stringify(['front', 'back', 'left-chest', 'right-chest']),
+      productionType: 'TEXTILE', placementMode: 'front_back', printAreaWidthCm: 30, printAreaHeightCm: 40, dtfMaxWidthCm: 55,
+      helpText: 'Select size and colour. Choose your print method and placement. Print area is 30 × 40 cm max.',
+      uploadInstructions: 'Upload PNG with transparent background at minimum 150 DPI.',
+    },
+  })
+  await upsertPricingTable(tshirtV.id, 'FIXED', { price: 7.50 })
+  for (const s of [{ n: 'XS', bp: 4.50 }, { n: 'S', bp: 4.50 }, { n: 'M', bp: 4.50 }, { n: 'L', bp: 4.50 }, { n: 'XL', bp: 5.50 }, { n: 'XXL', bp: 6.50 }]) {
+    await upsertVariant(tshirtV.id, s.n, 'Cotton', s.bp)
+  }
+  await upsertOption(tshirtV.id, 'Garment color', [
+    { name: 'Black', priceModifier: 0 }, { name: 'White', priceModifier: 0 }, { name: 'Navy', priceModifier: 0 },
+    { name: 'Grey', priceModifier: 0 }, { name: 'Red', priceModifier: 1 }, { name: 'Royal Blue', priceModifier: 1 },
+  ])
+  await upsertOption(tshirtV.id, 'Print method', [
+    { name: 'DTF', priceModifier: 0 }, { name: 'Flex', priceModifier: 2 }, { name: 'Flock', priceModifier: 4 },
+  ])
+  await upsertOption(tshirtV.id, 'Position', [
+    { name: 'Front', priceModifier: 0 }, { name: 'Back', priceModifier: 0 },
+    { name: 'Left chest', priceModifier: 0 }, { name: 'Right chest', priceModifier: 0 },
+  ])
+  console.log(`  ✓ T-shirt V-neck: ${tshirtV.id}`)
+
+  // Bag (new)
+  const bag = await db.product.upsert({
+    where: { slug: 'garment-bag' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/bag.png' },
+    create: {
+      name: 'Bag', slug: 'garment-bag', category: 'Textile print', categoryId: catId, active: true,
+      imageUrl: '/products/bag.png',
+      shortDescription: 'Custom printed bags — tote bags, cotton shopper bags, and more.',
+      description: 'Cotton tote bags and shopper bags (we supply) with custom DTF or flex print. 100% cotton, sturdy handles. Available in natural, black, and white. Min order 1 piece.',
+      guideText: 'PNG with transparent background. Minimum 150 DPI.', minDpi: 150, recommendedDpi: 300, bleedMm: 0, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: bag.id },
+    update: { isTextile: true, needsPlacement: true, needsUpload: true, priceMode: 'PIECE', hasVariants: false, hasOptions: true, allowedPositions: JSON.stringify(['front', 'back']), productionType: 'TEXTILE' },
+    create: {
+      productId: bag.id, type: 'TEXTILE', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+      isTextile: true, needsPlacement: true, needsUpload: true, priceMode: 'PIECE',
+      allowedPositions: JSON.stringify(['front', 'back']),
+      productionType: 'TEXTILE', printAreaWidthCm: 28, printAreaHeightCm: 30,
+      helpText: 'Choose your print placement. Price includes the bag and print.',
+      uploadInstructions: 'Upload PNG with transparent background at minimum 150 DPI.',
+    },
+  })
+  await upsertPricingTable(bag.id, 'FIXED', { price: 12.00 })
+  await upsertOption(bag.id, 'Bag color', [
+    { name: 'Natural', priceModifier: 0 }, { name: 'Black', priceModifier: 0 }, { name: 'White', priceModifier: 0 },
+  ])
+  await upsertOption(bag.id, 'Print method', [
+    { name: 'DTF', priceModifier: 0 }, { name: 'Flex', priceModifier: 2 },
+  ])
+  await upsertOption(bag.id, 'Position', [
+    { name: 'Front', priceModifier: 0 }, { name: 'Back', priceModifier: 0 },
+  ])
+  console.log(`  ✓ Bag: ${bag.id}`)
+
+  console.log('  Textile rebuild complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Sublimation rebuild — separate standard mug + magic mug products
+// ---------------------------------------------------------------------------
+
+async function seedSublimationRebuild() {
+  console.log('Seeding Sublimation rebuild...')
+
+  const catRow = await db.productCategory.findUnique({ where: { slug: 'sublimation' }, select: { id: true } })
+  const catId = catRow?.id ?? null
+
+  // Rename existing sublimation-mug → Standard mug
+  await db.product.updateMany({
+    where: { slug: 'sublimation-mug' },
+    data: { name: 'Standard mug', imageUrl: '/products/mug.png' },
+  })
+  console.log('  ✓ sublimation-mug → Standard mug')
+
+  // Rename sublimation-thermo → Thermo cup
+  await db.product.updateMany({
+    where: { slug: 'sublimation-thermo' },
+    data: { name: 'Thermo cup' },
+  })
+  // Rename sublimation-aluminium → Aluminium bottle
+  await db.product.updateMany({
+    where: { slug: 'sublimation-aluminium' },
+    data: { name: 'Aluminium bottle' },
+  })
+
+  // Magic mug (separate product)
+  const magicMug = await db.product.upsert({
+    where: { slug: 'sublimation-magic-mug' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/magic-mug.png' },
+    create: {
+      name: 'Magic mug', slug: 'sublimation-magic-mug', category: 'Sublimation print', categoryId: catId, active: true,
+      imageUrl: '/products/magic-mug.png',
+      shortDescription: 'Colour-changing magic mug — reveals your print when filled with hot liquid.',
+      description: 'Sublimation-printed colour-changing magic mug. Appears black when cold and reveals your full-colour design when filled with a hot drink. Ceramic, 330 ml. Dishwasher safe.',
+      guideText: 'PNG or PDF. Print area 238 × 117 mm. Minimum 200 DPI. Bleed 3 mm.',
+      minDpi: 200, recommendedDpi: 300, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: magicMug.id },
+    update: { needsUpload: true, priceMode: 'PIECE', type: 'MUG', printAreaWidthCm: 23.8, printAreaHeightCm: 11.7, productionType: 'TEXTILE' },
+    create: {
+      productId: magicMug.id, type: 'MUG', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', printAreaWidthCm: 23.8, printAreaHeightCm: 11.7, productionType: 'TEXTILE',
+      helpText: 'Upload your design. The mug appears black when cold and reveals your print with a hot drink.',
+      uploadInstructions: 'Upload PNG or PDF. Print area 238 × 117 mm. Include 3 mm bleed. Minimum 200 DPI.',
+    },
+  })
+  await upsertPricingTable(magicMug.id, 'FIXED', { price: 12.00 })
+  console.log(`  ✓ Magic mug: ${magicMug.id}`)
+
+  // Drink bottle (stainless, no image yet)
+  const drinkBottle = await db.product.upsert({
+    where: { slug: 'sublimation-bottle' },
+    update: { categoryId: catId, active: true, name: 'Drink bottle' },
+    create: {
+      name: 'Drink bottle', slug: 'sublimation-bottle', category: 'Sublimation print', categoryId: catId, active: true,
+      shortDescription: 'Custom printed stainless steel drink bottles — 500 ml, insulated.',
+      description: 'Sublimation-printed stainless steel insulated bottle. Double-walled, keeps drinks hot or cold. Full-wrap custom print. Capacity 500 ml.',
+      guideText: 'PNG or PDF. Print area 245 × 195 mm. Minimum 200 DPI.',
+      minDpi: 200, recommendedDpi: 300, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: drinkBottle.id },
+    update: { needsUpload: true, priceMode: 'PIECE', type: 'MUG', printAreaWidthCm: 24.5, printAreaHeightCm: 19.5, productionType: 'TEXTILE' },
+    create: {
+      productId: drinkBottle.id, type: 'MUG', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', printAreaWidthCm: 24.5, printAreaHeightCm: 19.5, productionType: 'TEXTILE',
+      helpText: 'Upload your wrap design. Price is per bottle.',
+      uploadInstructions: 'Upload PNG or PDF. Include 3 mm bleed. Print area 245 × 195 mm.',
+    },
+  })
+  await upsertPricingTable(drinkBottle.id, 'FIXED', { price: 18.00 })
+  console.log(`  ✓ Drink bottle: ${drinkBottle.id}`)
+
+  console.log('  Sublimation rebuild complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2769,6 +2977,12 @@ async function main() {
 
   // Sublimation print — image mapping
   await seedSublimationFix()
+
+  // Textile rebuild — garments only
+  await seedTextileRebuild()
+
+  // Sublimation rebuild — separate standard/magic mug products
+  await seedSublimationRebuild()
 
   console.log('\nAll seeds complete.')
 }

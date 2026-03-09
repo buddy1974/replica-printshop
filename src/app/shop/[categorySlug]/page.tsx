@@ -3,6 +3,7 @@ import { type Metadata } from 'next'
 import { db } from '@/lib/db'
 import ProductCard from '@/components/ProductCard'
 import Container from '@/components/Container'
+import CategoryFooter from '@/components/CategoryFooter'
 import Link from 'next/link'
 
 export const revalidate = 60
@@ -63,6 +64,7 @@ export default async function CategoryShopPage({ params }: { params: { categoryS
       <div className="mt-8">
         <Link href="/shop" className="text-sm text-gray-500 hover:text-gray-900">← All products</Link>
       </div>
+      <CategoryFooter />
     </Container>
   )
 }
