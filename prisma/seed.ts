@@ -2423,14 +2423,14 @@ async function seedDisplayFix() {
   // Customer stopper double sided A1 outdoor with water tank
   const csOutdoor = await db.product.upsert({
     where: { slug: 'customer-stopper-outdoor' },
-    update: { categoryId: catId, active: true, imageUrl: '/images/display/customer-stopper-outdoor.jpg' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/k-stopper-double.png' },
     create: {
       name: 'Customer stopper double sided A1 outdoor',
       slug: 'customer-stopper-outdoor',
       category: 'Display systems',
       categoryId: catId,
       active: true,
-      imageUrl: '/images/display/customer-stopper-outdoor.jpg',
+      imageUrl: '/products/k-stopper-double.png',
       shortDescription: 'Heavy-duty outdoor A-frame with water tank base — double-sided A1, all-weather.',
       description: 'Double-sided outdoor A-frame pavement sign in A1 format (594 × 841 mm). Water tank base provides stability in wind. Weather-resistant frame with printed inserts. Ideal for restaurant terraces, shop entrances, and exposed outdoor locations.',
       guideText: 'PDF or high-res PNG. A1: 594 × 841 mm. Include 5 mm bleed. Minimum 150 DPI. Upload 2 pages or 2 files (front and back).',
