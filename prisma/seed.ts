@@ -2385,6 +2385,169 @@ async function seedCatalogRebuild() {
 }
 
 // ---------------------------------------------------------------------------
+// Display Systems fix — real product lineup (image-driven)
+// ---------------------------------------------------------------------------
+
+async function seedDisplayFix() {
+  console.log('Seeding Display Systems fix — real product lineup...')
+
+  const catRow = await db.productCategory.findUnique({ where: { slug: 'display-systems' }, select: { id: true } })
+  const catId = catRow?.id ?? null
+
+  // Update category imageUrl (file must exist at /public/images/display/category.jpg)
+  if (catId) {
+    await db.productCategory.update({
+      where: { id: catId },
+      data: { imageUrl: '/images/display/category.jpg' },
+    })
+  }
+
+  // Deactivate products that are not in the real lineup
+  await db.product.updateMany({
+    where: { slug: { in: ['x-banner', 'l-banner', 'kundenstopper-outdoor', 'roll-up'] } },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated: x-banner, l-banner, kundenstopper-outdoor, roll-up')
+
+  // Rename kundestopper → Customer stopper standard
+  await db.product.updateMany({
+    where: { slug: 'kundestopper' },
+    data: {
+      name: 'Customer stopper standard',
+      shortDescription: 'Double-sided A-frame pavement signs — printed and ready.',
+      imageUrl: '/images/display/customer-stopper.jpg',
+    },
+  })
+  console.log('  ✓ Renamed kundestopper → Customer stopper standard')
+
+  // Customer stopper double sided A1 outdoor with water tank
+  const csOutdoor = await db.product.upsert({
+    where: { slug: 'customer-stopper-outdoor' },
+    update: { categoryId: catId, active: true, imageUrl: '/images/display/customer-stopper-outdoor.jpg' },
+    create: {
+      name: 'Customer stopper double sided A1 outdoor',
+      slug: 'customer-stopper-outdoor',
+      category: 'Display systems',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/images/display/customer-stopper-outdoor.jpg',
+      shortDescription: 'Heavy-duty outdoor A-frame with water tank base — double-sided A1, all-weather.',
+      description: 'Double-sided outdoor A-frame pavement sign in A1 format (594 × 841 mm). Water tank base provides stability in wind. Weather-resistant frame with printed inserts. Ideal for restaurant terraces, shop entrances, and exposed outdoor locations.',
+      guideText: 'PDF or high-res PNG. A1: 594 × 841 mm. Include 5 mm bleed. Minimum 150 DPI. Upload 2 pages or 2 files (front and back).',
+      minDpi: 150, recommendedDpi: 200, bleedMm: 5, safeMarginMm: 10, allowedFormats: 'PDF,PNG',
+      notes: 'Double-sided. Water tank base. A1 only.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: csOutdoor.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: false, productionType: 'ROLL_PRINT' },
+    create: {
+      productId: csOutdoor.id, type: 'FIXED', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', productionType: 'ROLL_PRINT',
+      helpText: 'A1 format, double-sided with water tank base. Price includes frame, water tank base, and printed inserts for both sides.',
+      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files. A1: 594 × 841 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
+    },
+  })
+  await upsertPricingTable(csOutdoor.id, 'FIXED', { price: 229.00 })
+  console.log(`  ✓ Customer stopper outdoor: ${csOutdoor.id}`)
+
+  // Rollup banner 85×200 (separate product)
+  const ru85 = await db.product.upsert({
+    where: { slug: 'rollup-85' },
+    update: { categoryId: catId, active: true, imageUrl: '/images/display/rollup-85.jpg' },
+    create: {
+      name: 'Rollup banner 85×200',
+      slug: 'rollup-85',
+      category: 'Display systems',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/images/display/rollup-85.jpg',
+      shortDescription: 'Retractable 85×200 cm roll-up stand — print, pole and carry bag included.',
+      description: 'Classic 85×200 cm retractable roll-up banner stand. High-quality aluminium cassette mechanism. Full-colour print included. Quick to set up in seconds. Carry bag for easy transport.',
+      guideText: 'PDF or high-res PNG. 850 × 2000 mm. Include 30 mm bleed at bottom (hidden in cassette). Min 72 DPI at full size.',
+      minDpi: 72, recommendedDpi: 100, bleedMm: 30, safeMarginMm: 50, allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Bleed at bottom is hidden in cassette. Pole and carry bag included.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: ru85.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: false, productionType: 'ROLL_PRINT' },
+    create: {
+      productId: ru85.id, type: 'ROLLUP', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', productionType: 'ROLL_PRINT',
+      helpText: '85×200 cm roll-up. Print, stand, pole and carry bag all included.',
+      uploadInstructions: 'Upload PDF or PNG at minimum 72 DPI. Size: 850 × 2000 mm. Include 30 mm bleed at the bottom — this area rolls into the cassette and is not visible.',
+    },
+  })
+  await upsertPricingTable(ru85.id, 'FIXED', { price: 89.00 })
+  console.log(`  ✓ Rollup 85×200: ${ru85.id}`)
+
+  // Rollup banner 100×200 (separate product)
+  const ru100 = await db.product.upsert({
+    where: { slug: 'rollup-100' },
+    update: { categoryId: catId, active: true, imageUrl: '/images/display/rollup-100.jpg' },
+    create: {
+      name: 'Rollup banner 100×200',
+      slug: 'rollup-100',
+      category: 'Display systems',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/images/display/rollup-100.jpg',
+      shortDescription: 'Wide 100×200 cm roll-up stand — maximum visibility, print included.',
+      description: 'Wide-format 100×200 cm retractable roll-up banner stand. Extra width for greater visual impact. High-quality aluminium cassette, full-colour print and carry bag included.',
+      guideText: 'PDF or high-res PNG. 1000 × 2000 mm. Include 30 mm bleed at bottom. Min 72 DPI at full size.',
+      minDpi: 72, recommendedDpi: 100, bleedMm: 30, safeMarginMm: 50, allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Bleed at bottom is hidden in cassette. Pole and carry bag included.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: ru100.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: false, productionType: 'ROLL_PRINT' },
+    create: {
+      productId: ru100.id, type: 'ROLLUP', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', productionType: 'ROLL_PRINT',
+      helpText: '100×200 cm roll-up. Print, stand, pole and carry bag all included.',
+      uploadInstructions: 'Upload PDF or PNG at minimum 72 DPI. Size: 1000 × 2000 mm. Include 30 mm bleed at the bottom.',
+    },
+  })
+  await upsertPricingTable(ru100.id, 'FIXED', { price: 109.00 })
+  console.log(`  ✓ Rollup 100×200: ${ru100.id}`)
+
+  // Rollup banner double sided outdoor with water tank
+  const ruOutdoor = await db.product.upsert({
+    where: { slug: 'rollup-outdoor' },
+    update: { categoryId: catId, active: true, imageUrl: '/images/display/rollup-outdoor.jpg' },
+    create: {
+      name: 'Rollup banner double sided outdoor',
+      slug: 'rollup-outdoor',
+      category: 'Display systems',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/images/display/rollup-outdoor.jpg',
+      shortDescription: 'Double-sided outdoor roll-up with water tank base — wind-stable, both sides printed.',
+      description: 'Heavy-duty outdoor double-sided roll-up banner stand with water tank base. Wind-resistant for exposed outdoor locations. Both sides fully printed. Carry bag included.',
+      guideText: 'PDF or high-res PNG. 2 sides: 850 × 2000 mm each. Include 30 mm bleed at bottom. Min 72 DPI.',
+      minDpi: 72, recommendedDpi: 100, bleedMm: 30, safeMarginMm: 50, allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Double-sided. Water tank base. Upload 2 pages or 2 files for front and back.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: ruOutdoor.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: false, productionType: 'ROLL_PRINT' },
+    create: {
+      productId: ruOutdoor.id, type: 'ROLLUP', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'PIECE', productionType: 'ROLL_PRINT',
+      helpText: 'Double-sided outdoor roll-up with water tank base. Both sides printed. Upload 2 files or a 2-page PDF.',
+      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files. Each side: 850 × 2000 mm. Include 30 mm bleed at bottom. Minimum 72 DPI.',
+    },
+  })
+  await upsertPricingTable(ruOutdoor.id, 'FIXED', { price: 189.00 })
+  console.log(`  ✓ Rollup outdoor double sided: ${ruOutdoor.id}`)
+
+  console.log('  Display Systems fix complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2415,6 +2578,9 @@ async function main() {
 
   // Catalog rebuild — final 8-category structure
   await seedCatalogRebuild()
+
+  // Display Systems — real product lineup + image paths
+  await seedDisplayFix()
 
   console.log('\nAll seeds complete.')
 }

@@ -38,6 +38,15 @@ export default async function CategoryShopPage({ params }: { params: { categoryS
 
   return (
     <Container>
+      {cat.imageUrl && (
+        <div className="w-full aspect-[3/1] rounded-lg overflow-hidden mb-6 bg-gray-100">
+          <img
+            src={cat.imageUrl}
+            alt={cat.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <h1 className="mb-2">{cat.name}</h1>
       {cat.description && (
         <p className="text-sm text-gray-500 mb-6">{cat.description}</p>
