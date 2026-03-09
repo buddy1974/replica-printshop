@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { assertExists } from '@/lib/assert'
+import { requireOwner } from '@/lib/requireOwner'
 
 interface Params {
   params: { id: string }
 }
 
-export async function GET(_req: NextRequest, { params }: Params) {
+// Step 321 — customer ownership check
+export async function GET(req: NextRequest, { params }: Params) {
   try {
     const order = await db.order.findUnique({
       where: { id: params.id },
@@ -22,6 +24,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
       },
     })
     assertExists(order, 'Order not found')
+    await requireOwner(req, order.userId)
     return NextResponse.json(order)
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })

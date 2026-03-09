@@ -48,6 +48,24 @@ export async function addToCart(input: AddToCartInput) {
   const product = await db.product.findUnique({ where: { id: productId, active: true }, select: { id: true } })
   assertExists(product, `Product not found: ${productId}`)
 
+  // Step 327 — validate variant belongs to this product
+  if (variantId) {
+    const variant = await db.productVariant.findUnique({ where: { id: variantId }, select: { productId: true } })
+    if (!variant) throw new ValidationError(`Variant not found: ${variantId}`)
+    if (variant.productId !== productId) throw new ValidationError('Variant does not belong to this product')
+  }
+
+  // Step 327 — validate all option values belong to options of this product
+  if (optionValueIds && optionValueIds.length > 0) {
+    const valid = await db.productOptionValue.findMany({
+      where: { id: { in: optionValueIds }, option: { productId } },
+      select: { id: true },
+    })
+    if (valid.length !== optionValueIds.length) {
+      throw new ValidationError('One or more option values are invalid for this product')
+    }
+  }
+
   // Validate product size rules
   if (width != null && height != null) {
     const config = await db.productConfig.findUnique({ where: { productId }, select: { maxWidthCm: true, maxHeightCm: true, dtfMaxWidthCm: true, rollWidthCm: true, printAreaWidthCm: true, printAreaHeightCm: true } })

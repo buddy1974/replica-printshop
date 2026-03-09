@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAbsPath } from '@/lib/storage'
 import { AppError, NotFoundError } from '@/lib/errors'
+import { requireAdmin } from '@/lib/adminAuth'
 import fs from 'fs'
 import path from 'path'
 
@@ -9,8 +10,10 @@ interface Params {
   params: { id: string }
 }
 
-export async function GET(_req: NextRequest, { params }: Params) {
+// Step 322 — admin-only file download
+export async function GET(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
     const upload = await db.uploadFile.findUnique({ where: { id: params.id } })
     if (!upload || !upload.filePath) {
       throw new NotFoundError('File not found')

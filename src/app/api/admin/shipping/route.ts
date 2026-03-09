@@ -3,8 +3,10 @@ import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { requireAdmin } from '@/lib/adminAuth'
 
-export async function GET() {
+// Step 322 — admin-only: GET also requires admin
+export async function GET(req: NextRequest) {
   try {
+    await requireAdmin(req)
     const rules = await db.shippingRule.findMany({ orderBy: { type: 'asc' } })
     return NextResponse.json(rules)
   } catch (e) {
