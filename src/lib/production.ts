@@ -85,7 +85,7 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
       data: { status: 'IN_PRODUCTION' },
       include: { user: { select: { email: true } } },
     })
-    sendProductionStarted(orderId, order.user.email).catch(() => {})
+    if (order.user?.email) sendProductionStarted(orderId, order.user.email).catch(() => {})
   } else if (status === 'DONE') {
     const pendingJobs = await db.productionJob.count({
       where: {
@@ -99,7 +99,7 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
         data: { status: 'DONE' },
         include: { user: { select: { email: true } } },
       })
-      sendDone(orderId, order.user.email).catch(() => {})
+      if (order.user?.email) sendDone(orderId, order.user.email).catch(() => {})
     }
   }
 

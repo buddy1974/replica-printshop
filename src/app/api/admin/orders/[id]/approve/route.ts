@@ -50,7 +50,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     await db.order.update({ where: { id: params.id }, data: { status: 'READY' } })
 
     // Fire email (non-blocking)
-    sendApproved(params.id, order.user.email).catch(() => {})
+    if (order.user?.email) sendApproved(params.id, order.user.email).catch(() => {})
 
     const updated = await db.order.findUnique({ where: { id: params.id } })
     return NextResponse.json(updated)

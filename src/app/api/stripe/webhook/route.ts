@@ -42,9 +42,12 @@ export async function POST(req: NextRequest) {
       include: { user: { select: { email: true } } },
     })
 
-    // Non-blocking email hooks
-    sendOrderConfirmed(orderId, order.user.email).catch(() => {})
-    sendUploadNeeded(orderId, order.user.email).catch(() => {})
+    // Non-blocking email hooks (user may be null for guest orders)
+    const email = order.user?.email ?? ''
+    if (email) {
+      sendOrderConfirmed(orderId, email).catch(() => {})
+      sendUploadNeeded(orderId, email).catch(() => {})
+    }
   }
 
   return NextResponse.json({ received: true })

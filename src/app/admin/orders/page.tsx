@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function OrdersPage() {
   const orders = await db.order.findMany({
-    include: { items: true, shippingMethod: true },
+    include: { items: true, shippingMethod: true, user: { select: { email: true, name: true } } },
     orderBy: { createdAt: 'desc' },
   })
 
@@ -22,7 +22,7 @@ export default async function OrdersPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
-                {['ID', 'Status', 'Payment', 'Delivery', 'Shipping', 'Total', 'Items', 'Created', ''].map((h) => (
+                {['ID', 'Customer', 'Status', 'Payment', 'Delivery', 'Shipping', 'Total', 'Items', 'Created', ''].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -32,6 +32,13 @@ export default async function OrdersPage() {
                 <tr key={o.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-blue-600 hover:underline">{o.id.slice(0, 8)}</Link>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-600">
+                    {o.user ? (
+                      <span title={o.user.email}>{o.user.name ?? o.user.email}</span>
+                    ) : (
+                      <span className="text-gray-400">Guest</span>
+                    )}
                   </td>
                   <td className="px-4 py-3"><Badge label={o.status} /></td>
                   <td className="px-4 py-3"><Badge label={o.paymentStatus} /></td>

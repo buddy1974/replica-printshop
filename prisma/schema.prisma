@@ -62,8 +62,31 @@ model User {
   name      String?
   createdAt DateTime @default(now())
 
-  cart   Cart?
-  orders Order[]
+  cart      Cart?
+  orders    Order[]
+  addresses Address[]
+}
+
+// ---------------------------------------------------------------------------
+// Addresses (saved by registered users)
+// ---------------------------------------------------------------------------
+
+model Address {
+  id      String  @id @default(cuid())
+  userId  String
+  name    String
+  company String?
+  street  String
+  zip     String
+  city    String
+  country String
+  phone   String?
+
+  user           User    @relation(fields: [userId], references: [id])
+  billingOrders  Order[] @relation("billingAddress")
+  shippingOrders Order[] @relation("shippingAddress")
+
+  @@index([userId])
 }
 
 // ---------------------------------------------------------------------------
@@ -307,7 +330,7 @@ model CartItem {
 
 model Order {
   id                String        @id @default(cuid())
-  userId            String
+  userId            String?
   total             Decimal       @db.Decimal(10, 2)
   shippingPrice     Decimal       @db.Decimal(10, 2) @default(0)
   expressMultiplier Decimal       @db.Decimal(4, 2)  @default(1.5)
@@ -315,11 +338,28 @@ model Order {
   paymentStatus     PaymentStatus @default(UNPAID)
   deliveryType      DeliveryType  @default(STANDARD)
   shippingMethodId  String?
+  billingAddressId  String?
+  shippingAddressId String?
+
+  // Inline guest address fields
+  billingName       String?
+  billingStreet     String?
+  billingCity       String?
+  billingZip        String?
+  billingCountry    String?
+  shippingName      String?
+  shippingStreet    String?
+  shippingCity      String?
+  shippingZip       String?
+  shippingCountry   String?
+
   createdAt         DateTime      @default(now())
 
-  user           User            @relation(fields: [userId], references: [id])
-  shippingMethod ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
-  items          OrderItem[]
+  user            User?           @relation(fields: [userId], references: [id])
+  shippingMethod  ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
+  billingAddress  Address?        @relation("billingAddress",  fields: [billingAddressId],  references: [id])
+  shippingAddress Address?        @relation("shippingAddress", fields: [shippingAddressId], references: [id])
+  items           OrderItem[]
 
   @@index([userId])
 }
@@ -331,6 +371,8 @@ model OrderItem {
   variantName             String?
   categoryName            String?
   productionTypeSnapshot  String?
+  productId               String?
+  variantId               String?
   width                   Decimal @db.Decimal(8, 2)
   height                  Decimal @db.Decimal(8, 2)
   quantity                Int
