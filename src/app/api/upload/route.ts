@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { replaceOrCreateUpload } from '@/lib/upload'
 import { saveFile } from '@/lib/storage'
+import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
-import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
-const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg', 'eps'])
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100 MB (step 267)
+const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg']) // step 266
 const ALLOWED_MIMES = new Set([
   'image/png',
   'image/jpeg',
   'application/pdf',
   'image/svg+xml',
-  'application/postscript',
-  'application/eps',
-  'application/x-eps',
 ])
 
 export async function POST(req: NextRequest) {
   try {
-    if (!checkRateLimit(getClientIp(req), 10, 60_000)) {
+    if (!checkRateLimit(getClientKey(req), 10, 60_000)) {
       return NextResponse.json({ error: 'Too many uploads. Try again in a minute.' }, { status: 429 })
     }
 
@@ -35,14 +33,37 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'orderItemId and file are required' }, { status: 400 })
       }
 
+      // Step 265 — ownership check
+      const cookieUserId = req.cookies.get('replica_uid')?.value ?? ''
+      const item = await db.orderItem.findUnique({
+        where: { id: orderItemId },
+        select: { order: { select: { userId: true } } },
+      })
+      if (!item) {
+        return NextResponse.json({ error: 'Order item not found' }, { status: 404 })
+      }
+      const orderOwnerId = item.order.userId
+      if (orderOwnerId) {
+        if (!cookieUserId) {
+          return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+        }
+        if (cookieUserId !== orderOwnerId) {
+          // Allow admin override
+          const user = await db.user.findUnique({ where: { id: cookieUserId }, select: { isAdmin: true } })
+          if (!user?.isAdmin) {
+            return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+          }
+        }
+      }
+
       if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json({ error: 'File too large. Maximum size is 50 MB.' }, { status: 400 })
+        return NextResponse.json({ error: 'File too large. Maximum size is 100 MB.' }, { status: 400 })
       }
 
       const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
       if (!ALLOWED_EXTENSIONS.has(ext) && !ALLOWED_MIMES.has(file.type)) {
         return NextResponse.json(
-          { error: 'File type not allowed. Accepted: PNG, JPG, PDF, SVG, EPS.' },
+          { error: 'File type not allowed. Accepted: PDF, PNG, JPG, JPEG, SVG.' },
           { status: 400 }
         )
       }

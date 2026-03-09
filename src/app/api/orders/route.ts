@@ -43,9 +43,24 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.nextUrl.searchParams.get('userId')
+    const cookieUserId = req.cookies.get('replica_uid')?.value ?? ''
+    if (!cookieUserId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    // Admins can query any userId; customers are locked to their own
+    const requester = await db.user.findUnique({ where: { id: cookieUserId }, select: { isAdmin: true } })
+    let whereUserId: string | undefined
+
+    if (requester?.isAdmin) {
+      const param = req.nextUrl.searchParams.get('userId')
+      whereUserId = param ?? undefined
+    } else {
+      whereUserId = cookieUserId
+    }
+
     const orders = await db.order.findMany({
-      where: userId ? { userId } : undefined,
+      where: whereUserId ? { userId: whereUserId } : undefined,
       include: { items: true, shippingMethod: true },
       orderBy: { createdAt: 'desc' },
     })

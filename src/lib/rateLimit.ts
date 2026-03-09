@@ -37,3 +37,12 @@ export function getClientIp(req: Request): string {
   const forwarded = (req.headers as Headers).get('x-forwarded-for')
   return forwarded?.split(',')[0].trim() ?? '127.0.0.1'
 }
+
+// Step 268 — prefer cookie userId over IP for rate-limit key
+import { NextRequest } from 'next/server'
+export function getClientKey(req: NextRequest): string {
+  const uid = req.cookies.get('replica_uid')?.value
+  if (uid) return `u:${uid}`
+  const forwarded = req.headers.get('x-forwarded-for')
+  return `ip:${forwarded?.split(',')[0].trim() ?? '127.0.0.1'}`
+}

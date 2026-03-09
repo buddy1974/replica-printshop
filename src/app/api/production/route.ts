@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getQueue } from '@/lib/production'
 import { AppError } from '@/lib/errors'
+import { requireAdmin } from '@/lib/adminAuth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    await requireAdmin(req)
     const queue = await getQueue()
     return NextResponse.json(queue)
   } catch (e) {

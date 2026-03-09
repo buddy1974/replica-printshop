@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { JobStatus } from '@/generated/prisma/client'
 import { updateJobStatus, assignMachine } from '@/lib/production'
 import { AppError } from '@/lib/errors'
+import { requireAdmin } from '@/lib/adminAuth'
 
 interface Params {
   params: { id: string }
@@ -9,6 +10,7 @@ interface Params {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
     const { id } = params
     const body = await req.json() as { status?: JobStatus; machine?: string }
 
