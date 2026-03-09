@@ -2548,6 +2548,103 @@ async function seedDisplayFix() {
 }
 
 // ---------------------------------------------------------------------------
+// Banner fix — real product lineup (PVC / Construction / Mesh only)
+// ---------------------------------------------------------------------------
+
+async function seedBannerFix() {
+  console.log('Seeding Banner fix — real product lineup...')
+
+  // Update category hero
+  await db.productCategory.update({
+    where: { slug: 'banner' },
+    data: { imageUrl: '/products/banner-hero-section.png' },
+  })
+
+  // Deactivate extra banner products not in real lineup
+  await db.product.updateMany({
+    where: { slug: { in: ['rollup-banner', 'event-banner', 'double-sided-banner', 'stage-banner', 'fence-banner'] } },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated extra banner products')
+
+  // PVC banner (rename from "Banner" → "PVC banner", wire image)
+  await db.product.updateMany({
+    where: { slug: 'banner' },
+    data: { name: 'PVC banner', imageUrl: '/products/banner.png' },
+  })
+  console.log('  ✓ PVC banner: /products/banner.png')
+
+  // Construction banner — wire image
+  await db.product.updateMany({
+    where: { slug: 'construction-banner' },
+    data: { active: true, imageUrl: '/products/construction-banner.png' },
+  })
+  console.log('  ✓ Construction banner: /products/construction-banner.png')
+
+  // Mesh banner — wire image
+  await db.product.updateMany({
+    where: { slug: 'mesh-banner' },
+    data: { imageUrl: '/products/mesh-banner.png' },
+  })
+  console.log('  ✓ Mesh banner: /products/mesh-banner.png')
+
+  console.log('  Banner fix complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Foil / Adhesive fix — keep only image-matched products
+// ---------------------------------------------------------------------------
+
+async function seedFoilFix() {
+  console.log('Seeding Foil / Adhesive fix...')
+
+  // Update category hero
+  await db.productCategory.update({
+    where: { slug: 'foil' },
+    data: { imageUrl: '/products/foil-adhessive-hero-banner.png' },
+  })
+  console.log('  ✓ Foil hero: /products/foil-adhessive-hero-banner.png')
+
+  // Deactivate products without images (user-specified + no image match)
+  await db.product.updateMany({
+    where: {
+      slug: {
+        in: [
+          'magnetfolie',        // explicitly: "magnet foil"
+          'logo-foil',          // explicitly: "logo foil"
+          'opening-hours-print',// explicitly: "opening hours"
+          'pvc-folie',          // explicitly: "pvc foil"
+          'privacy-foil',       // explicitly: "privacy foil"
+          'window-foil',        // explicitly: "window foil"
+          'magnetic-board-print', // no image
+        ],
+      },
+    },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated foil products without images')
+
+  // Wire images for products that have matching files
+  const foilImageMap: Array<{ slug: string; imageUrl: string; label: string }> = [
+    { slug: 'car-graphics',   imageUrl: '/products/car-graphics.png',   label: 'Car graphics' },
+    { slug: 'car-magnet',     imageUrl: '/products/car-magnet.png',     label: 'Car magnet' },
+    { slug: 'milchglasfolie', imageUrl: '/products/milchglasfolie.png', label: 'Milchglasfolie' },
+    { slug: 'lochfolie',      imageUrl: '/products/lochfolie.png',      label: 'Lochfolie' },
+    { slug: 'window-graphics',imageUrl: '/products/window-graphics.png',label: 'Window graphics' },
+  ]
+
+  for (const item of foilImageMap) {
+    await db.product.updateMany({
+      where: { slug: item.slug },
+      data: { active: true, imageUrl: item.imageUrl },
+    })
+    console.log(`  ✓ ${item.label}: ${item.imageUrl}`)
+  }
+
+  console.log('  Foil fix complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2581,6 +2678,12 @@ async function main() {
 
   // Display Systems — real product lineup + image paths
   await seedDisplayFix()
+
+  // Banner — real product lineup (PVC / Construction / Mesh)
+  await seedBannerFix()
+
+  // Foil / Adhesive — image-matched products only
+  await seedFoilFix()
 
   console.log('\nAll seeds complete.')
 }
