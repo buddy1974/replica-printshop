@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
+import Link from 'next/link'
 import { db } from '@/lib/db'
-import ProductCard from '@/components/ProductCard'
 import Container from '@/components/Container'
 
 export const revalidate = 60
@@ -11,68 +11,76 @@ export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
 }
 
-type ShopProduct = { id: string; name: string; slug: string; category: string; active: boolean; shortDescription: string | null; imageUrl: string | null }
-type ShopCategory = { id: string; name: string; slug: string; description: string | null; products: ShopProduct[] }
+type ShopCategory = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  imageUrl: string | null
+  _count: { products: number }
+}
 
 export default async function ShopPage() {
   let categories: ShopCategory[] = []
-  let uncategorised: ShopProduct[] = []
 
   try {
-    ;[categories, uncategorised] = await Promise.all([
-      db.productCategory.findMany({
-        orderBy: { sortOrder: 'asc' },
-        include: {
-          products: {
-            where: { active: true },
-            orderBy: { name: 'asc' },
-            select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true, imageUrl: true },
-          },
-        },
-      }),
-      db.product.findMany({
-        where: { active: true, categoryId: null },
-        orderBy: { name: 'asc' },
-        select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true, imageUrl: true },
-      }),
-    ])
+    categories = await db.productCategory.findMany({
+      orderBy: { sortOrder: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageUrl: true,
+        _count: { select: { products: { where: { active: true } } } },
+      },
+    })
   } catch {
-    // DB unavailable at build time — page will be regenerated on first request
+    // DB unavailable at build time — page will regenerate on first request
   }
 
-  const groups = categories.filter((c) => c.products.length > 0)
+  const visible = categories.filter((c) => c._count.products > 0)
 
   return (
     <Container>
-      <h1 className="mb-6">Shop</h1>
+      <div className="mb-8">
+        <h1 className="mb-1">Shop</h1>
+        <p className="text-sm text-gray-500">Browse our full range of print products and display solutions.</p>
+      </div>
 
-      {groups.map((cat) => (
-        <section key={cat.id} className="mb-10">
-          <h2 className="text-base font-semibold text-gray-700 mb-1 pb-2 border-b border-gray-200">{cat.name}</h2>
-          {cat.description && (
-            <p className="text-sm text-gray-500 mb-4">{cat.description}</p>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            {cat.products.map((p) => (
-              <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
-            ))}
-          </div>
-        </section>
-      ))}
-
-      {uncategorised.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-base font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">Other</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {uncategorised.map((p) => (
-              <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={p.category} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {groups.length === 0 && uncategorised.length === 0 && (
+      {visible.length === 0 ? (
         <p className="text-sm text-gray-500">No products available.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {visible.map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/shop/${cat.slug}`}
+              className="group rounded-lg border border-gray-200 bg-white overflow-hidden hover:border-gray-400 hover:shadow-sm transition-all"
+            >
+              <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
+                {cat.imageUrl ? (
+                  <img
+                    src={cat.imageUrl}
+                    alt={cat.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <img src="/placeholder.svg" alt="" className="w-16 h-16 opacity-30" />
+                )}
+              </div>
+              <div className="p-3">
+                <p className="font-semibold text-sm leading-tight">{cat.name}</p>
+                {cat.description && (
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">{cat.description}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-2 group-hover:text-gray-700 transition-colors">
+                  {cat._count.products} {cat._count.products === 1 ? 'product' : 'products'} →
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
       )}
     </Container>
   )

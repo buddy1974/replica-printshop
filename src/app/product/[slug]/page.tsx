@@ -48,6 +48,7 @@ interface Product {
   id: string
   name: string
   slug: string
+  imageUrl: string | null
   variants: Variant[]
   options: Option[]
   pricingRules: { pricePerM2: number; minPrice: number; expressMultiplier: number }[]
@@ -75,6 +76,7 @@ async function getProduct(slug: string): Promise<Product | null> {
   if (!p) return null
   return {
     ...p,
+    imageUrl: p.imageUrl ?? null,
     variants: p.variants.map((v) => ({ ...v, basePrice: Number(v.basePrice) })),
     options: p.options.map((o) => ({
       ...o,
@@ -165,6 +167,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
   return (
     <Container>
+      {product.imageUrl && (
+        <div className="mb-6 rounded-lg overflow-hidden border border-gray-200 max-w-xs">
+          <img src={product.imageUrl} alt={product.name} className="w-full object-cover aspect-[4/3]" loading="lazy" />
+        </div>
+      )}
       <h1 className="mb-2">{product.name}</h1>
       {product.description && (
         <p className="text-sm text-gray-600 mb-4 leading-relaxed">{product.description}</p>

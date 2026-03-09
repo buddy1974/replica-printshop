@@ -19,7 +19,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
   const [products, total] = await Promise.all([
     db.product.findMany({
       where,
-      select: { id: true, name: true, slug: true, category: true, active: true },
+      select: { id: true, name: true, slug: true, category: true, active: true, imageUrl: true },
       orderBy: { name: 'asc' },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
@@ -66,7 +66,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>
-                {['Name', 'Slug', 'Category', 'Status', ''].map((h, i) => (
+                {['', 'Name', 'Slug', 'Category', 'Status', ''].map((h, i) => (
                   <th key={i} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -74,6 +74,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
             <tbody className="divide-y divide-gray-100">
               {products.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 w-10">
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt="" loading="lazy" className="w-8 h-8 object-cover rounded border border-gray-200" />
+                    ) : (
+                      <div className="w-8 h-8 rounded border border-gray-200 bg-gray-100" />
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">{p.slug}</td>
                   <td className="px-4 py-3 text-gray-600">{p.category}</td>

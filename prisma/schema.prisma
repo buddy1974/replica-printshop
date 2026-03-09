@@ -103,6 +103,7 @@ model ProductCategory {
   allowShipping    Boolean   @default(true)
   allowPickup      Boolean   @default(true)
   description     String?
+  imageUrl        String?
   metaTitle       String?
   metaDescription String?
 

@@ -76,30 +76,37 @@ async function seedCategories() {
     {
       name: 'Display systems', slug: 'display-systems', sortOrder: 0, defaultPriceMode: 'PIECE',
       description: 'Roll-ups, kundestoppere, frames, and display stands — ready to print and delivered fast.',
+      imageUrl: '/images/products/rollup.svg',
     },
     {
-      name: 'Textile print', slug: 'textile-print', sortOrder: 1, defaultPriceMode: 'PIECE',
-      description: 'High-quality DTF (Direct-to-Film) transfers heat-pressed onto your garments. Suitable for t-shirts, hoodies, tote bags, and more.',
-    },
-    {
-      name: 'Vinyl plot', slug: 'vinyl-plot', sortOrder: 2, defaultPriceMode: 'METER',
-      description: 'Precision-cut vinyl lettering and shapes from our plotter. Ideal for signs, windows, vehicles, and equipment marking.',
-    },
-    {
-      name: 'Stickers', slug: 'stickers', sortOrder: 3, defaultPriceMode: 'AREA',
-      description: 'Full-colour stickers printed and cut to shape. Available in gloss, matte, or laminated finish. Square cut or contour cut.',
-    },
-    {
-      name: 'Banner', slug: 'banner', sortOrder: 4, defaultPriceMode: 'AREA',
+      name: 'Banner', slug: 'banner', sortOrder: 1, defaultPriceMode: 'AREA',
       description: 'Large format banners printed on durable PVC or mesh material. Finished with hemmed edges and eyelets for easy mounting.',
+      imageUrl: '/images/products/banner.svg',
     },
     {
-      name: 'Rigid', slug: 'rigid', sortOrder: 5, defaultPriceMode: 'FIXED',
-      description: 'Printing on rigid substrates such as forex, dibond, and acrylic. Suitable for outdoor signage and display.',
-    },
-    {
-      name: 'Foil', slug: 'foil', sortOrder: 6, defaultPriceMode: 'AREA',
+      name: 'Foil', slug: 'foil', sortOrder: 2, defaultPriceMode: 'AREA',
       description: 'Self-adhesive foils, window films, magnetic foils, and car magnets. Custom size, precision cut.',
+      imageUrl: '/images/products/foil.svg',
+    },
+    {
+      name: 'Textile print', slug: 'textile-print', sortOrder: 3, defaultPriceMode: 'PIECE',
+      description: 'DTF transfers, flex and flock vinyl, embroidery, and patches. Suitable for t-shirts, hoodies, workwear, and more.',
+      imageUrl: '/images/products/textile.svg',
+    },
+    {
+      name: 'Vinyl plot', slug: 'vinyl-plot', sortOrder: 4, defaultPriceMode: 'METER',
+      description: 'Precision-cut vinyl lettering and shapes from our plotter. Ideal for signs, windows, vehicles, and equipment marking.',
+      imageUrl: '/images/products/vinyl.svg',
+    },
+    {
+      name: 'Stickers', slug: 'stickers', sortOrder: 5, defaultPriceMode: 'AREA',
+      description: 'Full-colour stickers printed and cut to shape. Available in gloss, matte, or laminated finish. Square cut or contour cut.',
+      imageUrl: '/images/products/sticker.svg',
+    },
+    {
+      name: 'Rigid', slug: 'rigid', sortOrder: 6, defaultPriceMode: 'FIXED',
+      description: 'Printing on rigid substrates such as forex, dibond, and acrylic. Suitable for outdoor signage and display.',
+      imageUrl: null,
     },
   ]
 
@@ -107,7 +114,7 @@ async function seedCategories() {
     await db.productCategory.upsert({
       where: { slug: cat.slug },
       create: cat,
-      update: { name: cat.name, sortOrder: cat.sortOrder, defaultPriceMode: cat.defaultPriceMode, description: cat.description },
+      update: { name: cat.name, sortOrder: cat.sortOrder, defaultPriceMode: cat.defaultPriceMode, description: cat.description, imageUrl: cat.imageUrl },
     })
     console.log(`  ✓ ${cat.name}`)
   }
