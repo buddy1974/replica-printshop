@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
+import { requireAdmin } from '@/lib/adminAuth'
 
 interface Params { params: { id: string } }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
     const { name, price, active } = await req.json()
     const method = await db.shippingMethod.update({
       where: { id: params.id },
@@ -23,8 +25,9 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
     await db.shippingMethod.delete({ where: { id: params.id } })
     return NextResponse.json({ success: true })
   } catch (e) {

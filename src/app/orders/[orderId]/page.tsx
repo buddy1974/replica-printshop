@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
@@ -19,6 +20,9 @@ const STATUS_MESSAGES: Record<string, { text: string; color: string }> = {
 }
 
 export default async function OrderDetailPage({ params }: { params: { orderId: string } }) {
+  const cookieStore = cookies()
+  const viewerId = cookieStore.get('replica_uid')?.value ?? ''
+
   const order = await db.order.findUnique({
     where: { id: params.orderId },
     include: {
@@ -30,6 +34,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
     },
   })
   if (!order) notFound()
+  if (order.userId && order.userId !== viewerId) notFound()
 
   const msg = STATUS_MESSAGES[order.status]
 

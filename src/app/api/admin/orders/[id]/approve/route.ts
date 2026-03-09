@@ -4,13 +4,15 @@ import { AppError, ValidationError } from '@/lib/errors'
 import { assertExists } from '@/lib/assert'
 import { sendApproved } from '@/lib/email'
 import { createProductionJob } from '@/lib/production'
+import { requireAdmin } from '@/lib/adminAuth'
 
 interface Params {
   params: { id: string }
 }
 
-export async function POST(_req: NextRequest, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
     const order = await db.order.findUnique({
       where: { id: params.id },
       include: {

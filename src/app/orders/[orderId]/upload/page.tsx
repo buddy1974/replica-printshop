@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { cookies } from 'next/headers'
 import UploadForm from '@/components/UploadForm'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
@@ -35,11 +36,15 @@ function GuidePanel({ guide }: { guide: ProductGuide }) {
 }
 
 export default async function UploadPage({ params }: { params: { orderId: string } }) {
+  const cookieStore = cookies()
+  const viewerId = cookieStore.get('replica_uid')?.value ?? ''
+
   const order = await db.order.findUnique({
     where: { id: params.orderId },
     include: { items: true },
   })
   if (!order) notFound()
+  if (order.userId && order.userId !== viewerId) notFound()
 
   const guides = await Promise.all(
     order.items.map((item) =>

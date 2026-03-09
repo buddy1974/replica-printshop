@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
+import { requireAdmin } from '@/lib/adminAuth'
 
 export async function GET() {
   try {
@@ -15,6 +16,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    await requireAdmin(req)
     const { name, price, type } = await req.json()
     if (!name || !type) {
       return NextResponse.json({ error: 'name and type are required' }, { status: 400 })

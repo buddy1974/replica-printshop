@@ -581,6 +581,175 @@ async function seedMeshBanner() {
 }
 
 // ---------------------------------------------------------------------------
+// Textile extension — DTF, Flex, Flock, Embroidery, Patches (steps 241–246)
+// ---------------------------------------------------------------------------
+
+async function seedTextileExtension() {
+  console.log('Seeding Textile extension products...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'textile-print' } })
+
+  // --- DTF (Direct-to-Film) ---
+  const dtf = await db.product.upsert({
+    where: { slug: 'dtf' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'DTF transfers printed and cut to size — heat-press at home or in production.' },
+    create: {
+      name: 'DTF', slug: 'dtf', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      imageUrl: '/images/products/textile.svg',
+      shortDescription: 'DTF transfers printed and cut to size — heat-press at home or in production.',
+      description: 'Full-colour direct-to-film (DTF) transfers. We print and cut — you heat-press onto any fabric. Works on cotton, polyester, nylon, and blends. Suitable for small runs.',
+      guideText: 'PNG with transparent background. Minimum 150 DPI. Max width 60 cm.', minDpi: 150, recommendedDpi: 300, bleedMm: 0, safeMarginMm: 2, allowedFormats: 'PNG,PDF',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: dtf.id },
+    update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, productionType: 'PRINT_CUT' },
+    create: {
+      productId: dtf.id, type: 'DTF_SHEET', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 60, maxWidthCm: 60,
+      minWidth: 3, maxWidth: 60, minHeight: 3, maxHeight: 200, productionType: 'PRINT_CUT',
+    },
+  })
+  await upsertPricingTable(dtf.id, 'AREA', { pricePerM2: 45.00 })
+  console.log(`  ✓ DTF: ${dtf.id}`)
+
+  // --- Flex ---
+  const flex = await db.product.upsert({
+    where: { slug: 'flex-print' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Heat-transfer flex vinyl — bright, durable single-colour prints.' },
+    create: {
+      name: 'Flex', slug: 'flex-print', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      imageUrl: '/images/products/textile.svg',
+      shortDescription: 'Heat-transfer flex vinyl — bright, durable single-colour prints.',
+      description: 'Flex vinyl heat transfers for textiles. High opacity, single-colour. Suitable for sports kits, workwear, and promotional wear. Wash-resistant at 60°C. Max width 50 cm.',
+      guideText: 'Vector file required. Single-colour only. Max width 50 cm.', minDpi: null, recommendedDpi: null, bleedMm: 0, safeMarginMm: 2, allowedFormats: 'SVG,PDF,EPS',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: flex.id },
+    update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, productionType: 'CUT' },
+    create: {
+      productId: flex.id, type: 'FLEX', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+      isCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 50, maxWidthCm: 50,
+      minWidth: 3, maxWidth: 50, minHeight: 3, maxHeight: 200, productionType: 'CUT',
+    },
+  })
+  await upsertPricingTable(flex.id, 'AREA', { pricePerM2: 35.00 })
+  await upsertOption(flex.id, 'Colour', [
+    { name: 'White', priceModifier: 0 }, { name: 'Black', priceModifier: 0 },
+    { name: 'Red', priceModifier: 0 }, { name: 'Blue', priceModifier: 0 },
+    { name: 'Yellow', priceModifier: 0 }, { name: 'Green', priceModifier: 0 },
+    { name: 'Silver', priceModifier: 1 }, { name: 'Gold', priceModifier: 1 },
+  ])
+  console.log(`  ✓ Flex: ${flex.id}`)
+
+  // --- Flock ---
+  const flock = await db.product.upsert({
+    where: { slug: 'flock-print' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Flock heat transfers — soft, velvety finish for premium textiles.' },
+    create: {
+      name: 'Flock', slug: 'flock-print', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      imageUrl: '/images/products/textile.svg',
+      shortDescription: 'Flock heat transfers — soft, velvety finish for premium textiles.',
+      description: 'Flock heat-transfer material for textiles. Creates a soft, raised velvety surface. Ideal for premium fashion and workwear. Single-colour. Max width 50 cm.',
+      guideText: 'Vector file required. Single-colour only. Max width 50 cm.', minDpi: null, recommendedDpi: null, bleedMm: 0, safeMarginMm: 2, allowedFormats: 'SVG,PDF,EPS',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: flock.id },
+    update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, productionType: 'CUT' },
+    create: {
+      productId: flock.id, type: 'FLOCK', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+      isCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 50, maxWidthCm: 50,
+      minWidth: 3, maxWidth: 50, minHeight: 3, maxHeight: 200, productionType: 'CUT',
+    },
+  })
+  await upsertPricingTable(flock.id, 'AREA', { pricePerM2: 40.00 })
+  await upsertOption(flock.id, 'Colour', [
+    { name: 'Black', priceModifier: 0 }, { name: 'White', priceModifier: 0 },
+    { name: 'Red', priceModifier: 0 }, { name: 'Navy', priceModifier: 0 },
+    { name: 'Royal Blue', priceModifier: 0 }, { name: 'Forest Green', priceModifier: 0 },
+  ])
+  console.log(`  ✓ Flock: ${flock.id}`)
+
+  // --- Embroidery (step 241 + 243 + 244) ---
+  const embroidery = await db.product.upsert({
+    where: { slug: 'embroidery' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Machine embroidery on garments — flat, 3D, or patch.' },
+    create: {
+      name: 'Embroidery', slug: 'embroidery', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      imageUrl: '/images/products/textile.svg',
+      shortDescription: 'Machine embroidery on garments — flat, 3D, or patch.',
+      description: 'High-quality machine embroidery on your garments. Choose between flat embroidery, 3D puff embroidery, or patch application. Pricing based on stitch count. Send your garment or order with ours.',
+      guideText: 'Vector or high-res PNG. Design will be digitised for embroidery.', minDpi: 300, recommendedDpi: 600, bleedMm: 0, safeMarginMm: 5, allowedFormats: 'PDF,PNG,SVG,AI,EPS',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: embroidery.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: true, productionType: 'TEXTILE' },
+    create: {
+      productId: embroidery.id, type: 'EMBROIDERY', hasCustomSize: false, hasFixedSizes: false, hasVariants: true, hasOptions: true,
+      needsUpload: true, priceMode: 'PIECE', productionType: 'TEXTILE',
+    },
+  })
+  await upsertPricingTable(embroidery.id, 'FIXED', { price: 12.00 })
+  // Variants (garment size)
+  for (const s of [
+    { name: 'S', basePrice: 0 }, { name: 'M', basePrice: 0 },
+    { name: 'L', basePrice: 0 }, { name: 'XL', basePrice: 2 }, { name: 'XXL', basePrice: 4 },
+  ]) await upsertVariant(embroidery.id, s.name, 'Garment', s.basePrice)
+  // Embroidery type option (step 243)
+  await upsertOption(embroidery.id, 'Embroidery type', [
+    { name: 'Flat embroidery',  priceModifier: 0 },
+    { name: '3D embroidery',    priceModifier: 5 },
+    { name: 'Patch embroidery', priceModifier: 3 },
+  ])
+  // Stitch count option (step 244)
+  await upsertOption(embroidery.id, 'Stitch count', [
+    { name: '5 000',  priceModifier: 0 },
+    { name: '10 000', priceModifier: 4 },
+    { name: '15 000', priceModifier: 8 },
+    { name: '20 000', priceModifier: 12 },
+  ])
+  console.log(`  ✓ Embroidery: ${embroidery.id}`)
+
+  // --- Patches (step 242 + 245) ---
+  const patches = await db.product.upsert({
+    where: { slug: 'patches' },
+    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Custom embroidered patches — iron-on, velcro, or sew-on.' },
+    create: {
+      name: 'Patches', slug: 'patches', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      imageUrl: '/images/products/textile.svg',
+      shortDescription: 'Custom embroidered patches — iron-on, velcro, or sew-on.',
+      description: 'Custom machine-embroidered patches. Choose your border type and backing. Suitable for jackets, bags, hats, and uniforms. Min order 10 pieces.',
+      guideText: 'Vector or high-res PNG. Design will be digitised for embroidery.', minDpi: 300, recommendedDpi: 600, bleedMm: 0, safeMarginMm: 3, allowedFormats: 'PDF,PNG,SVG,AI,EPS',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: patches.id },
+    update: { needsUpload: true, priceMode: 'PIECE', hasCustomSize: true, productionType: 'TEXTILE' },
+    create: {
+      productId: patches.id, type: 'PATCH', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+      needsUpload: true, priceMode: 'PIECE', minWidth: 3, maxWidth: 20, minHeight: 3, maxHeight: 20, productionType: 'TEXTILE',
+    },
+  })
+  await upsertPricingTable(patches.id, 'FIXED', { price: 4.50 })
+  // Patch border option (step 245)
+  await upsertOption(patches.id, 'Patch border', [
+    { name: 'No border',    priceModifier: 0 },
+    { name: 'Merrow border', priceModifier: 1 },
+    { name: 'Laser cut',    priceModifier: 2 },
+  ])
+  // Backing option (step 245)
+  await upsertOption(patches.id, 'Backing', [
+    { name: 'Iron on',  priceModifier: 0 },
+    { name: 'Velcro',  priceModifier: 1 },
+    { name: 'Sew on',  priceModifier: 0 },
+  ])
+  console.log(`  ✓ Patches: ${patches.id}`)
+}
+
+// ---------------------------------------------------------------------------
 // Roll-Up (Display systems)
 // ---------------------------------------------------------------------------
 
@@ -1146,6 +1315,7 @@ async function main() {
   await seedShippingMethods()
 
   // Real shop products
+  await seedTextileExtension()
   await seedRollUp()
   await seedKundestopper()
   await seedTextilePrint()

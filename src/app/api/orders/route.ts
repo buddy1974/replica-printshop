@@ -3,9 +3,14 @@ import { DeliveryType } from '@/generated/prisma/client'
 import { createOrderFromCart } from '@/lib/order'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 
 export async function POST(req: NextRequest) {
   try {
+    if (!checkRateLimit(getClientIp(req), 10, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 })
+    }
+
     const body = await req.json()
     // cartUserId: identifies the cart (required). userId: stored on order (null = guest)
     const { userId, cartUserId, deliveryType, billingAddress, shippingAddress, saveAddress } = body as {

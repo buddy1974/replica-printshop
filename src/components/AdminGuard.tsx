@@ -1,23 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getUserId } from '@/lib/session'
+
+type Status = 'loading' | 'ok' | 'denied'
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
-  const [checked, setChecked] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [status, setStatus] = useState<Status>('loading')
 
   useEffect(() => {
-    setUserId(getUserId())
-    setChecked(true)
+    fetch('/api/user/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setStatus(data?.isAdmin ? 'ok' : 'denied'))
+      .catch(() => setStatus('denied'))
   }, [])
 
-  if (!checked) return null
+  if (status === 'loading') return null
 
-  if (!userId) {
+  if (status === 'denied') {
     return (
       <div style={{ padding: 40, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
-        Not logged in
+        Admin access required
       </div>
     )
   }
