@@ -2516,14 +2516,14 @@ async function seedDisplayFix() {
   // Rollup banner double sided outdoor with water tank
   const ruOutdoor = await db.product.upsert({
     where: { slug: 'rollup-outdoor' },
-    update: { categoryId: catId, active: true, imageUrl: '/images/display/rollup-outdoor.jpg' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/double-sided-outdoor-banner.png' },
     create: {
       name: 'Rollup banner double sided outdoor',
       slug: 'rollup-outdoor',
       category: 'Display systems',
       categoryId: catId,
       active: true,
-      imageUrl: '/images/display/rollup-outdoor.jpg',
+      imageUrl: '/products/double-sided-outdoor-banner.png',
       shortDescription: 'Double-sided outdoor roll-up with water tank base — wind-stable, both sides printed.',
       description: 'Heavy-duty outdoor double-sided roll-up banner stand with water tank base. Wind-resistant for exposed outdoor locations. Both sides fully printed. Carry bag included.',
       guideText: 'PDF or high-res PNG. 2 sides: 850 × 2000 mm each. Include 30 mm bleed at bottom. Min 72 DPI.',
