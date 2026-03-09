@@ -97,6 +97,10 @@ async function seedCategories() {
       name: 'Rigid', slug: 'rigid', sortOrder: 5, defaultPriceMode: 'FIXED',
       description: 'Printing on rigid substrates such as forex, dibond, and acrylic. Suitable for outdoor signage and display.',
     },
+    {
+      name: 'Foil', slug: 'foil', sortOrder: 6, defaultPriceMode: 'AREA',
+      description: 'Self-adhesive foils, window films, magnetic foils, and car magnets. Custom size, precision cut.',
+    },
   ]
 
   for (const cat of categories) {
@@ -386,6 +390,51 @@ async function seedStickers() {
 }
 
 // ---------------------------------------------------------------------------
+// Banner finishing / material / print options (steps 231–234)
+// ---------------------------------------------------------------------------
+
+const BANNER_FINISHING_VALUES = [
+  { name: 'Nur Schnitt',              priceModifier: 0.00 },
+  { name: 'Nur Flachsaum',            priceModifier: 0.50 },
+  { name: 'Flachsaum + Ösen (Ecken)', priceModifier: 1.50 },
+  { name: 'Flachsaum + Ösen 100cm',   priceModifier: 2.00 },
+  { name: 'Flachsaum + Ösen 50cm',    priceModifier: 2.50 },
+  { name: 'Flachsaum + Ösen 30cm',    priceModifier: 3.00 },
+  { name: 'Hohlsaum 3cm',             priceModifier: 1.50 },
+  { name: 'Hohlsaum 6cm',             priceModifier: 2.00 },
+  { name: 'Hohlsaum 8cm',             priceModifier: 2.00 },
+  { name: 'Hohlsaum 10cm',            priceModifier: 2.50 },
+  { name: 'Rundkeder 6mm',            priceModifier: 2.50 },
+  { name: 'Rundkeder 8mm',            priceModifier: 3.00 },
+]
+
+async function applyBannerOptions(productId: string) {
+  // Remove legacy "Finishing" option (3-value version) if present
+  const legacy = await db.productOption.findFirst({ where: { productId, name: 'Finishing' } })
+  if (legacy) {
+    await db.productOptionValue.deleteMany({ where: { optionId: legacy.id } })
+    await db.productOption.delete({ where: { id: legacy.id } })
+    console.log('    - removed legacy Finishing option')
+  }
+
+  await upsertOption(productId, 'Material', [
+    { name: 'PVC Frontlit 510g', priceModifier: 0 },
+    { name: 'Mesh Banner',       priceModifier: 2 },
+    { name: 'Blockout',          priceModifier: 3 },
+    { name: 'Textile Banner',    priceModifier: 5 },
+  ])
+
+  await upsertOption(productId, 'Print', [
+    { name: '4/0', priceModifier: 0 },
+    { name: '4/4', priceModifier: 4 },
+  ])
+
+  for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+    await upsertOption(productId, `Finishing ${side}`, BANNER_FINISHING_VALUES)
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Banner (step 197)
 // ---------------------------------------------------------------------------
 
@@ -452,12 +501,8 @@ async function seedBanner() {
   // Pricing: AREA → €14 per m²
   await upsertPricingTable(product.id, 'AREA', { pricePerM2: 14.00 })
 
-  // Finishing option
-  await upsertOption(product.id, 'Finishing', [
-    { name: 'Hemmed + eyelets',   priceModifier: 0  },
-    { name: 'Hemmed only',        priceModifier: -2 },
-    { name: 'No finishing (flat)', priceModifier: -4 },
-  ])
+  // Material, Print, per-side Finishing options (steps 231–234)
+  await applyBannerOptions(product.id)
 
   console.log(`  ✓ Banner: ${product.id}`)
 }
@@ -529,12 +574,8 @@ async function seedMeshBanner() {
   // Pricing: AREA → €18 per m² (mesh material costs more)
   await upsertPricingTable(product.id, 'AREA', { pricePerM2: 18.00 })
 
-  // Finishing option
-  await upsertOption(product.id, 'Finishing', [
-    { name: 'Hemmed + eyelets',   priceModifier: 0  },
-    { name: 'Hemmed only',        priceModifier: -2 },
-    { name: 'No finishing (flat)', priceModifier: -4 },
-  ])
+  // Material, Print, per-side Finishing options (steps 231–234)
+  await applyBannerOptions(product.id)
 
   console.log(`  ✓ Mesh banner: ${product.id}`)
 }
@@ -683,6 +724,218 @@ async function seedKundestopper() {
   await upsertVariant(product.id, 'A2 (420 × 594 mm)', 'Kundestopper', 119.00)
 
   console.log(`  ✓ Kundestopper: ${product.id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Construction banner (step 237)
+// ---------------------------------------------------------------------------
+
+async function seedConstructionBanner() {
+  console.log('Seeding Construction banner...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'banner' } })
+
+  const product = await db.product.upsert({
+    where: { slug: 'construction-banner' },
+    update: {
+      categoryId: cat?.id ?? null,
+      imageUrl: '/images/products/banner.svg',
+      shortDescription: 'Heavy-duty banners for construction sites, scaffolding, and fencing.',
+      description: 'Construction banners printed on reinforced PVC or mesh material. UV and weather resistant. Finished with hemmed edges and reinforced eyelets for secure mounting on scaffolding, fences, and hoardings.',
+    },
+    create: {
+      name: 'Construction banner',
+      slug: 'construction-banner',
+      category: 'Banner',
+      categoryId: cat?.id ?? null,
+      active: true,
+      imageUrl: '/images/products/banner.svg',
+      shortDescription: 'Heavy-duty banners for construction sites, scaffolding, and fencing.',
+      description: 'Construction banners printed on reinforced PVC or mesh material. UV and weather resistant. Finished with hemmed edges and reinforced eyelets for secure mounting on scaffolding, fences, and hoardings.',
+      guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 30 mm bleed on all sides.',
+      minDpi: 72,
+      recommendedDpi: 100,
+      bleedMm: 30,
+      safeMarginMm: 30,
+      allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Max width 160 cm. Reinforced eyelets every 50 cm for secure outdoor fixing.',
+    },
+  })
+
+  await db.productConfig.upsert({
+    where: { productId: product.id },
+    update: {
+      isRoll: true,
+      needsUpload: true,
+      priceMode: 'AREA',
+      rollWidthCm: 160,
+      maxWidthCm: 160,
+      productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max width 160 cm. Price is per m² of printed area.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 30 mm bleed on all sides.',
+    },
+    create: {
+      productId: product.id,
+      type: 'BANNER',
+      hasCustomSize: true,
+      hasFixedSizes: false,
+      hasVariants: false,
+      hasOptions: true,
+      isRoll: true,
+      needsUpload: true,
+      priceMode: 'AREA',
+      rollWidthCm: 160,
+      maxWidthCm: 160,
+      minWidth: 30,
+      maxWidth: 160,
+      minHeight: 30,
+      maxHeight: 2000,
+      productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max width 160 cm. Price is per m² of printed area.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 30 mm bleed on all sides.',
+    },
+  })
+
+  await upsertPricingTable(product.id, 'AREA', { pricePerM2: 16.00 })
+  await applyBannerOptions(product.id)
+
+  console.log(`  ✓ Construction banner: ${product.id}`)
+}
+
+// ---------------------------------------------------------------------------
+// Foil products (steps 238–239)
+// ---------------------------------------------------------------------------
+
+async function seedFoilProducts() {
+  console.log('Seeding Foil products...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'foil' } })
+
+  const foilDefs = [
+    {
+      name: 'Magnetfolie',
+      slug: 'magnetfolie',
+      imageUrl: '/images/products/foil.svg',
+      shortDescription: 'Printed magnetic foil — flexible, removable, repositionable.',
+      description: 'Full-colour print on flexible magnetic foil. Easily repositionable and leaves no residue. Ideal for vehicles, refrigerators, whiteboards, and metal surfaces. Max width 100 cm.',
+      pricePerM2: 18.00,
+      maxWidth: 100,
+    },
+    {
+      name: 'Milchglasfolie',
+      slug: 'milchglasfolie',
+      imageUrl: '/images/products/foil.svg',
+      shortDescription: 'Frosted glass film — privacy and style for windows and glass doors.',
+      description: 'Self-adhesive frosted glass film printed with your design. Provides privacy while letting light through. Ideal for office partitions, shop windows, and glass doors. Max width 137 cm.',
+      pricePerM2: 22.00,
+      maxWidth: 137,
+    },
+    {
+      name: 'Lochfolie',
+      slug: 'lochfolie',
+      imageUrl: '/images/products/foil.svg',
+      shortDescription: 'Perforated window film — see-through from inside, opaque outside.',
+      description: 'Printed perforated vinyl film (50/50). Full-colour print visible from outside; transparent from inside. Ideal for shop windows and vehicle rear windows. Max width 137 cm.',
+      pricePerM2: 20.00,
+      maxWidth: 137,
+    },
+    {
+      name: 'PVC Folie',
+      slug: 'pvc-folie',
+      imageUrl: '/images/products/foil.svg',
+      shortDescription: 'Self-adhesive PVC film — for windows, walls, and smooth surfaces.',
+      description: 'Premium self-adhesive PVC film for indoor and outdoor use. Waterproof, UV-resistant, and easy to apply. Available in gloss or matte. Max width 137 cm.',
+      pricePerM2: 15.00,
+      maxWidth: 137,
+    },
+    {
+      name: 'Car Magnet',
+      slug: 'car-magnet',
+      imageUrl: '/images/products/car-magnet.svg',
+      shortDescription: 'Magnetic car signs — attach and remove in seconds.',
+      description: 'Full-colour printed magnetic car signs. Strong enough to stay on at motorway speed. Ideal for business vehicles, temporary branding, and event promotion. Max width 100 cm.',
+      pricePerM2: 25.00,
+      maxWidth: 100,
+    },
+    {
+      name: 'Car Magnet Schild',
+      slug: 'car-magnet-schild',
+      imageUrl: '/images/products/car-magnet.svg',
+      shortDescription: 'Pre-cut magnetic door signs with rounded corners.',
+      description: 'Full-colour magnetic door signs pre-cut to common car door formats. Rounded corners prevent lifting at speed. Supplied in pairs. Printed on 0.8 mm magnetic material.',
+      pricePerM2: 25.00,
+      maxWidth: 100,
+    },
+  ]
+
+  for (const def of foilDefs) {
+    const product = await db.product.upsert({
+      where: { slug: def.slug },
+      update: {
+        categoryId: cat?.id ?? null,
+        imageUrl: def.imageUrl,
+        shortDescription: def.shortDescription,
+        description: def.description,
+      },
+      create: {
+        name: def.name,
+        slug: def.slug,
+        category: 'Foil',
+        categoryId: cat?.id ?? null,
+        active: true,
+        imageUrl: def.imageUrl,
+        shortDescription: def.shortDescription,
+        description: def.description,
+        guideText: `PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed on all sides. Max width ${def.maxWidth} cm.`,
+        minDpi: 100,
+        recommendedDpi: 150,
+        bleedMm: 3,
+        safeMarginMm: 5,
+        allowedFormats: 'PDF,PNG,SVG',
+        notes: `Max width ${def.maxWidth} cm.`,
+      },
+    })
+
+    await db.productConfig.upsert({
+      where: { productId: product.id },
+      update: {
+        isRoll: true,
+        isPrintCut: true,
+        needsUpload: true,
+        priceMode: 'AREA',
+        rollWidthCm: def.maxWidth,
+        maxWidthCm: def.maxWidth,
+        productionType: 'PRINT_CUT',
+        helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`,
+        uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed on all sides.',
+      },
+      create: {
+        productId: product.id,
+        type: 'FOIL',
+        hasCustomSize: true,
+        hasFixedSizes: false,
+        hasVariants: false,
+        hasOptions: false,
+        isRoll: true,
+        isPrintCut: true,
+        needsUpload: true,
+        priceMode: 'AREA',
+        rollWidthCm: def.maxWidth,
+        maxWidthCm: def.maxWidth,
+        minWidth: 5,
+        maxWidth: def.maxWidth,
+        minHeight: 5,
+        maxHeight: 500,
+        productionType: 'PRINT_CUT',
+        helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`,
+        uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed on all sides.',
+      },
+    })
+
+    await upsertPricingTable(product.id, 'AREA', { pricePerM2: def.pricePerM2 })
+
+    console.log(`  ✓ ${def.name}: ${product.id}`)
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -892,7 +1145,7 @@ async function main() {
   await seedCategories()
   await seedShippingMethods()
 
-  // Real shop products (steps 192–199, display systems added in fix block)
+  // Real shop products
   await seedRollUp()
   await seedKundestopper()
   await seedTextilePrint()
@@ -900,6 +1153,8 @@ async function main() {
   await seedStickers()
   await seedBanner()
   await seedMeshBanner()
+  await seedConstructionBanner()
+  await seedFoilProducts()
 
   // Legacy products
   await seedDTF()
