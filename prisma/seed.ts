@@ -3142,6 +3142,105 @@ async function seedVinylFix() {
 }
 
 // ---------------------------------------------------------------------------
+// Banner + DTF product fix
+// ---------------------------------------------------------------------------
+
+async function seedBannerDTFFix() {
+  console.log('Seeding Banner + DTF product fix...')
+
+  const catRows = await db.productCategory.findMany({ select: { id: true, slug: true } })
+  const cats: Record<string, string> = {}
+  for (const c of catRows) cats[c.slug] = c.id
+
+  // ── Banner: deactivate bauzaun-banner (duplicate), keep construction-banner ─
+
+  await db.product.updateMany({
+    where: { slug: 'bauzaun-banner' },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated bauzaun-banner (duplicate)')
+
+  await db.product.updateMany({
+    where: { slug: 'construction-banner' },
+    data: { active: true, categoryId: cats['banner'] ?? null, imageUrl: '/products/construction-banner.png' },
+  })
+  console.log('  ✓ construction-banner active in Banner')
+
+  // ── DTF: hero, deactivate old combined product, create 3 separate products ─
+
+  await db.productCategory.update({
+    where: { slug: 'dtf-gang-sheet' },
+    data: { imageUrl: '/products/dtf-hero-banner.png' },
+  })
+  console.log('  ✓ DTF category hero: dtf-hero-banner.png')
+
+  // Deactivate the old combined gang sheet product
+  await db.product.updateMany({
+    where: { slug: 'dtf-gang-sheet' },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated old dtf-gang-sheet product')
+
+  const dtfCatId = cats['dtf-gang-sheet'] ?? null
+
+  const dtfProducts = [
+    {
+      slug: 'dtf-55x100',
+      name: 'DTF 55 × 100 cm',
+      imageUrl: '/products/dtf-55x100-cm.png',
+      shortDescription: 'Full-size DTF gang sheet 55 × 100 cm — transfer up to 12 standard designs in one go.',
+      price: 40.00,
+    },
+    {
+      slug: 'dtf-a3',
+      name: 'DTF A3',
+      imageUrl: '/products/dtf-a3.png',
+      shortDescription: 'DTF gang sheet A3 (29.7 × 42 cm) — ideal for 4–6 medium prints.',
+      price: 12.00,
+    },
+    {
+      slug: 'dtf-a4',
+      name: 'DTF A4',
+      imageUrl: '/products/dtf-a4.png',
+      shortDescription: 'DTF gang sheet A4 (21 × 29.7 cm) — perfect for small designs or single prints.',
+      price: 6.00,
+    },
+  ]
+
+  for (const def of dtfProducts) {
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { active: true, imageUrl: def.imageUrl, categoryId: dtfCatId },
+      create: {
+        name: def.name, slug: def.slug, category: 'DTF gang sheet',
+        categoryId: dtfCatId, active: true,
+        imageUrl: def.imageUrl, shortDescription: def.shortDescription,
+        guideText: 'Upload PDF or PNG. Minimum 150 DPI. Leave 3 mm margin. Do not include bleed.',
+        minDpi: 150, recommendedDpi: 300, allowedFormats: 'PDF,PNG',
+        notes: 'DTF heat transfer film. Print and press onto garment.',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { priceMode: 'PIECE', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false },
+      create: {
+        productId: p.id, type: 'DTF',
+        hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        isDTF: true, needsUpload: true, priceMode: 'PIECE',
+        helpText: 'Fixed price per sheet. Upload your design file.',
+        uploadInstructions: 'Upload PDF or PNG. Minimum 150 DPI at final size.',
+      },
+    })
+    // Clear existing pricing tables and set a single FIXED price
+    await db.pricingTable.deleteMany({ where: { productId: p.id } })
+    await db.pricingTable.create({ data: { productId: p.id, type: 'FIXED', price: def.price } })
+    console.log(`  ✓ ${def.name}: ${def.imageUrl} @ €${def.price}`)
+  }
+
+  console.log('  Banner + DTF product fix complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -3202,6 +3301,9 @@ async function main() {
 
   // Vinyl plot fix — hero + image mapping + cleanup
   await seedVinylFix()
+
+  // Banner + DTF product fix
+  await seedBannerDTFFix()
 
   console.log('\nAll seeds complete.')
 }
