@@ -4,6 +4,7 @@ import { saveFile } from '@/lib/storage'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
+import { logInfo, logError } from '@/lib/logger'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100 MB (step 267)
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg']) // step 266
@@ -68,9 +69,18 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const { storagePath, size, mime } = await saveFile(file, orderItemId)
+      // Step 274 — safe upload: log on failure, surface readable error
+      let saved: { storagePath: string; size: number; mime: string }
+      try {
+        saved = await saveFile(file, orderItemId)
+      } catch (saveErr) {
+        logError('File save failed', saveErr, { orderItemId, filename: file.name })
+        return NextResponse.json({ error: 'File could not be saved. Please try again.' }, { status: 500 })
+      }
+      const { storagePath, size, mime } = saved
 
       const upload = await replaceOrCreateUpload({ orderItemId, filename: file.name, filePath: storagePath, size, mime, uploadType, uploadIndex })
+      logInfo('Upload created', { orderItemId, filename: file.name, size }) // step 279
       return NextResponse.json(upload, { status: 201 })
     }
 

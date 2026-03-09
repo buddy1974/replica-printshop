@@ -3,13 +3,15 @@ import { JobStatus } from '@/generated/prisma/client'
 import { assertExists } from '@/lib/assert'
 import { ValidationError } from '@/lib/errors'
 import { sendProductionStarted, sendDone } from '@/lib/email'
+import { logInfo } from '@/lib/logger'
 
-// Valid status transitions
+// Step 278 — Valid status transitions (guards against illegal transitions)
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   QUEUED:      ['IN_PROGRESS'],
   IN_PROGRESS: ['DONE', 'FAILED'],
   FAILED:      ['QUEUED'],
-  DONE:        [], // terminal — no transitions allowed
+  DONE:        [], // terminal
+  CANCELLED:   [], // terminal
 }
 
 const MACHINE_TYPE_MAP: Record<string, string> = {
@@ -84,6 +86,7 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
       data: { status: 'IN_PRODUCTION' },
       include: { user: { select: { email: true } } },
     })
+    logInfo('Production started', { jobId, orderId }) // step 279
     if (order.user?.email) sendProductionStarted(orderId, order.user.email).catch(() => {})
   } else if (status === 'DONE') {
     const pendingJobs = await db.productionJob.count({
@@ -98,6 +101,7 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
         data: { status: 'DONE' },
         include: { user: { select: { email: true } } },
       })
+      logInfo('Production done — all jobs complete', { jobId, orderId }) // step 279
       if (order.user?.email) sendDone(orderId, order.user.email).catch(() => {})
     }
   }

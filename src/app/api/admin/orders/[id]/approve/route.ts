@@ -5,6 +5,7 @@ import { assertExists } from '@/lib/assert'
 import { sendApproved } from '@/lib/email'
 import { createProductionJob } from '@/lib/production'
 import { requireAdmin } from '@/lib/adminAuth'
+import { logInfo } from '@/lib/logger'
 
 interface Params {
   params: { id: string }
@@ -24,6 +25,12 @@ export async function POST(req: NextRequest, { params }: Params) {
     })
 
     assertExists(order, `Order not found: ${params.id}`)
+
+    // Step 276 — Idempotent approve: safe to call multiple times
+    const ALREADY_APPROVED = ['APPROVED', 'READY', 'IN_PRODUCTION', 'DONE']
+    if (ALREADY_APPROVED.includes(order.status)) {
+      return NextResponse.json({ message: `Order is already ${order.status}`, id: params.id })
+    }
 
     if (order.status !== 'UPLOADED') {
       throw new ValidationError(
@@ -50,6 +57,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     }
 
     await db.order.update({ where: { id: params.id }, data: { status: 'READY' } })
+
+    logInfo('Order approved', { orderId: params.id }) // step 279
 
     // Fire email (non-blocking)
     if (order.user?.email) sendApproved(params.id, order.user.email).catch(() => {})

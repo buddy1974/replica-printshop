@@ -35,10 +35,17 @@ export async function saveFile(
   fs.mkdirSync(dir, { recursive: true })
 
   const diskPath = path.join(dir, safeName)
-  const buffer = Buffer.from(await file.arrayBuffer())
-  fs.writeFileSync(diskPath, buffer)
-
   const storagePath = `storage/uploads/${orderItemId}/${safeName}`
+
+  // Step 274 — clean up partial file on write failure
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer())
+    fs.writeFileSync(diskPath, buffer)
+  } catch (err) {
+    if (fs.existsSync(diskPath)) fs.unlinkSync(diskPath)
+    throw err
+  }
+
   return { storagePath, size: file.size, mime: file.type }
 }
 
