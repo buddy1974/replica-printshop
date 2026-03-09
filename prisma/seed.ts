@@ -3107,6 +3107,41 @@ async function seedCatalogCorrections() {
 }
 
 // ---------------------------------------------------------------------------
+// Vinyl plot fix — hero + image mapping + cleanup
+// ---------------------------------------------------------------------------
+
+async function seedVinylFix() {
+  console.log('Seeding Vinyl plot fix...')
+
+  // Category hero
+  await db.productCategory.update({
+    where: { slug: 'vinyl-plot' },
+    data: { imageUrl: '/products/lettering-plotfolie-banner.png' },
+  })
+
+  // Deactivate original generic vinyl-lettering product
+  await db.product.updateMany({
+    where: { slug: 'vinyl-lettering' },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated vinyl-lettering')
+
+  // Wire images + ensure active
+  const vinylProducts = [
+    { slug: 'car-lettering',   imageUrl: '/products/car-lettering.png' },
+    { slug: 'logo-cut-vinyl',  imageUrl: '/products/logo-cut-vinyl.png' },
+    { slug: 'window-lettering', imageUrl: '/products/window-lettering.png' },
+    { slug: 'reflective-vinyl', imageUrl: '/products/reflective-vinyl.png' },
+  ]
+  for (const p of vinylProducts) {
+    await db.product.updateMany({ where: { slug: p.slug }, data: { imageUrl: p.imageUrl, active: true } })
+    console.log(`  ✓ ${p.slug}: ${p.imageUrl}`)
+  }
+
+  console.log('  Vinyl plot fix complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -3164,6 +3199,9 @@ async function main() {
 
   // Catalog corrections phase 2
   await seedCatalogCorrections()
+
+  // Vinyl plot fix — hero + image mapping + cleanup
+  await seedVinylFix()
 
   console.log('\nAll seeds complete.')
 }
