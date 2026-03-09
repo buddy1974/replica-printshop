@@ -4,7 +4,8 @@ import { saveFile } from '@/lib/storage'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
-import { logInfo, logError } from '@/lib/logger'
+import { logInfo, logError as consoleLogError } from '@/lib/logger'
+import { logAction, logError } from '@/lib/log'
 
 // Step 323 — max 50 MB; allowed types: pdf, png, jpg, jpeg, svg only
 const MAX_FILE_SIZE = process.env.MAX_UPLOAD_SIZE
@@ -88,13 +89,19 @@ export async function POST(req: NextRequest) {
       try {
         saved = await saveFile(file, orderItemId)
       } catch (saveErr) {
-        logError('File save failed', saveErr, { orderItemId, filename: file.name })
+        consoleLogError('File save failed', saveErr, { orderItemId, filename: file.name })
         return NextResponse.json({ error: 'File could not be saved. Please try again.' }, { status: 500 })
       }
       const { storagePath, size, mime } = saved
 
       const upload = await replaceOrCreateUpload({ orderItemId, filename: file.name, filePath: storagePath, size, mime, uploadType, uploadIndex })
-      logInfo('Upload created', { orderItemId, filename: file.name, size }) // step 279
+      logInfo('Upload created', { orderItemId, filename: file.name, size })
+      // Step 333
+      logAction('UPLOAD_CREATE', 'upload', {
+        userId: cookieUserId || null,
+        entityId: upload.id,
+        data: { orderItemId, filename: file.name, size },
+      })
       return NextResponse.json(upload, { status: 201 })
     }
 
@@ -110,6 +117,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(upload, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: '/api/upload' })
     console.error(e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }

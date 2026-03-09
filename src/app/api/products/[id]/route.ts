@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { assertExists } from '@/lib/assert'
+import { requireAdmin } from '@/lib/adminAuth'
+import { logAction, logError } from '@/lib/log'
 
 const productInclude = {
   variants: true,
@@ -31,6 +33,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
+    const adminId = req.cookies.get('replica_uid')?.value
     const body = await req.json()
     const {
       name, slug, category, categoryId, active,
@@ -61,23 +65,33 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       },
       include: productInclude,
     })
+    // Step 335
+    logAction('ADMIN_PRODUCT_EDIT', 'product', { userId: adminId, entityId: params.id, data: { name, active } })
     return NextResponse.json(product)
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: `/api/products/${params.id}` })
     console.error(e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
   try {
+    await requireAdmin(req)
+    const adminId = req.cookies.get('replica_uid')?.value
     const product = await db.product.update({
       where: { id: params.id },
       data: { active: false },
     })
+    // Step 335
+    logAction('ADMIN_PRODUCT_DELETE', 'product', { userId: adminId, entityId: params.id })
     return NextResponse.json(product)
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: `/api/products/${params.id}` })
     console.error(e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }

@@ -6,6 +6,7 @@ import { sendApproved } from '@/lib/email'
 import { createProductionJob } from '@/lib/production'
 import { requireAdmin } from '@/lib/adminAuth'
 import { logInfo } from '@/lib/logger'
+import { logAction, logError } from '@/lib/log'
 import { assertValidOrderTransition } from '@/lib/orderStatus'
 
 interface Params {
@@ -62,7 +63,11 @@ export async function POST(req: NextRequest, { params }: Params) {
     assertValidOrderTransition('APPROVED', 'READY')
     await db.order.update({ where: { id: params.id }, data: { status: 'READY' } })
 
-    logInfo('Order approved', { orderId: params.id }) // step 279
+    logInfo('Order approved', { orderId: params.id })
+    // Steps 332, 335
+    const adminId = req.cookies.get('replica_uid')?.value
+    logAction('ADMIN_APPROVE', 'order', { userId: adminId, entityId: params.id, data: { status: 'READY' } })
+    logAction('ORDER_STATUS', 'order', { userId: adminId, entityId: params.id, data: { from: 'UPLOADED', to: 'READY' } })
 
     // Fire email (non-blocking)
     if (order.user?.email) sendApproved(params.id, order.user.email).catch(() => {})
@@ -71,6 +76,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json(updated)
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: `/api/admin/orders/${params.id}/approve` })
     console.error(e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }

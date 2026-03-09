@@ -4,6 +4,7 @@ import { assertExists } from '@/lib/assert'
 import { ValidationError } from '@/lib/errors'
 import { sendProductionStarted, sendDone } from '@/lib/email'
 import { logInfo } from '@/lib/logger'
+import { logAction } from '@/lib/log'
 import { assertValidOrderTransition } from '@/lib/orderStatus'
 
 // Step 278 — Valid status transitions (guards against illegal transitions)
@@ -41,14 +42,13 @@ export async function createProductionJob(orderItemId: string) {
     ? (MACHINE_TYPE_MAP[item.productionTypeSnapshot] ?? null)
     : null
 
-  return db.productionJob.create({
-    data: {
-      orderItemId,
-      status: 'QUEUED',
-      machineType,
-    },
+  const job = await db.productionJob.create({
+    data: { orderItemId, status: 'QUEUED', machineType },
     include: jobInclude,
   })
+  // Step 339
+  logAction('PROD_CREATE', 'productionJob', { entityId: job.id, data: { orderItemId, machineType } })
+  return job
 }
 
 export async function getQueue() {
@@ -89,7 +89,10 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
       data: { status: 'IN_PRODUCTION' },
       include: { user: { select: { email: true } } },
     })
-    logInfo('Production started', { jobId, orderId }) // step 279
+    logInfo('Production started', { jobId, orderId })
+    // Steps 332, 339
+    logAction('PROD_START', 'productionJob', { entityId: jobId, data: { orderId } })
+    logAction('ORDER_STATUS', 'order', { entityId: orderId, data: { from: updated.orderItem.order.status, to: 'IN_PRODUCTION' } })
     if (order.user?.email) sendProductionStarted(orderId, order.user.email).catch(() => {})
   } else if (status === 'DONE') {
     const pendingJobs = await db.productionJob.count({
@@ -106,7 +109,10 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
         data: { status: 'DONE' },
         include: { user: { select: { email: true } } },
       })
-      logInfo('Production done — all jobs complete', { jobId, orderId }) // step 279
+      logInfo('Production done — all jobs complete', { jobId, orderId })
+      // Steps 332, 339
+      logAction('PROD_DONE', 'productionJob', { entityId: jobId, data: { orderId } })
+      logAction('ORDER_STATUS', 'order', { entityId: orderId, data: { from: updated.orderItem.order.status, to: 'DONE' } })
       if (order.user?.email) sendDone(orderId, order.user.email).catch(() => {})
     }
   }
@@ -115,9 +121,12 @@ export async function updateJobStatus(jobId: string, status: JobStatus) {
 }
 
 export async function assignMachine(jobId: string, machineName: string) {
-  return db.productionJob.update({
+  const job = await db.productionJob.update({
     where: { id: jobId },
     data: { machine: machineName },
     include: jobInclude,
   })
+  // Step 339
+  logAction('PROD_ASSIGN', 'productionJob', { entityId: jobId, data: { machine: machineName } })
+  return job
 }

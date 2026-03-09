@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUserByEmail } from '@/lib/user'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { logAction, logError } from '@/lib/log'
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,9 +19,13 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await getOrCreateUserByEmail(email, name)
+    // Step 336
+    logAction('LOGIN', 'user', { userId: user.id, data: { email } })
     return NextResponse.json(user)
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: '/api/user' })
     console.error(e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }

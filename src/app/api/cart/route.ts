@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCart, addToCart } from '@/lib/cart'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
+import { logAction, logError } from '@/lib/log'
 
 // Step 302 — verify cookie userId matches requested userId (if cookie is set)
 function cartAccessDenied(req: NextRequest, userId: string): boolean {
@@ -44,9 +45,13 @@ export async function POST(req: NextRequest) {
     }
 
     const cart = await addToCart({ userId, productId, variantId, width, height, quantity, express, optionValueIds, placement })
+    // Step 334
+    logAction('CART_ADD', 'cart', { userId, data: { productId, variantId, quantity, width, height } })
     return NextResponse.json(cart, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: '/api/cart' })
     console.error(e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
