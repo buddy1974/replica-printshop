@@ -2454,14 +2454,14 @@ async function seedDisplayFix() {
   // Rollup banner 85×200 (separate product)
   const ru85 = await db.product.upsert({
     where: { slug: 'rollup-85' },
-    update: { categoryId: catId, active: true, imageUrl: '/images/display/rollup-85.jpg' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/rollup-standard.png' },
     create: {
       name: 'Rollup banner 85×200',
       slug: 'rollup-85',
       category: 'Display systems',
       categoryId: catId,
       active: true,
-      imageUrl: '/images/display/rollup-85.jpg',
+      imageUrl: '/products/rollup-standard.png',
       shortDescription: 'Retractable 85×200 cm roll-up stand — print, pole and carry bag included.',
       description: 'Classic 85×200 cm retractable roll-up banner stand. High-quality aluminium cassette mechanism. Full-colour print included. Quick to set up in seconds. Carry bag for easy transport.',
       guideText: 'PDF or high-res PNG. 850 × 2000 mm. Include 30 mm bleed at bottom (hidden in cassette). Min 72 DPI at full size.',
@@ -2485,14 +2485,14 @@ async function seedDisplayFix() {
   // Rollup banner 100×200 (separate product)
   const ru100 = await db.product.upsert({
     where: { slug: 'rollup-100' },
-    update: { categoryId: catId, active: true, imageUrl: '/images/display/rollup-100.jpg' },
+    update: { categoryId: catId, active: true, imageUrl: '/products/rollup-standard.png' },
     create: {
       name: 'Rollup banner 100×200',
       slug: 'rollup-100',
       category: 'Display systems',
       categoryId: catId,
       active: true,
-      imageUrl: '/images/display/rollup-100.jpg',
+      imageUrl: '/products/rollup-standard.png',
       shortDescription: 'Wide 100×200 cm roll-up stand — maximum visibility, print included.',
       description: 'Wide-format 100×200 cm retractable roll-up banner stand. Extra width for greater visual impact. High-quality aluminium cassette, full-colour print and carry bag included.',
       guideText: 'PDF or high-res PNG. 1000 × 2000 mm. Include 30 mm bleed at bottom. Min 72 DPI at full size.',
