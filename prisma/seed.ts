@@ -2415,7 +2415,7 @@ async function seedDisplayFix() {
     data: {
       name: 'Customer stopper standard',
       shortDescription: 'Double-sided A-frame pavement signs — printed and ready.',
-      imageUrl: '/images/display/customer-stopper.jpg',
+      imageUrl: '/products/k-stopper-a1.png',
     },
   })
   console.log('  ✓ Renamed kundestopper → Customer stopper standard')
