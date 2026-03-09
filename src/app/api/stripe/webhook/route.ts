@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { db } from '@/lib/db'
-import { sendOrderConfirmed, sendUploadNeeded } from '@/lib/email'
+import { sendOrderConfirmed, sendUploadNeeded, sendAdminNewOrder } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
       sendOrderConfirmed(orderId, email).catch(() => {})
       sendUploadNeeded(orderId, email).catch(() => {})
     }
+    sendAdminNewOrder(orderId, Number(order.total)).catch(() => {})
   }
 
   return NextResponse.json({ received: true })
