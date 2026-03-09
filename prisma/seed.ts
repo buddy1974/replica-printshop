@@ -2929,6 +2929,184 @@ async function seedSublimationRebuild() {
 }
 
 // ---------------------------------------------------------------------------
+// Catalog corrections phase 2
+// ---------------------------------------------------------------------------
+
+async function seedCatalogCorrections() {
+  console.log('Seeding catalog corrections phase 2...')
+
+  // Re-fetch category map
+  const catRows = await db.productCategory.findMany({ select: { id: true, slug: true } })
+  const cats: Record<string, string> = {}
+  for (const c of catRows) cats[c.slug] = c.id
+
+  // ── 1. Bauzaun banner ────────────────────────────────────────────────────
+
+  const bauzaun = await db.product.upsert({
+    where: { slug: 'bauzaun-banner' },
+    update: { categoryId: cats['banner'] ?? null, active: true, imageUrl: '/products/construction-banner.png' },
+    create: {
+      name: 'Bauzaunbanner PVC',
+      slug: 'bauzaun-banner',
+      category: 'Banner',
+      categoryId: cats['banner'] ?? null,
+      active: true,
+      imageUrl: '/products/construction-banner.png',
+      shortDescription: 'Robuste PVC Vollplane 510 g/m² — Standardformat 340 × 173 cm, B1 zertifiziert.',
+      description: 'Bauzaunbanner aus robuster PVC Vollplane 510 g/m². Standardformat 340 × 173 cm passend für Euro-Bauzaunelemente. B1 feuerhemmend zertifiziert. UV-beständig, witterungsfest, mit Hohlsaum und Ösen.',
+      guideText: 'PDF oder PNG. Mindestauflösung 72 DPI im Endformat. 340 × 173 cm. 20 mm Beschnitt auf allen Seiten.',
+      minDpi: 72, recommendedDpi: 100, bleedMm: 20, safeMarginMm: 20, allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Standardformat 340 × 173 cm. B1 zertifiziert.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: bauzaun.id },
+    update: { isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 160, maxWidthCm: 160, productionType: 'ROLL_PRINT' },
+    create: {
+      productId: bauzaun.id, type: 'BANNER', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+      isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 160, maxWidthCm: 160,
+      minWidth: 50, maxWidth: 340, minHeight: 50, maxHeight: 500, productionType: 'ROLL_PRINT',
+      helpText: 'Standardformat 340 × 173 cm für Euro-Bauzaun. Preis pro m² bedruckter Fläche.',
+      uploadInstructions: 'PDF oder PNG. 72 DPI Mindestauflösung im Endformat. 20 mm Beschnitt auf allen Seiten.',
+    },
+  })
+  await upsertPricingTable(bauzaun.id, 'AREA', { pricePerM2: 16.00 })
+  await applyBannerOptions(bauzaun.id)
+  console.log(`  ✓ Bauzaunbanner PVC: ${bauzaun.id}`)
+
+  // ── 2. Plexiglas sign (foil category, image found) ───────────────────────
+
+  const plex = await db.product.upsert({
+    where: { slug: 'plexiglas-sign' },
+    update: { categoryId: cats['foil'] ?? null, active: true, imageUrl: '/products/plexiglas%20folie.png' },
+    create: {
+      name: 'Plexiglas sign',
+      slug: 'plexiglas-sign',
+      category: 'Foil / Adhesive',
+      categoryId: cats['foil'] ?? null,
+      active: true,
+      imageUrl: '/products/plexiglas%20folie.png',
+      shortDescription: 'Transparent acrylic panel with adhesive print — mounted with metal spacers.',
+      description: 'Premium plexiglass (acrylic) sign with printed graphic adhered to the back side. Glossy surface gives a clean, professional look. Mounted with brushed metal spacers for a floating effect. Ideal for reception areas, office signage, and retail environments.',
+      guideText: 'PDF or high-res PNG. Minimum 150 DPI at final size. Include 3 mm bleed.',
+      minDpi: 150, recommendedDpi: 200, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG',
+      notes: 'Acrylic panel with metal spacers. Printed on back side.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: plex.id },
+    update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, maxWidthCm: 150, productionType: 'ROLL_PRINT' },
+    create: {
+      productId: plex.id, type: 'RIGID', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+      needsUpload: true, priceMode: 'AREA', maxWidthCm: 150, minWidth: 10, maxWidth: 150, minHeight: 10, maxHeight: 200,
+      productionType: 'ROLL_PRINT',
+      helpText: 'Enter width and height in cm. Max 150 × 200 cm. Price is per m².',
+      uploadInstructions: 'Upload PDF or PNG. Minimum 150 DPI. Include 3 mm bleed on all sides.',
+    },
+  })
+  await upsertPricingTable(plex.id, 'AREA', { pricePerM2: 85.00 })
+  console.log(`  ✓ Plexiglas sign: ${plex.id}`)
+
+  // ── 3. DTF gang sheet — fixed sizes ──────────────────────────────────────
+
+  const dtfGang = await db.product.findUnique({ where: { slug: 'dtf-gang-sheet' } })
+  if (dtfGang) {
+    // Switch from custom size to fixed variants
+    await db.productConfig.update({
+      where: { productId: dtfGang.id },
+      data: { hasCustomSize: false, hasFixedSizes: false, hasVariants: true, hasOptions: false, priceMode: 'PIECE' },
+    })
+    await upsertVariant(dtfGang.id, '55 × 100 cm', 'DTF Film', 40.00)
+    await upsertVariant(dtfGang.id, 'A3 (29.7 × 42 cm)', 'DTF Film', 12.00)
+    await upsertVariant(dtfGang.id, 'A4 (21 × 29.7 cm)', 'DTF Film', 6.00)
+    await upsertPricingTable(dtfGang.id, 'FIXED', { price: 0 })
+    console.log(`  ✓ DTF gang sheet: fixed sizes (55×100, A3, A4)`)
+  }
+
+  // ── 4. Sublimation — deactivate drink bottle (no image) ──────────────────
+
+  await db.product.updateMany({
+    where: { slug: 'sublimation-bottle' },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated drink bottle (no image)')
+
+  // ── 5. Stickers category — push to hidden, move products to foil ──────────
+
+  await db.productCategory.update({
+    where: { slug: 'stickers' },
+    data: { sortOrder: 200 },
+  })
+  console.log('  ✓ Stickers category hidden (sortOrder 200)')
+
+  // Deactivate separate sticker products that become options
+  await db.product.updateMany({
+    where: {
+      slug: { in: ['car-decals', 'advertising-stickers', 'window-stickers', 'product-labels', 'iso-stickers', 'stickers'] },
+    },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated separate sticker products')
+
+  // Custom stickers — one product in Foil / Adhesive
+  const customStickers = await db.product.upsert({
+    where: { slug: 'custom-stickers' },
+    update: { categoryId: cats['foil'] ?? null, active: true },
+    create: {
+      name: 'Custom stickers',
+      slug: 'custom-stickers',
+      category: 'Foil / Adhesive',
+      categoryId: cats['foil'] ?? null,
+      active: true,
+      imageUrl: '/products/lochfolie.png',
+      shortDescription: 'Full-colour stickers in any size — choose material, laminate, and shape.',
+      description: 'Custom printed stickers on premium vinyl or paper stock. Available in gloss, matte, or transparent. Square cut or contour cut. Suitable for product labels, packaging, promotion, and decoration.',
+      guideText: 'PDF or PNG. Include 2 mm bleed. Minimum 150 DPI at print size.',
+      minDpi: 150, recommendedDpi: 300, bleedMm: 2, safeMarginMm: 2, allowedFormats: 'PDF,PNG,SVG',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: customStickers.id },
+    update: { isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 137, maxWidthCm: 137, productionType: 'PRINT_CUT' },
+    create: {
+      productId: customStickers.id, type: 'STICKER', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+      isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA',
+      rollWidthCm: 137, maxWidthCm: 137, minWidth: 2, maxWidth: 137, minHeight: 2, maxHeight: 500,
+      productionType: 'PRINT_CUT',
+      helpText: 'Enter the dimensions of your sticker. Choose material, laminate, and cut type.',
+      uploadInstructions: 'Upload PDF or PNG. Include 2 mm bleed. Minimum 150 DPI at final print size. For contour cut, include a CutContour spot colour layer.',
+    },
+  })
+  await upsertPricingTable(customStickers.id, 'AREA', { pricePerM2: 32.00 })
+  await upsertOption(customStickers.id, 'Material', [
+    { name: 'White vinyl gloss',  priceModifier: 0 },
+    { name: 'White vinyl matte',  priceModifier: 1 },
+    { name: 'Transparent vinyl',  priceModifier: 2 },
+    { name: 'Kraft paper',        priceModifier: 0 },
+  ])
+  await upsertOption(customStickers.id, 'Laminate', [
+    { name: 'None',          priceModifier: 0 },
+    { name: 'Gloss laminate', priceModifier: 3 },
+    { name: 'Matte laminate', priceModifier: 3 },
+  ])
+  await upsertOption(customStickers.id, 'Shape', [
+    { name: 'Square cut',   priceModifier: 0 },
+    { name: 'Contour cut',  priceModifier: 5 },
+  ])
+  console.log(`  ✓ Custom stickers (Foil / Adhesive): ${customStickers.id}`)
+
+  // ── 6. Vinyl plot — remove non-real products ──────────────────────────────
+
+  await db.product.updateMany({
+    where: { slug: { in: ['door-lettering', 'opening-hours-lettering', 'wall-lettering'] } },
+    data: { active: false },
+  })
+  console.log('  ✓ Vinyl plot: deactivated door-lettering, opening-hours-lettering, wall-lettering')
+
+  console.log('  Catalog corrections phase 2 complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2983,6 +3161,9 @@ async function main() {
 
   // Sublimation rebuild — separate standard/magic mug products
   await seedSublimationRebuild()
+
+  // Catalog corrections phase 2
+  await seedCatalogCorrections()
 
   console.log('\nAll seeds complete.')
 }
