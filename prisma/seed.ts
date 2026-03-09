@@ -72,6 +72,13 @@ async function upsertPricingTable(
 async function seedCategories() {
   console.log('Seeding product categories...')
 
+  // Step 291 — rename legacy 'rigid' slug to 'large-format' if it exists
+  const rigid = await db.productCategory.findUnique({ where: { slug: 'rigid' } })
+  if (rigid) {
+    await db.productCategory.update({ where: { id: rigid.id }, data: { slug: 'large-format', name: 'Large format' } })
+    console.log('  ↳ renamed rigid → large-format')
+  }
+
   const categories = [
     {
       name: 'Display systems', slug: 'display-systems', sortOrder: 0, defaultPriceMode: 'PIECE',
@@ -79,18 +86,18 @@ async function seedCategories() {
       imageUrl: '/images/products/rollup.svg',
     },
     {
-      name: 'Banner', slug: 'banner', sortOrder: 1, defaultPriceMode: 'AREA',
+      name: 'Banners', slug: 'banner', sortOrder: 1, defaultPriceMode: 'AREA',
       description: 'Large format banners printed on durable PVC or mesh material. Finished with hemmed edges and eyelets for easy mounting.',
       imageUrl: '/images/products/banner.svg',
     },
     {
-      name: 'Foil', slug: 'foil', sortOrder: 2, defaultPriceMode: 'AREA',
-      description: 'Self-adhesive foils, window films, magnetic foils, and car magnets. Custom size, precision cut.',
+      name: 'Foils', slug: 'foil', sortOrder: 2, defaultPriceMode: 'AREA',
+      description: 'Self-adhesive foils and window films. Custom size, precision cut.',
       imageUrl: '/images/products/foil.svg',
     },
     {
       name: 'Textile print', slug: 'textile-print', sortOrder: 3, defaultPriceMode: 'PIECE',
-      description: 'DTF transfers, flex and flock vinyl, embroidery, and patches. Suitable for t-shirts, hoodies, workwear, and more.',
+      description: 'DTF transfers, flex and flock vinyl. Suitable for t-shirts, hoodies, workwear, and more.',
       imageUrl: '/images/products/textile.svg',
     },
     {
@@ -104,9 +111,19 @@ async function seedCategories() {
       imageUrl: '/images/products/sticker.svg',
     },
     {
-      name: 'Rigid', slug: 'rigid', sortOrder: 6, defaultPriceMode: 'FIXED',
-      description: 'Printing on rigid substrates such as forex, dibond, and acrylic. Suitable for outdoor signage and display.',
+      name: 'Large format', slug: 'large-format', sortOrder: 6, defaultPriceMode: 'AREA',
+      description: 'Printing on rigid substrates — forex, dibond, and acrylic. Suitable for outdoor signage, displays, and shop signs.',
       imageUrl: null,
+    },
+    {
+      name: 'Magnets', slug: 'magnets', sortOrder: 7, defaultPriceMode: 'AREA',
+      description: 'Magnetic foil and car magnet signs. Full-colour print, repositionable, and removable without residue.',
+      imageUrl: '/images/products/car-magnet.svg',
+    },
+    {
+      name: 'Embroidery', slug: 'embroidery', sortOrder: 8, defaultPriceMode: 'PIECE',
+      description: 'Machine embroidery and custom patches. Flat, 3D, or patch embroidery on garments, bags, and accessories.',
+      imageUrl: '/images/products/textile.svg',
     },
   ]
 
@@ -679,12 +696,13 @@ async function seedTextileExtension() {
   ])
   console.log(`  ✓ Flock: ${flock.id}`)
 
-  // --- Embroidery (step 241 + 243 + 244) ---
+  // --- Embroidery (step 241 + 243 + 244) — uses Embroidery category ---
+  const embroideryCat = await db.productCategory.findUnique({ where: { slug: 'embroidery' } })
   const embroidery = await db.product.upsert({
     where: { slug: 'embroidery' },
-    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Machine embroidery on garments — flat, 3D, or patch.' },
+    update: { categoryId: embroideryCat?.id ?? cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Machine embroidery on garments — flat, 3D, or patch.' },
     create: {
-      name: 'Embroidery', slug: 'embroidery', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      name: 'Embroidery', slug: 'embroidery', category: 'Embroidery', categoryId: embroideryCat?.id ?? cat?.id ?? null, active: true,
       imageUrl: '/images/products/textile.svg',
       shortDescription: 'Machine embroidery on garments — flat, 3D, or patch.',
       description: 'High-quality machine embroidery on your garments. Choose between flat embroidery, 3D puff embroidery, or patch application. Pricing based on stitch count. Send your garment or order with ours.',
@@ -720,12 +738,12 @@ async function seedTextileExtension() {
   ])
   console.log(`  ✓ Embroidery: ${embroidery.id}`)
 
-  // --- Patches (step 242 + 245) ---
+  // --- Patches (step 242 + 245) — uses Embroidery category ---
   const patches = await db.product.upsert({
     where: { slug: 'patches' },
-    update: { categoryId: cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Custom embroidered patches — iron-on, velcro, or sew-on.' },
+    update: { categoryId: embroideryCat?.id ?? cat?.id ?? null, imageUrl: '/images/products/textile.svg', shortDescription: 'Custom embroidered patches — iron-on, velcro, or sew-on.' },
     create: {
-      name: 'Patches', slug: 'patches', category: 'Textile print', categoryId: cat?.id ?? null, active: true,
+      name: 'Patches', slug: 'patches', category: 'Embroidery', categoryId: embroideryCat?.id ?? cat?.id ?? null, active: true,
       imageUrl: '/images/products/textile.svg',
       shortDescription: 'Custom embroidered patches — iron-on, velcro, or sew-on.',
       description: 'Custom machine-embroidered patches. Choose your border type and backing. Suitable for jackets, bags, hats, and uniforms. Min order 10 pieces.',
@@ -986,17 +1004,67 @@ async function seedFoilProducts() {
   console.log('Seeding Foil products...')
 
   const cat = await db.productCategory.findUnique({ where: { slug: 'foil' } })
+  const magnetCat = await db.productCategory.findUnique({ where: { slug: 'magnets' } })
 
-  const foilDefs = [
+  // Step 291 — Magnetfolie, Car Magnet, Car Magnet Schild → Magnets category
+  const magnetDefs = [
     {
       name: 'Magnetfolie',
       slug: 'magnetfolie',
-      imageUrl: '/images/products/foil.svg',
+      imageUrl: '/images/products/car-magnet.svg',
       shortDescription: 'Printed magnetic foil — flexible, removable, repositionable.',
       description: 'Full-colour print on flexible magnetic foil. Easily repositionable and leaves no residue. Ideal for vehicles, refrigerators, whiteboards, and metal surfaces. Max width 100 cm.',
       pricePerM2: 18.00,
       maxWidth: 100,
+      catId: magnetCat?.id ?? cat?.id ?? null,
+      categoryLabel: 'Magnets',
     },
+    {
+      name: 'Car Magnet',
+      slug: 'car-magnet',
+      imageUrl: '/images/products/car-magnet.svg',
+      shortDescription: 'Magnetic car signs — attach and remove in seconds.',
+      description: 'Full-colour printed magnetic car signs. Strong enough to stay on at motorway speed. Ideal for business vehicles, temporary branding, and event promotion. Max width 100 cm.',
+      pricePerM2: 25.00,
+      maxWidth: 100,
+      catId: magnetCat?.id ?? cat?.id ?? null,
+      categoryLabel: 'Magnets',
+    },
+    {
+      name: 'Car Magnet Schild',
+      slug: 'car-magnet-schild',
+      imageUrl: '/images/products/car-magnet.svg',
+      shortDescription: 'Pre-cut magnetic door signs with rounded corners.',
+      description: 'Full-colour magnetic door signs pre-cut to common car door formats. Rounded corners prevent lifting at speed. Supplied in pairs. Printed on 0.8 mm magnetic material.',
+      pricePerM2: 25.00,
+      maxWidth: 100,
+      catId: magnetCat?.id ?? cat?.id ?? null,
+      categoryLabel: 'Magnets',
+    },
+  ]
+
+  for (const def of magnetDefs) {
+    const product = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: def.catId, imageUrl: def.imageUrl, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: def.categoryLabel, categoryId: def.catId, active: true,
+        imageUrl: def.imageUrl, shortDescription: def.shortDescription, description: def.description,
+        guideText: `PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width ${def.maxWidth} cm.`,
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG,SVG',
+        notes: `Max width ${def.maxWidth} cm.`,
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: product.id },
+      update: { isRoll: true, isPrintCut: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, productionType: 'PRINT_CUT', helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`, uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed on all sides.' },
+      create: { productId: product.id, type: 'FOIL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false, isRoll: true, isPrintCut: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, minWidth: 5, maxWidth: def.maxWidth, minHeight: 5, maxHeight: 500, productionType: 'PRINT_CUT', helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`, uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed on all sides.' },
+    })
+    await upsertPricingTable(product.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    console.log(`  ✓ ${def.name} (Magnets): ${product.id}`)
+  }
+
+  const foilDefs = [
     {
       name: 'Milchglasfolie',
       slug: 'milchglasfolie',
@@ -1023,24 +1091,6 @@ async function seedFoilProducts() {
       description: 'Premium self-adhesive PVC film for indoor and outdoor use. Waterproof, UV-resistant, and easy to apply. Available in gloss or matte. Max width 137 cm.',
       pricePerM2: 15.00,
       maxWidth: 137,
-    },
-    {
-      name: 'Car Magnet',
-      slug: 'car-magnet',
-      imageUrl: '/images/products/car-magnet.svg',
-      shortDescription: 'Magnetic car signs — attach and remove in seconds.',
-      description: 'Full-colour printed magnetic car signs. Strong enough to stay on at motorway speed. Ideal for business vehicles, temporary branding, and event promotion. Max width 100 cm.',
-      pricePerM2: 25.00,
-      maxWidth: 100,
-    },
-    {
-      name: 'Car Magnet Schild',
-      slug: 'car-magnet-schild',
-      imageUrl: '/images/products/car-magnet.svg',
-      shortDescription: 'Pre-cut magnetic door signs with rounded corners.',
-      description: 'Full-colour magnetic door signs pre-cut to common car door formats. Rounded corners prevent lifting at speed. Supplied in pairs. Printed on 0.8 mm magnetic material.',
-      pricePerM2: 25.00,
-      maxWidth: 100,
     },
   ]
 
@@ -1110,6 +1160,54 @@ async function seedFoilProducts() {
 
     await upsertPricingTable(product.id, 'AREA', { pricePerM2: def.pricePerM2 })
 
+    console.log(`  ✓ ${def.name}: ${product.id}`)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Large format — forex, dibond, acrylic (step 291/292)
+// ---------------------------------------------------------------------------
+
+async function seedLargeFormat() {
+  console.log('Seeding Large format products...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'large-format' } })
+
+  const defs = [
+    {
+      name: 'Forex board', slug: 'forex-board', pricePerM2: 28.00, maxWidth: 200,
+      shortDescription: 'Lightweight PVC foam board for indoor signs and displays.',
+      description: 'Printed directly onto white forex (PVC foam board). Lightweight, rigid, and easy to mount. Suitable for indoor signs, displays, posters, and point-of-sale. Available in 3 mm and 5 mm thickness.',
+    },
+    {
+      name: 'Dibond sign', slug: 'dibond-sign', pricePerM2: 55.00, maxWidth: 200,
+      shortDescription: 'Aluminium composite panel for outdoor and long-lasting signage.',
+      description: 'Printed on dibond (aluminium composite panel). Weather-resistant, UV-stable, and rigid. Ideal for outdoor signs, building fascia, and long-term displays.',
+    },
+    {
+      name: 'Acrylic sign', slug: 'acrylic-sign', pricePerM2: 75.00, maxWidth: 150,
+      shortDescription: 'Premium glossy acrylic signs — vibrant colour, premium look.',
+      description: 'Printed on clear or white acrylic. High-gloss surface gives vivid colour reproduction. Ideal for reception signs, office decor, and premium retail displays.',
+    },
+  ]
+
+  for (const def of defs) {
+    const product = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: cat?.id ?? null, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Large format', categoryId: cat?.id ?? null, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: `PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width ${def.maxWidth} cm.`,
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: product.id },
+      update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, maxWidthCm: def.maxWidth, productionType: 'ROLL_PRINT', helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`, uploadInstructions: 'Upload PDF or PNG. Minimum 100 DPI at final print size. Include 3 mm bleed on all sides.' },
+      create: { productId: product.id, type: 'RIGID', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false, needsUpload: true, priceMode: 'AREA', maxWidthCm: def.maxWidth, minWidth: 10, maxWidth: def.maxWidth, minHeight: 10, maxHeight: 300, productionType: 'ROLL_PRINT', helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`, uploadInstructions: 'Upload PDF or PNG. Minimum 100 DPI at final print size. Include 3 mm bleed on all sides.' },
+    })
+    await upsertPricingTable(product.id, 'AREA', { pricePerM2: def.pricePerM2 })
     console.log(`  ✓ ${def.name}: ${product.id}`)
   }
 }
@@ -1332,6 +1430,7 @@ async function main() {
   await seedMeshBanner()
   await seedConstructionBanner()
   await seedFoilProducts()
+  await seedLargeFormat()
 
   // Legacy products
   await seedDTF()
