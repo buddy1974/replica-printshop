@@ -5,7 +5,7 @@ import ProductCard from '@/components/ProductCard'
 import Container from '@/components/Container'
 import Link from 'next/link'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export async function generateMetadata({ params }: { params: { categorySlug: string } }): Promise<Metadata> {
   const cat = await db.productCategory.findUnique({

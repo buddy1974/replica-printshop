@@ -2,11 +2,40 @@ import Link from 'next/link'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
 import { db } from '@/lib/db'
+import { type Prisma } from '@/generated/prisma/client'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ProductsPage() {
-  const products = await db.product.findMany({ orderBy: { name: 'asc' } })
+const PAGE_SIZE = 20
+
+export default async function ProductsPage({ searchParams }: { searchParams: { page?: string; q?: string } }) {
+  const page = Math.max(1, Number(searchParams.page ?? 1))
+  const q = searchParams.q?.trim() ?? ''
+
+  const where: Prisma.ProductWhereInput = q
+    ? { name: { contains: q, mode: 'insensitive' } }
+    : {}
+
+  const [products, total] = await Promise.all([
+    db.product.findMany({
+      where,
+      select: { id: true, name: true, slug: true, category: true, active: true },
+      orderBy: { name: 'asc' },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    db.product.count({ where }),
+  ])
+
+  const totalPages = Math.ceil(total / PAGE_SIZE)
+
+  const buildHref = (p: number) => {
+    const params = new URLSearchParams()
+    if (p > 1) params.set('page', String(p))
+    if (q) params.set('q', q)
+    const s = params.toString()
+    return `/admin/products${s ? `?${s}` : ''}`
+  }
 
   return (
     <Container>
@@ -16,8 +45,22 @@ export default async function ProductsPage() {
           + New product
         </Link>
       </div>
+
+      <form method="GET" action="/admin/products" className="mb-4 flex gap-2">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Search by name…"
+          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-64"
+        />
+        <button type="submit" className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:border-gray-500">Search</button>
+        {q && (
+          <Link href="/admin/products" className="rounded border border-gray-200 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900">Clear</Link>
+        )}
+      </form>
+
       {products.length === 0 ? (
-        <p className="text-sm text-gray-500">No products yet. Create your first product above.</p>
+        <p className="text-sm text-gray-500">{q ? 'No products match that search.' : 'No products yet. Create your first product above.'}</p>
       ) : (
         <div className="overflow-x-auto rounded border border-gray-200 bg-white">
           <table className="w-full text-sm">
@@ -46,6 +89,19 @@ export default async function ProductsPage() {
           </table>
         </div>
       )}
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center gap-2 text-sm">
+          {page > 1 && (
+            <Link href={buildHref(page - 1)} className="rounded border border-gray-300 px-3 py-1.5 hover:border-gray-500">← Prev</Link>
+          )}
+          <span className="text-gray-500">Page {page} of {totalPages} ({total} total)</span>
+          {page < totalPages && (
+            <Link href={buildHref(page + 1)} className="rounded border border-gray-300 px-3 py-1.5 hover:border-gray-500">Next →</Link>
+          )}
+        </div>
+      )}
+
       <div className="mt-4">
         <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900">← Back to admin</Link>
       </div>

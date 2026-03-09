@@ -111,7 +111,7 @@ export default function AdminOrderDetailPage() {
               {previews.map((f) => (
                 <div key={f.id} style={{ marginBottom: 12 }}>
                   <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>PREVIEW</p>
-                  <img src={`/api/admin/files/${f.id}`} alt="Preview" style={{ maxWidth: 240, borderRadius: 6, border: '1px solid #e5e7eb' }} />
+                  <img src={`/api/admin/files/${f.id}`} alt="Preview" loading="lazy" style={{ maxWidth: 240, borderRadius: 6, border: '1px solid #e5e7eb' }} />
                 </div>
               ))}
 

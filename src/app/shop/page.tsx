@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import ProductCard from '@/components/ProductCard'
 import Container from '@/components/Container'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Shop',
@@ -11,23 +11,34 @@ export const metadata: Metadata = {
   alternates: { canonical: '/shop' },
 }
 
+type ShopProduct = { id: string; name: string; slug: string; category: string; active: boolean; shortDescription: string | null }
+type ShopCategory = { id: string; name: string; slug: string; description: string | null; products: ShopProduct[] }
+
 export default async function ShopPage() {
-  const categories = await db.productCategory.findMany({
-    orderBy: { sortOrder: 'asc' },
-    include: {
-      products: {
-        where: { active: true },
+  let categories: ShopCategory[] = []
+  let uncategorised: ShopProduct[] = []
+
+  try {
+    ;[categories, uncategorised] = await Promise.all([
+      db.productCategory.findMany({
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          products: {
+            where: { active: true },
+            orderBy: { name: 'asc' },
+            select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true },
+          },
+        },
+      }),
+      db.product.findMany({
+        where: { active: true, categoryId: null },
         orderBy: { name: 'asc' },
         select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true },
-      },
-    },
-  })
-
-  const uncategorised = await db.product.findMany({
-    where: { active: true, categoryId: null },
-    orderBy: { name: 'asc' },
-    select: { id: true, name: true, slug: true, category: true, active: true, shortDescription: true },
-  })
+      }),
+    ])
+  } catch {
+    // DB unavailable at build time — page will be regenerated on first request
+  }
 
   const groups = categories.filter((c) => c.products.length > 0)
 

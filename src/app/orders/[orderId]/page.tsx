@@ -85,7 +85,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
               {previews.map((u) => (
                 <div key={u.id} className="mb-3">
                   <p className="text-xs text-gray-500 mb-1">Preview</p>
-                  <img src={`/api/admin/files/${u.id}`} alt="Preview" className="max-w-xs rounded border border-gray-200" />
+                  <img src={`/api/admin/files/${u.id}`} alt="Preview" loading="lazy" className="max-w-xs rounded border border-gray-200" />
                 </div>
               ))}
 

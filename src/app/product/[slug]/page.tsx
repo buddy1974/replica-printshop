@@ -4,7 +4,7 @@ import ConfiguratorForm from '@/components/ConfiguratorForm'
 import Container from '@/components/Container'
 import { db } from '@/lib/db'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 interface Option {
   id: string

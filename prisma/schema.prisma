@@ -140,6 +140,8 @@ model Product {
   mockupTemplates  MockupTemplate[]
   config           ProductConfig?
   productCategory  ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
 }
 
 // ---------------------------------------------------------------------------
@@ -371,6 +373,8 @@ model Order {
   items           OrderItem[]
 
   @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -435,6 +439,7 @@ model UploadFile {
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
 
   @@index([orderItemId])
+  @@index([status])
 }
 
 // ---------------------------------------------------------------------------
@@ -451,4 +456,7 @@ model ProductionJob {
   createdAt   DateTime  @default(now())
 
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([status])
+  @@index([machineType])
 }

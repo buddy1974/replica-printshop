@@ -91,7 +91,7 @@ export default function ProductionJobCard({
       {job.orderItem.previewUrl && (
         <div>
           <p className="text-xs text-gray-500 mb-1">Preview</p>
-          <img src={job.orderItem.previewUrl} alt="Print preview" className="max-w-48 rounded border border-gray-200" />
+          <img src={job.orderItem.previewUrl} alt="Print preview" loading="lazy" className="max-w-48 rounded border border-gray-200" />
         </div>
       )}
 

@@ -25,7 +25,6 @@ const jobInclude = {
   orderItem: {
     include: {
       order: { include: { shippingMethod: true } },
-      uploadFiles: true,
     },
   },
 } as const

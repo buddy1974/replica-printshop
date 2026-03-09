@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Button from '@/components/Button'
 import ProductPreview from '@/components/ProductPreview'
 
@@ -69,12 +69,13 @@ const labelTextCls = 'text-sm font-medium text-gray-700'
 export default function ConfiguratorForm({ product }: { product: Product }) {
   const cfg = product.config
 
-  const fixedSizeOptions: { label: string; w: number; h: number }[] = cfg?.fixedSizes
-    ? cfg.fixedSizes.split(',').map((s) => {
-        const [w, h] = s.trim().split('x').map(Number)
-        return { label: `${w} × ${h} cm`, w, h }
-      })
-    : []
+  const fixedSizeOptions = useMemo<{ label: string; w: number; h: number }[]>(() => {
+    if (!cfg?.fixedSizes) return []
+    return cfg.fixedSizes.split(',').map((s) => {
+      const [w, h] = s.trim().split('x').map(Number)
+      return { label: `${w} × ${h} cm`, w, h }
+    })
+  }, [cfg?.fixedSizes])
 
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
   const [optionValueIds, setOptionValueIds] = useState<string[]>([])
@@ -89,12 +90,11 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const [addedToCart, setAddedToCart] = useState(false)
   const [cartError, setCartError] = useState<string | null>(null)
 
-  const showPlacement = cfg?.needsPlacement || (cfg?.placementMode && cfg.placementMode !== 'none')
-
-  const showVariants = cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0
-  const showOptions = cfg ? cfg.hasOptions && product.options.length > 0 : product.options.length > 0
-  const showCustomSize = cfg ? cfg.hasCustomSize : true
-  const showFixedSizes = cfg ? cfg.hasFixedSizes && fixedSizeOptions.length > 0 : false
+  const showPlacement = useMemo(() => cfg?.needsPlacement || (cfg?.placementMode && cfg.placementMode !== 'none'), [cfg])
+  const showVariants = useMemo(() => cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0, [cfg, product.variants.length])
+  const showOptions = useMemo(() => cfg ? cfg.hasOptions && product.options.length > 0 : product.options.length > 0, [cfg, product.options.length])
+  const showCustomSize = useMemo(() => cfg ? cfg.hasCustomSize : true, [cfg])
+  const showFixedSizes = useMemo(() => cfg ? cfg.hasFixedSizes && fixedSizeOptions.length > 0 : false, [cfg, fixedSizeOptions.length])
 
   const minW = cfg?.minWidth ?? 1
   const maxW = cfg?.maxWidth ?? 500
@@ -126,7 +126,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       }
     }
     fetchPrice()
-  }, [product.id, variantId, optionValueIds, width, height, quantity, deliveryType])
+  }, [product.id, variantId, optionValueIds, width, height, quantity, deliveryType, showCustomSize, showFixedSizes])
 
   const toggleOptionValue = (valueId: string, optionId: string) => {
     const option = product.options.find((o) => o.id === optionId)
