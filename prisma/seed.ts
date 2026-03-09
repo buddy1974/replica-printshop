@@ -125,6 +125,16 @@ async function seedCategories() {
       description: 'Machine embroidery and custom patches. Flat, 3D, or patch embroidery on garments, bags, and accessories.',
       imageUrl: '/images/products/textile.svg',
     },
+    {
+      name: 'Construction / signage', slug: 'construction-signage', sortOrder: 9, defaultPriceMode: 'AREA',
+      description: 'Rigid signs, construction banners, site hoardings, and outdoor signage. Forex, dibond, and acrylic.',
+      imageUrl: null,
+    },
+    {
+      name: 'Special', slug: 'special', sortOrder: 10, defaultPriceMode: 'PIECE',
+      description: 'Internal and special orders. Not visible in the public shop.',
+      imageUrl: null,
+    },
   ]
 
   for (const cat of categories) {
@@ -1412,6 +1422,583 @@ async function seedMug() {
 }
 
 // ---------------------------------------------------------------------------
+// Catalog lock — complete product catalog (locked before steps 321-330)
+// ---------------------------------------------------------------------------
+
+async function seedCatalogLock() {
+  console.log('Seeding catalog lock — missing products and reassignments...')
+
+  // Fetch all category IDs
+  const catRows = await db.productCategory.findMany({ select: { id: true, slug: true } })
+  const cats: Record<string, string> = {}
+  for (const c of catRows) cats[c.slug] = c.id
+
+  // ---- Reassign existing products to correct categories ----
+  if (cats['construction-signage']) {
+    await db.product.updateMany({
+      where: { slug: { in: ['construction-banner'] } },
+      data: { categoryId: cats['construction-signage'], category: 'Construction / signage' },
+    })
+    await db.product.updateMany({
+      where: { slug: { in: ['forex-board', 'dibond-sign', 'acrylic-sign'] } },
+      data: { categoryId: cats['construction-signage'], category: 'Construction / signage' },
+    })
+    console.log('  ↳ reassigned construction + rigid products to Construction / signage')
+  }
+
+  // ---- Large format — roll-based (canvas, backlit, photo, display) ----
+  const largeRollDefs = [
+    {
+      name: 'Canvas print', slug: 'canvas-print', pricePerM2: 35.00, maxWidth: 160,
+      shortDescription: 'High-quality canvas prints for decoration, art reproduction, and display.',
+      description: 'Printed on premium artist canvas material. Ideal for interior decoration, art reproduction, photo prints, and exhibition displays. Max width 160 cm.',
+    },
+    {
+      name: 'Backlit film', slug: 'backlit-film', pricePerM2: 40.00, maxWidth: 160,
+      shortDescription: 'Backlit film for lightbox displays and illuminated signs.',
+      description: 'High-clarity backlit film for lightbox and LED display panels. Vibrant, evenly backlit colours. Suitable for retail lightboxes, exhibition displays, and illuminated signage. Max width 160 cm.',
+    },
+    {
+      name: 'Photo print large', slug: 'photo-print-large', pricePerM2: 30.00, maxWidth: 160,
+      shortDescription: 'Large format photographic prints — vibrant, sharp, and durable.',
+      description: 'Large format photo-quality prints on premium coated media. Ideal for portraits, event photography displays, and interior decor. Available in gloss or matte. Max width 160 cm.',
+    },
+    {
+      name: 'Display print', slug: 'display-print', pricePerM2: 22.00, maxWidth: 160,
+      shortDescription: 'Economy large format display prints for short-term campaigns.',
+      description: 'High-resolution large format prints on display media. Suitable for events, exhibitions, retail campaigns, and point-of-sale displays. Max width 160 cm.',
+    },
+  ]
+  for (const def of largeRollDefs) {
+    const catId = cats['large-format'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Large format', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: `PDF or high-res PNG. Minimum 72 DPI at full size. Include 5 mm bleed. Max width ${def.maxWidth} cm.`,
+        minDpi: 72, recommendedDpi: 100, bleedMm: 5, safeMarginMm: 5, allowedFormats: 'PDF,PNG,TIFF',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, productionType: 'ROLL_PRINT', helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².` },
+      create: {
+        productId: p.id, type: 'LARGE_FORMAT', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth,
+        minWidth: 10, maxWidth: def.maxWidth, minHeight: 10, maxHeight: 500, productionType: 'ROLL_PRINT',
+        helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`,
+        uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 5 mm bleed on all sides.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Construction / signage — new rigid signs ----
+  const signDefs = [
+    {
+      name: 'PVC sign', slug: 'pvc-sign', pricePerM2: 28.00, maxWidth: 200,
+      shortDescription: 'Lightweight printed PVC foam signs for indoor and outdoor use.',
+      description: 'Printed on white PVC foam board (Forex). Lightweight and easy to mount. Suitable for indoor and sheltered outdoor use. Available in 3 mm and 5 mm thickness.',
+    },
+    {
+      name: 'Site sign', slug: 'site-sign', pricePerM2: 55.00, maxWidth: 200,
+      shortDescription: 'Rigid aluminium composite site signs for construction and outdoor use.',
+      description: 'Printed on dibond (aluminium composite panel). Weather-resistant and UV-stable. Suitable for construction site boards, project signs, and outdoor hoardings.',
+    },
+    {
+      name: 'Warning sign', slug: 'warning-sign', pricePerM2: 55.00, maxWidth: 200,
+      shortDescription: 'Custom warning and safety signs for workplaces and construction sites.',
+      description: 'High-visibility warning and safety signs printed on rigid aluminium composite. UV-resistant and weatherproof. Custom sizes or standard safety sign formats.',
+    },
+  ]
+  for (const def of signDefs) {
+    const catId = cats['construction-signage'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Construction / signage', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: `PDF or PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width ${def.maxWidth} cm.`,
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { needsUpload: true, priceMode: 'AREA', hasCustomSize: true, maxWidthCm: def.maxWidth, productionType: 'ROLL_PRINT', helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².` },
+      create: {
+        productId: p.id, type: 'RIGID', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        needsUpload: true, priceMode: 'AREA', maxWidthCm: def.maxWidth, minWidth: 10, maxWidth: def.maxWidth, minHeight: 10, maxHeight: 300, productionType: 'ROLL_PRINT',
+        helpText: `Enter width and height in cm. Max width ${def.maxWidth} cm. Price is per m².`,
+        uploadInstructions: 'Upload PDF or PNG. Minimum 100 DPI at final print size. Include 3 mm bleed on all sides.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Additional banners ----
+  const bannerAddDefs = [
+    {
+      name: 'Rollup banner', slug: 'rollup-banner', pricePerM2: 14.00,
+      shortDescription: 'Vertical rollup-format PVC banners — print only, no stand.',
+      description: 'Printed PVC banners in tall rollup proportions. Print only — no stand. Suitable as replacement graphics for existing roll-up stands, or free-hanging banners. Max width 160 cm.',
+    },
+    {
+      name: 'Event banner', slug: 'event-banner', pricePerM2: 14.00,
+      shortDescription: 'Custom event banners for conferences, festivals, and trade shows.',
+      description: 'Large format event banners for conferences, festivals, sports events, and trade shows. Printed on durable PVC with hemmed edges and eyelets. Max width 160 cm.',
+    },
+    {
+      name: 'Double sided banner', slug: 'double-sided-banner', pricePerM2: 20.00,
+      shortDescription: 'Double-sided banners printed on blockout material.',
+      description: 'Banners printed on both sides with blockout material to prevent bleed-through. Each side can have a different design. Finished with hemmed edges and eyelets. Max width 160 cm.',
+    },
+    {
+      name: 'Stage banner', slug: 'stage-banner', pricePerM2: 14.00,
+      shortDescription: 'Wide-format stage and backdrop banners for events and productions.',
+      description: 'Large backdrop and stage banners for events, theatre, and TV productions. Available in wide and ultra-wide formats. Max width 160 cm — multiple panels for wider stages.',
+    },
+    {
+      name: 'Fence banner', slug: 'fence-banner', pricePerM2: 16.00,
+      shortDescription: 'Heavy-duty mesh banners for construction fences and sports grounds.',
+      description: 'Printed mesh banners designed for fence and barrier mounting. Wind-through mesh construction for exposed outdoor use. Reinforced eyelets every 50 cm. Max width 160 cm.',
+    },
+  ]
+  for (const def of bannerAddDefs) {
+    const catId = cats['banner'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Banners', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 20 mm bleed on all sides.',
+        minDpi: 72, recommendedDpi: 100, bleedMm: 20, safeMarginMm: 20, allowedFormats: 'PDF,PNG,TIFF',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 160, maxWidthCm: 160, productionType: 'ROLL_PRINT', helpText: 'Enter width and height in cm. Max width 160 cm. Price is per m² of printed area.' },
+      create: {
+        productId: p.id, type: 'BANNER', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+        isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 160, maxWidthCm: 160,
+        minWidth: 30, maxWidth: 160, minHeight: 30, maxHeight: 1000, productionType: 'ROLL_PRINT',
+        helpText: 'Enter width and height in cm. Max width 160 cm. Price is per m² of printed area.',
+        uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 20 mm bleed on all sides.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    await applyBannerOptions(p.id)
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Additional sticker products ----
+  const stickerAddDefs: Array<{
+    name: string; slug: string; pricePerM2: number; shortDescription: string; description: string
+    options: { name: string; values: { name: string; priceModifier: number }[] }[]
+  }> = [
+    {
+      name: 'Product labels', slug: 'product-labels', pricePerM2: 38.00,
+      shortDescription: 'Custom product labels — self-adhesive, printed and cut to shape.',
+      description: 'Full-colour self-adhesive product labels on premium white or transparent vinyl. Available in any shape. Waterproof, scratch-resistant. Suitable for bottles, boxes, and packaging.',
+      options: [
+        { name: 'Material', values: [{ name: 'White vinyl', priceModifier: 0 }, { name: 'Transparent vinyl', priceModifier: 2 }, { name: 'Silver metallic', priceModifier: 4 }] },
+        { name: 'Lamination', values: [{ name: 'None', priceModifier: 0 }, { name: 'Matte', priceModifier: 3 }, { name: 'Gloss', priceModifier: 3 }] },
+      ],
+    },
+    {
+      name: 'Car decals', slug: 'car-decals', pricePerM2: 32.00,
+      shortDescription: 'Full-colour car decals and vehicle graphics — outdoor durable.',
+      description: 'Printed vinyl decals for vehicles and outdoor surfaces. UV and weather resistant. Available with or without lamination. Contour cut to any shape.',
+      options: [
+        { name: 'Lamination', values: [{ name: 'None', priceModifier: 0 }, { name: 'Matte', priceModifier: 3 }, { name: 'Gloss UV', priceModifier: 4 }] },
+        { name: 'Cut type', values: [{ name: 'Square cut', priceModifier: 0 }, { name: 'Contour cut', priceModifier: 5 }] },
+      ],
+    },
+    {
+      name: 'Window stickers', slug: 'window-stickers', pricePerM2: 20.00,
+      shortDescription: 'Perforated window stickers — see-through from inside.',
+      description: 'Printed perforated vinyl for windows (50/50 perforation). Full-colour design visible from outside; clear view from inside. Removable and repositionable.',
+      options: [],
+    },
+    {
+      name: 'Advertising stickers', slug: 'advertising-stickers', pricePerM2: 32.00,
+      shortDescription: 'Large quantity advertising stickers for campaigns and promotions.',
+      description: 'Full-colour printed advertising stickers for outdoor campaigns, retail promotions, and brand marketing. Available in gloss or matte lamination.',
+      options: [
+        { name: 'Lamination', values: [{ name: 'None', priceModifier: 0 }, { name: 'Matte', priceModifier: 3 }, { name: 'Gloss', priceModifier: 3 }] },
+        { name: 'Cut type', values: [{ name: 'Square cut', priceModifier: 0 }, { name: 'Contour cut', priceModifier: 5 }] },
+      ],
+    },
+    {
+      name: 'ISO stickers', slug: 'iso-stickers', pricePerM2: 38.00,
+      shortDescription: 'ISO compliance stickers for machinery, equipment, and vehicles.',
+      description: 'Durable ISO-compliant safety and compliance stickers printed on laminated vinyl. UV, chemical, and scratch resistant. Custom sizes. Suitable for machinery, forklifts, and industrial equipment.',
+      options: [
+        { name: 'Lamination', values: [{ name: 'Matte', priceModifier: 0 }, { name: 'Gloss', priceModifier: 0 }] },
+      ],
+    },
+  ]
+  for (const def of stickerAddDefs) {
+    const catId = cats['stickers'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Stickers', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: 'PDF or PNG. Minimum 150 DPI. Include 2 mm bleed. Contour cut supported.',
+        minDpi: 150, recommendedDpi: 300, bleedMm: 2, safeMarginMm: 2, allowedFormats: 'PDF,PNG,SVG',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 137, maxWidthCm: 137, productionType: 'PRINT_CUT', helpText: 'Enter the dimensions. Max width 137 cm. Price is per m².' },
+      create: {
+        productId: p.id, type: 'STICKER', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: def.options.length > 0,
+        isPrintCut: true, isRoll: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 137, maxWidthCm: 137,
+        minWidth: 2, maxWidth: 137, minHeight: 2, maxHeight: 500, productionType: 'PRINT_CUT',
+        helpText: 'Enter the dimensions. Max width 137 cm. Price is per m².',
+        uploadInstructions: 'Upload PDF or PNG at minimum 150 DPI. Include 2 mm bleed.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    for (const opt of def.options) await upsertOption(p.id, opt.name, opt.values)
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Additional vinyl plot products ----
+  const vinylAddDefs = [
+    {
+      name: 'Car lettering', slug: 'car-lettering',
+      shortDescription: 'Cut vinyl lettering and graphics for vehicles.',
+      description: 'Precision-cut vinyl lettering and shapes for vehicles. Pre-masked and ready to apply. Suitable for car doors, vans, boats, and trailers.',
+    },
+    {
+      name: 'Window lettering', slug: 'window-lettering',
+      shortDescription: 'Cut vinyl lettering for shop windows and glass surfaces.',
+      description: 'Precision-cut vinyl lettering for shop windows, glass doors, and partitions. Pre-masked for easy application.',
+    },
+    {
+      name: 'Opening hours lettering', slug: 'opening-hours-lettering',
+      shortDescription: 'Vinyl opening hours for shop windows — professional and durable.',
+      description: 'Cut vinyl opening hours text and graphics for shop windows. Pre-masked and ready to apply. Choose your font, colour, and style.',
+    },
+    {
+      name: 'Wall lettering', slug: 'wall-lettering',
+      shortDescription: 'Decorative and signage vinyl lettering for walls and surfaces.',
+      description: 'Cut vinyl lettering for interior and exterior walls. Company names, slogans, numbers, and decorative elements. Pre-masked for easy application.',
+    },
+    {
+      name: 'Door lettering', slug: 'door-lettering',
+      shortDescription: 'Cut vinyl for doors — names, numbers, and logos.',
+      description: 'Precision-cut vinyl text and graphics for doors and entrances. Ideal for office names, room numbers, and building directories.',
+    },
+    {
+      name: 'Logo cut vinyl', slug: 'logo-cut-vinyl',
+      shortDescription: 'Single-colour cut vinyl logo — precise edges, long-lasting.',
+      description: 'Your logo precision-cut from single-colour vinyl. Suitable for windows, vehicles, walls, and signage. Pre-masked for easy application.',
+    },
+  ]
+  for (const def of vinylAddDefs) {
+    const catId = cats['vinyl-plot'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Vinyl plot', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: 'Vector file required. Single-colour design. Width limited to 61 cm.',
+        minDpi: null, recommendedDpi: null, bleedMm: 0, safeMarginMm: 2, allowedFormats: 'SVG,PDF,AI,EPS',
+        notes: 'Single colour. Vector only.',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isCut: true, isRoll: true, needsUpload: true, priceMode: 'METER', rollWidthCm: 61, maxWidthCm: 61, productionType: 'CUT', helpText: 'Enter width (max 61 cm) and the length of vinyl you need. Price is per linear metre.' },
+      create: {
+        productId: p.id, type: 'VINYL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+        isCut: true, isRoll: true, needsUpload: true, priceMode: 'METER', rollWidthCm: 61, maxWidthCm: 61,
+        minWidth: 1, maxWidth: 61, minHeight: 5, maxHeight: 500, productionType: 'CUT',
+        helpText: 'Enter width (max 61 cm) and the length of vinyl you need. Price is per linear metre.',
+        uploadInstructions: 'Upload a vector file (SVG, PDF, AI, or EPS). Single colour only.',
+      },
+    })
+    await upsertPricingTable(p.id, 'METER', { pricePerMeter: 9.00 })
+    await upsertOption(p.id, 'Vinyl color', [
+      { name: 'White', priceModifier: 0 }, { name: 'Black', priceModifier: 0 },
+      { name: 'Red', priceModifier: 0 }, { name: 'Blue', priceModifier: 0 },
+      { name: 'Yellow', priceModifier: 0 }, { name: 'Green', priceModifier: 0 },
+      { name: 'Gold', priceModifier: 2 }, { name: 'Silver', priceModifier: 2 },
+    ])
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // Reflective vinyl — higher price, separate product
+  {
+    const catId = cats['vinyl-plot'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: 'reflective-vinyl' },
+      update: { categoryId: catId },
+      create: {
+        name: 'Reflective vinyl', slug: 'reflective-vinyl', category: 'Vinyl plot', categoryId: catId, active: true,
+        shortDescription: 'Class 1 reflective vinyl lettering for safety signs and vehicles.',
+        description: 'Class 1 retroreflective vinyl cut on our plotter. Highly visible at night when illuminated by headlights. Suitable for safety markings, vehicles, and emergency equipment. Max width 61 cm.',
+        guideText: 'Vector file required. Single-colour only. Max width 61 cm.',
+        bleedMm: 0, safeMarginMm: 2, allowedFormats: 'SVG,PDF,EPS',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isCut: true, isRoll: true, needsUpload: true, priceMode: 'METER', rollWidthCm: 61, maxWidthCm: 61, productionType: 'CUT' },
+      create: {
+        productId: p.id, type: 'VINYL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+        isCut: true, isRoll: true, needsUpload: true, priceMode: 'METER', rollWidthCm: 61, maxWidthCm: 61,
+        minWidth: 1, maxWidth: 61, minHeight: 5, maxHeight: 200, productionType: 'CUT',
+        helpText: 'Enter width and length. Max width 61 cm. Price is per linear metre.',
+      },
+    })
+    await upsertPricingTable(p.id, 'METER', { pricePerMeter: 18.00 })
+    await upsertOption(p.id, 'Reflective class', [
+      { name: 'Class 1 — White', priceModifier: 0 }, { name: 'Class 1 — Yellow', priceModifier: 0 }, { name: 'Class 1 — Red', priceModifier: 0 },
+    ])
+    console.log(`  ✓ Reflective vinyl: ${p.id}`)
+  }
+
+  // ---- Additional foil products ----
+  const foilAddDefs = [
+    {
+      name: 'Window foil', slug: 'window-foil', pricePerM2: 15.00,
+      shortDescription: 'Self-adhesive window film — custom print for windows and glass.',
+      description: 'Printed self-adhesive window film for display, branding, and decoration. Easy to apply and remove. Max width 137 cm.',
+    },
+    {
+      name: 'Privacy foil', slug: 'privacy-foil', pricePerM2: 18.00,
+      shortDescription: 'Privacy film for office partitions and glass doors.',
+      description: 'Frosted or patterned privacy film for office partitions, meeting rooms, and glass doors. Lets light through while blocking direct view. Max width 137 cm.',
+    },
+  ]
+  for (const def of foilAddDefs) {
+    const catId = cats['foil'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Foils', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: 'PDF or PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width 137 cm.',
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG,SVG',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isRoll: true, isPrintCut: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 137, maxWidthCm: 137, productionType: 'PRINT_CUT', helpText: 'Enter width and height in cm. Max width 137 cm. Price is per m².' },
+      create: {
+        productId: p.id, type: 'FOIL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        isRoll: true, isPrintCut: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 137, maxWidthCm: 137,
+        minWidth: 5, maxWidth: 137, minHeight: 5, maxHeight: 500, productionType: 'PRINT_CUT',
+        helpText: 'Enter width and height in cm. Max width 137 cm. Price is per m².',
+        uploadInstructions: 'Upload PDF or PNG. Minimum 100 DPI at final size. Include 3 mm bleed.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Additional magnet products ----
+  {
+    const catId = cats['magnets'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: 'magnetic-board-print' },
+      update: { categoryId: catId },
+      create: {
+        name: 'Magnetic board print', slug: 'magnetic-board-print', category: 'Magnets', categoryId: catId, active: true,
+        shortDescription: 'Printed magnetic whiteboard sheets — write-on, wipe-off surface.',
+        description: 'Full-colour print on white magnetic material with a writable surface. Repositionable on any metal surface. Ideal for offices, kitchens, and planning boards. Max width 100 cm.',
+        guideText: 'PDF or PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width 100 cm.',
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isRoll: true, isPrintCut: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 100, maxWidthCm: 100, productionType: 'PRINT_CUT' },
+      create: {
+        productId: p.id, type: 'FOIL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        isRoll: true, isPrintCut: true, needsUpload: true, priceMode: 'AREA', rollWidthCm: 100, maxWidthCm: 100,
+        minWidth: 5, maxWidth: 100, minHeight: 5, maxHeight: 200, productionType: 'PRINT_CUT',
+        helpText: 'Enter width and height in cm. Max width 100 cm. Price is per m².',
+        uploadInstructions: 'Upload PDF or PNG. Minimum 100 DPI. Include 3 mm bleed.',
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: 30.00 })
+    console.log(`  ✓ Magnetic board print: ${p.id}`)
+  }
+
+  // ---- Additional textile products (we supply garment) ----
+  const garmentDefs = [
+    {
+      name: 'T-shirt print', slug: 't-shirt-print', price: 18.00,
+      shortDescription: 'T-shirt with custom DTF print — we supply the garment.',
+      description: 'Full-colour DTF print on a quality cotton t-shirt (we supply). Choose your size and print placement. Printed and delivered as a finished product.',
+      sizes: [
+        { name: 'XS', bp: 0 }, { name: 'S', bp: 0 }, { name: 'M', bp: 0 },
+        { name: 'L', bp: 0 }, { name: 'XL', bp: 2 }, { name: 'XXL', bp: 4 }, { name: '3XL', bp: 6 },
+      ],
+    },
+    {
+      name: 'Hoodie print', slug: 'hoodie-print', price: 32.00,
+      shortDescription: 'Hoodie with custom DTF print — we supply the garment.',
+      description: 'Full-colour DTF print on a quality cotton/poly hoodie (we supply). Choose size and placement. Soft-feel print, washable at 40°C.',
+      sizes: [
+        { name: 'S', bp: 0 }, { name: 'M', bp: 0 }, { name: 'L', bp: 0 },
+        { name: 'XL', bp: 3 }, { name: 'XXL', bp: 6 }, { name: '3XL', bp: 8 },
+      ],
+    },
+    {
+      name: 'Polo print', slug: 'polo-print', price: 22.00,
+      shortDescription: 'Polo shirt with custom print or embroidery.',
+      description: 'Professional polo shirt with custom DTF print or embroidery. Suitable for uniforms, corporate wear, and events. We supply the polo shirt.',
+      sizes: [
+        { name: 'S', bp: 0 }, { name: 'M', bp: 0 }, { name: 'L', bp: 0 }, { name: 'XL', bp: 2 }, { name: 'XXL', bp: 4 },
+      ],
+    },
+    {
+      name: 'Workwear print', slug: 'workwear-print', price: 25.00,
+      shortDescription: 'Workwear with custom logo print or embroidery.',
+      description: 'Professional workwear (we supply) with custom DTF print or embroidery. Suitable for uniforms, PPE, and branded workwear.',
+      sizes: [
+        { name: 'S', bp: 0 }, { name: 'M', bp: 0 }, { name: 'L', bp: 0 },
+        { name: 'XL', bp: 3 }, { name: 'XXL', bp: 5 }, { name: '3XL', bp: 8 },
+      ],
+    },
+    {
+      name: 'Sport jersey', slug: 'sport-jersey', price: 28.00,
+      shortDescription: 'Custom sport jerseys and trikots — full sublimation or DTF print.',
+      description: 'Custom sports jerseys and trikots (we supply) with full sublimation or DTF print. Lightweight, breathable polyester. Player names, numbers, and logos.',
+      sizes: [
+        { name: 'YS', bp: 0 }, { name: 'YM', bp: 0 }, { name: 'YL', bp: 0 },
+        { name: 'S', bp: 0 }, { name: 'M', bp: 0 }, { name: 'L', bp: 0 }, { name: 'XL', bp: 2 }, { name: 'XXL', bp: 4 },
+      ],
+    },
+  ]
+  for (const def of garmentDefs) {
+    const catId = cats['textile-print'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Textile print', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: 'PNG with transparent background. Minimum 150 DPI. Design will be printed as DTF transfer.',
+        minDpi: 150, recommendedDpi: 300, bleedMm: 0, safeMarginMm: 5, allowedFormats: 'PNG,PDF',
+        notes: 'Transparent background required for DTF transfers.',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { isTextile: true, needsPlacement: true, needsUpload: true, priceMode: 'PIECE', hasVariants: true, placementMode: 'front_back', printAreaWidthCm: 30, printAreaHeightCm: 40, dtfMaxWidthCm: 55, productionType: 'TEXTILE' },
+      create: {
+        productId: p.id, type: 'TEXTILE', hasCustomSize: false, hasFixedSizes: false, hasVariants: true, hasOptions: true,
+        isTextile: true, needsPlacement: true, needsUpload: true, priceMode: 'PIECE',
+        placementMode: 'front_back', printAreaWidthCm: 30, printAreaHeightCm: 40, dtfMaxWidthCm: 55, productionType: 'TEXTILE',
+        helpText: 'Select size and colour. Print area is 30 × 40 cm max (front or back).',
+        uploadInstructions: 'Upload PNG with transparent background at minimum 150 DPI.',
+      },
+    })
+    await upsertPricingTable(p.id, 'FIXED', { price: def.price })
+    for (const s of def.sizes) await upsertVariant(p.id, s.name, 'Garment', s.bp)
+    await upsertOption(p.id, 'Garment color', [
+      { name: 'Black', priceModifier: 0 }, { name: 'White', priceModifier: 0 },
+      { name: 'Navy', priceModifier: 0 }, { name: 'Grey', priceModifier: 0 },
+      { name: 'Red', priceModifier: 1 }, { name: 'Royal Blue', priceModifier: 1 },
+    ])
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Additional embroidery products ----
+  const embAddDefs = [
+    {
+      name: 'Logo embroidery', slug: 'logo-embroidery', price: 10.00,
+      shortDescription: 'Embroidered logo on your garment — flat or 3D.',
+      description: 'Machine embroidery of your company logo or design on any garment. Flat or 3D puff embroidery. We digitise your design. Send your garment or order together with a garment.',
+    },
+    {
+      name: 'Cap embroidery', slug: 'cap-embroidery', price: 8.00,
+      shortDescription: 'Embroidered logo on caps, hats, and headwear.',
+      description: 'Machine embroidery on caps, baseball hats, and headwear. Flat or structured puff embroidery. We can embroider on your caps or supply the caps.',
+    },
+    {
+      name: 'Woven patch', slug: 'woven-patch', price: 5.00,
+      shortDescription: 'Woven patches — sharper detail than embroidery.',
+      description: 'High-quality woven patches with fine detail not achievable with machine embroidery. Suitable for logos, flags, and intricate designs. Available with iron-on, velcro, or sew-on backing.',
+    },
+  ]
+  for (const def of embAddDefs) {
+    const catId = cats['embroidery'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, shortDescription: def.shortDescription, description: def.description },
+      create: {
+        name: def.name, slug: def.slug, category: 'Embroidery', categoryId: catId, active: true,
+        shortDescription: def.shortDescription, description: def.description,
+        guideText: 'Vector or high-res PNG. Design will be digitised for embroidery.',
+        minDpi: 300, recommendedDpi: 600, bleedMm: 0, safeMarginMm: 5, allowedFormats: 'PDF,PNG,SVG,AI,EPS',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { needsUpload: true, priceMode: 'PIECE', productionType: 'TEXTILE' },
+      create: {
+        productId: p.id, type: 'EMBROIDERY', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: true,
+        needsUpload: true, priceMode: 'PIECE', productionType: 'TEXTILE',
+        helpText: 'Upload your logo or design. Price is per piece.',
+        uploadInstructions: 'Upload vector or high-res PNG. Design will be digitised.',
+      },
+    })
+    await upsertPricingTable(p.id, 'FIXED', { price: def.price })
+    await upsertOption(p.id, 'Embroidery type', [
+      { name: 'Flat embroidery', priceModifier: 0 }, { name: '3D puff embroidery', priceModifier: 3 },
+    ])
+    await upsertOption(p.id, 'Stitch count', [
+      { name: '5 000', priceModifier: 0 }, { name: '10 000', priceModifier: 3 },
+      { name: '15 000', priceModifier: 6 }, { name: '20 000', priceModifier: 10 },
+    ])
+    console.log(`  ✓ ${def.name}: ${p.id}`)
+  }
+
+  // ---- Special / internal ----
+  {
+    const catId = cats['special'] ?? null
+    const p = await db.product.upsert({
+      where: { slug: 'manual-order' },
+      update: { categoryId: catId },
+      create: {
+        name: 'Manual order', slug: 'manual-order', category: 'Special', categoryId: catId, active: false,
+        shortDescription: 'Manual order — internal use only.',
+        description: 'Used for manually entered orders. Not visible in the shop.',
+        guideText: 'Admin use only.',
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { priceMode: 'PIECE' },
+      create: {
+        productId: p.id, type: 'MANUAL', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
+        needsUpload: false, priceMode: 'PIECE', productionType: 'MANUAL',
+      },
+    })
+    await upsertPricingTable(p.id, 'FIXED', { price: 0 })
+    console.log(`  ✓ Manual order: ${p.id}`)
+  }
+
+  console.log('  Catalog lock complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -1436,6 +2023,9 @@ async function main() {
   await seedDTF()
   await seedSticker()
   await seedMug()
+
+  // Catalog lock — complete product catalog
+  await seedCatalogLock()
 
   console.log('\nAll seeds complete.')
 }
