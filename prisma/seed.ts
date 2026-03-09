@@ -2645,6 +2645,82 @@ async function seedFoilFix() {
 }
 
 // ---------------------------------------------------------------------------
+// Textile print fix — image mapping
+// ---------------------------------------------------------------------------
+
+async function seedTextileFix() {
+  console.log('Seeding Textile print fix — image mapping...')
+
+  // Category hero
+  await db.productCategory.update({
+    where: { slug: 'textile-print' },
+    data: { imageUrl: '/products/textileprint-banner.png' },
+  })
+  console.log('  ✓ Textile hero: /products/textileprint-banner.png')
+
+  const textileImageMap: Array<{ slug: string; imageUrl: string }> = [
+    { slug: 't-shirt-print',  imageUrl: '/products/t-shirt-front-1.png' },
+    { slug: 'hoodie-print',   imageUrl: '/products/hoodie-front.png' },
+    { slug: 'polo-print',     imageUrl: '/products/polo-front.png' },
+    { slug: 'cap-embroidery', imageUrl: '/products/cap.png' },
+  ]
+
+  for (const item of textileImageMap) {
+    await db.product.updateMany({ where: { slug: item.slug }, data: { imageUrl: item.imageUrl } })
+    console.log(`  ✓ ${item.slug}: ${item.imageUrl}`)
+  }
+
+  console.log('  Textile fix complete.')
+}
+
+// ---------------------------------------------------------------------------
+// DTF gang sheet fix — image mapping
+// ---------------------------------------------------------------------------
+
+async function seedDTFFix() {
+  console.log('Seeding DTF gang sheet fix — image mapping...')
+
+  await db.productCategory.update({
+    where: { slug: 'dtf-gang-sheet' },
+    data: { imageUrl: '/products/textileprint-banner2.png' },
+  })
+  await db.product.updateMany({
+    where: { slug: 'dtf-gang-sheet' },
+    data: { imageUrl: '/products/textileprint-banner2.png' },
+  })
+  console.log('  ✓ DTF gang sheet: /products/textileprint-banner2.png')
+  console.log('  DTF fix complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Sublimation print fix — image mapping
+// ---------------------------------------------------------------------------
+
+async function seedSublimationFix() {
+  console.log('Seeding Sublimation fix — image mapping...')
+
+  // Category hero (filename has typo but file exists)
+  await db.productCategory.update({
+    where: { slug: 'sublimation' },
+    data: { imageUrl: '/products/sublimstion-print-banner.png' },
+  })
+  console.log('  ✓ Sublimation hero: /products/sublimstion-print-banner.png')
+
+  const sublimImageMap: Array<{ slug: string; imageUrl: string }> = [
+    { slug: 'sublimation-mug',       imageUrl: '/products/mug.png' },
+    { slug: 'sublimation-thermo',    imageUrl: '/products/Edelstahl-Thermo-cup.png' },
+    { slug: 'sublimation-aluminium', imageUrl: '/products/Aluminium-drink-bottle.png' },
+  ]
+
+  for (const item of sublimImageMap) {
+    await db.product.updateMany({ where: { slug: item.slug }, data: { imageUrl: item.imageUrl } })
+    console.log(`  ✓ ${item.slug}: ${item.imageUrl}`)
+  }
+
+  console.log('  Sublimation fix complete.')
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2684,6 +2760,15 @@ async function main() {
 
   // Foil / Adhesive — image-matched products only
   await seedFoilFix()
+
+  // Textile print — image mapping
+  await seedTextileFix()
+
+  // DTF gang sheet — image mapping
+  await seedDTFFix()
+
+  // Sublimation print — image mapping
+  await seedSublimationFix()
 
   console.log('\nAll seeds complete.')
 }
