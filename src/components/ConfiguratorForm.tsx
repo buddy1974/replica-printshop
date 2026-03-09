@@ -87,6 +87,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const [placement, setPlacement] = useState<'front' | 'back'>('front')
   const [userId, setUserId] = useState('')
   const [addedToCart, setAddedToCart] = useState(false)
+  const [cartError, setCartError] = useState<string | null>(null)
 
   const showPlacement = cfg?.needsPlacement || (cfg?.placementMode && cfg.placementMode !== 'none')
 
@@ -138,9 +139,10 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
 
   const handleAddToCart = async () => {
     if (!userId) {
-      alert('Enter a user ID to add to cart')
+      setCartError('Please enter a user ID before adding to cart.')
       return
     }
+    setCartError(null)
     const res = await fetch('/api/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -159,6 +161,9 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
     if (res.ok) {
       setAddedToCart(true)
       setTimeout(() => setAddedToCart(false), 2000)
+    } else {
+      const body = await res.json().catch(() => ({}))
+      setCartError(body.error ?? 'Could not add to cart. Please try again.')
     }
   }
 
@@ -231,10 +236,19 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </div>
       )}
 
-      <label className={labelCls}>
-        <span className={labelTextCls}>Quantity</span>
-        <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} className={inputCls} />
-      </label>
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>
+          <span className={labelTextCls}>Quantity</span>
+          <input
+            type="number"
+            min={1}
+            value={quantity}
+            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+            className={inputCls}
+          />
+        </label>
+        {quantity < 1 && <p className="text-sm text-red-600">Quantity must be at least 1.</p>}
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <span className={labelTextCls}>Delivery</span>
@@ -288,9 +302,12 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         <input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user-id" className={inputCls} />
       </label>
 
-      <Button onClick={handleAddToCart}>
-        {addedToCart ? 'Added to cart!' : 'Add to cart'}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button onClick={handleAddToCart} disabled={!!sizeError || quantity < 1}>
+          {addedToCart ? 'Added to cart!' : 'Add to cart'}
+        </Button>
+        {cartError && <p className="text-sm text-red-600">{cartError}</p>}
+      </div>
     </div>
   )
 }
