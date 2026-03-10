@@ -198,7 +198,7 @@ function SpecsSection({ product }: { product: Product }) {
         <ul className="space-y-1">
           {extraSpecs.map((spec, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-1.5" />
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1.5" />
               {String(spec)}
             </li>
           ))}
@@ -334,7 +334,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
         <div className="flex flex-col gap-4">
           {/* Category + title */}
           <div>
-            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">
               {product.category}
             </p>
             <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">

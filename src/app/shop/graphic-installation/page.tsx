@@ -48,7 +48,7 @@ export default function GraphicInstallationPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 pt-6 text-white">
-          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-red-300 mb-2">
             Car Lettering · Folienmontage · Lochfolie · Window Graphics ·
             Schilder · Leuchtkasten · Plexiglas · Möbelmontage · Vinylboden ·
             Bootsbeschriftung · LKW Planen · Event &amp; Wedding Grafik
@@ -83,7 +83,7 @@ export default function GraphicInstallationPage() {
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
             {SERVICES.map((s) => (
               <li key={s} className="flex items-center gap-2 text-gray-700 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                 {s}
               </li>
             ))}
@@ -100,7 +100,7 @@ export default function GraphicInstallationPage() {
           </div>
           <Link
             href="/contact"
-            className="inline-block rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors shrink-0"
+            className="inline-block rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors shrink-0"
           >
             Contact
           </Link>

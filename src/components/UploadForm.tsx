@@ -136,7 +136,7 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
       {/* File list / loading / empty state */}
       {loadingUploads ? (
         <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin" />
+          <div className="w-6 h-6 border-4 border-gray-200 border-t-red-600 rounded-full animate-spin" />
         </div>
       ) : artFiles.length > 0 ? (
         <div>
@@ -202,7 +202,7 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
           <select
             value={uploadType}
             onChange={(e) => setUploadType(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
           >
             <option value="ARTWORK">Artwork</option>
             <option value="FRONT">Front</option>
@@ -214,7 +214,7 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
         <input
           type="file"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+          className="text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
         />
         <div className="flex flex-wrap gap-2">
           <button

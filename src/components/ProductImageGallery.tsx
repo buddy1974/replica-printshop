@@ -53,8 +53,8 @@ export default function ProductImageGallery({ mainUrl, name, extraImages = [] }:
               className={[
                 'relative aspect-square rounded-lg border p-1 overflow-hidden transition-colors',
                 url === active
-                  ? 'border-indigo-500 ring-1 ring-indigo-400'
-                  : 'border-gray-200 hover:border-indigo-300',
+                  ? 'border-red-500 ring-1 ring-red-400'
+                  : 'border-gray-200 hover:border-red-300',
               ].join(' ')}
             >
               <Image src={url} alt="" fill sizes="(max-width: 768px) 25vw, 12vw" className="object-contain" />

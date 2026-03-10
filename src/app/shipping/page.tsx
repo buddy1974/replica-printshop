@@ -73,7 +73,7 @@ export default function ShippingPage() {
               <ul className="space-y-1.5">
                 {item.lines.map((line) => (
                   <li key={line} className="flex items-start gap-2 text-sm text-gray-600">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-1.5" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1.5" />
                     {line}
                   </li>
                 ))}
@@ -82,9 +82,9 @@ export default function ShippingPage() {
           ))}
         </div>
 
-        <div className="mt-8 rounded-xl bg-indigo-50 border border-indigo-100 p-5 text-sm text-indigo-800">
+        <div className="mt-8 rounded-xl bg-red-50 border border-red-100 p-5 text-sm text-red-800">
           Questions about delivery or timeline?{' '}
-          <a href="/contact" className="font-semibold underline hover:text-indigo-600">Contact us</a> — we reply within 1 business day.
+          <a href="/contact" className="font-semibold underline hover:text-red-600">Contact us</a> — we reply within 1 business day.
         </div>
 
       </div>

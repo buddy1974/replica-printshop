@@ -56,7 +56,7 @@ export default async function ShopPage() {
             <Link
               key={cat.id}
               href={`/shop/${cat.slug}`}
-              className="group rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-indigo-300 hover:shadow-sm transition-all"
+              className="group rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-300 hover:shadow-sm transition-all"
             >
               <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
                 {cat.imageUrl ? (

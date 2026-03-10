@@ -1,5 +1,6 @@
 import { type Metadata } from 'next'
 import Container from '@/components/Container'
+import { BRANDING } from '@/config/branding'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -22,7 +23,7 @@ export default function ContactPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Address</p>
             <div className="text-sm text-gray-700 leading-relaxed space-y-0.5">
-              <p className="font-semibold text-gray-900">replica printshop</p>
+              <p className="font-semibold text-gray-900">{BRANDING.name}</p>
               <p>Musterstraße 12</p>
               <p>12345 Berlin</p>
               <p>Germany</p>
@@ -34,14 +35,14 @@ export default function ContactPage() {
             <div className="text-sm text-gray-700 space-y-1.5">
               <p>
                 <span className="text-gray-400">Phone:</span>{' '}
-                <a href="tel:+49123456789" className="text-gray-900 hover:text-indigo-600 transition-colors">
+                <a href="tel:+49123456789" className="text-gray-900 hover:text-red-600 transition-colors">
                   +49 123 456 789
                 </a>
               </p>
               <p>
                 <span className="text-gray-400">Email:</span>{' '}
-                <a href="mailto:info@replica.print" className="text-gray-900 hover:text-indigo-600 transition-colors">
-                  info@replica.print
+                <a href="mailto:info@printshop.de" className="text-gray-900 hover:text-red-600 transition-colors">
+                  info@printshop.de
                 </a>
               </p>
             </div>
@@ -61,7 +62,7 @@ export default function ContactPage() {
               'Rush production available on request',
             ].map((item) => (
               <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0 mt-1.5" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0 mt-1.5" />
                 {item}
               </li>
             ))}
@@ -69,14 +70,14 @@ export default function ContactPage() {
         </div>
 
         {/* CTA */}
-        <div className="rounded-xl bg-indigo-700 text-white p-6">
+        <div className="rounded-xl bg-gray-900 text-white p-6">
           <p className="font-semibold mb-1">Ready to order or have questions?</p>
-          <p className="text-indigo-200 text-sm mb-4">
+          <p className="text-gray-400 text-sm mb-4">
             Send us an email or call — we respond within 1 business day.
           </p>
           <a
-            href="mailto:info@replica.print"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors"
+            href="mailto:info@printshop.de"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
           >
             Send email →
           </a>

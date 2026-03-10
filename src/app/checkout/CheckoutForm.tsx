@@ -67,12 +67,12 @@ export default function CheckoutForm({ userId, cartUserId }: CheckoutFormProps) 
               className={[
                 'flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors',
                 delivery === value
-                  ? 'border-indigo-600 bg-indigo-50 text-indigo-900'
+                  ? 'border-gray-900 bg-gray-50 text-gray-900'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300',
               ].join(' ')}
             >
               <span className="font-medium">{label}</span>
-              <span className={delivery === value ? 'text-indigo-500 text-xs' : 'text-gray-400 text-xs'}>
+              <span className={delivery === value ? 'text-gray-600 text-xs' : 'text-gray-400 text-xs'}>
                 {desc}
               </span>
             </button>

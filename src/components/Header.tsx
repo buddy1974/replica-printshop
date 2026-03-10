@@ -33,7 +33,7 @@ export default function Header() {
                   'whitespace-nowrap px-2.5 sm:px-3 py-1.5 rounded-lg text-sm transition-colors',
                   mobileHide ? 'hidden sm:inline-flex' : 'inline-flex',
                   active
-                    ? 'text-indigo-600 font-semibold bg-indigo-50'
+                    ? 'text-red-600 font-semibold bg-red-50'
                     : 'text-gray-600 font-medium hover:text-gray-900 hover:bg-gray-100',
                 ].join(' ')}
               >

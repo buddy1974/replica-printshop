@@ -27,7 +27,7 @@ export default function Error({ error, reset }: Props) {
       <div className="flex flex-wrap gap-3 justify-center">
         <button
           onClick={reset}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
         >
           Try again
         </button>

@@ -23,7 +23,7 @@ export default function ProductCard({ slug, name, category, shortDescription, im
 
   return (
     <>
-      <div className="group rounded-xl border border-gray-200 bg-white overflow-hidden flex flex-col hover:border-indigo-300 hover:shadow-sm transition-all">
+      <div className="group rounded-xl border border-gray-200 bg-white overflow-hidden flex flex-col hover:border-red-300 hover:shadow-sm transition-all">
         {/* Step 401 — image uses contain, not cover */}
         <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
           {imageUrl ? (

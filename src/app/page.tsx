@@ -2,20 +2,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { type Metadata } from 'next'
 import { db } from '@/lib/db'
+import { BRANDING } from '@/config/branding'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: { absolute: 'replica printshop' },
+  title: { absolute: BRANDING.name },
   description: 'Large format, textile print, foil, banners, installation service. Fast in-house production, pickup or shipping.',
   openGraph: {
-    title: 'replica printshop',
+    title: BRANDING.name,
     description: 'Large format, textile print, foil, banners, installation service.',
-    images: [{ url: '/frontpage-hero.png', width: 1200, alt: 'replica printshop' }],
+    images: [{ url: '/frontpage-hero.png', width: 1200, alt: BRANDING.name }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'replica printshop',
+    title: BRANDING.name,
     description: 'Large format, textile print, foil, banners, installation service.',
     images: ['/frontpage-hero.png'],
   },
@@ -68,7 +69,7 @@ export default async function Home() {
           {/* Left — text + CTAs */}
           <div className="flex flex-col gap-6">
             <div>
-              <span className="inline-block text-xs font-semibold tracking-widest text-indigo-600 uppercase mb-3">
+              <span className="inline-block text-xs font-semibold tracking-widest text-red-600 uppercase mb-3">
                 Print · Textile · Werbetechnik
               </span>
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-3">
@@ -83,7 +84,7 @@ export default async function Home() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/shop"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors shadow-sm"
               >
                 Go to shop →
               </Link>
@@ -110,7 +111,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 7. Trust / service strip ────────────────────────────────────────── */}
+      {/* ── 2. Trust / service strip ────────────────────────────────────────── */}
       <section className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-7 grid grid-cols-2 md:grid-cols-4 gap-4">
           {TRUST_ITEMS.map((item) => (
@@ -125,7 +126,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 4. Category blocks ──────────────────────────────────────────────── */}
+      {/* ── 3. Category blocks ──────────────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 py-14">
         <div className="mb-7">
           <h2 className="text-2xl font-bold text-gray-900">Our services</h2>
@@ -137,7 +138,7 @@ export default async function Home() {
             <Link
               key={cat.id}
               href={`/shop/${cat.slug}`}
-              className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-indigo-400 hover:shadow-md transition-all"
+              className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-400 hover:shadow-md transition-all"
             >
               {/* Category image */}
               <div className="relative aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden">
@@ -150,7 +151,7 @@ export default async function Home() {
                     className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-300">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-300">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -163,7 +164,7 @@ export default async function Home() {
                 {cat.description && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">{cat.description}</p>
                 )}
-                <p className="text-xs text-indigo-500 mt-2 font-medium group-hover:text-indigo-700">
+                <p className="text-xs text-red-500 mt-2 font-medium group-hover:text-red-700">
                   Browse →
                 </p>
               </div>
@@ -172,7 +173,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 5. Featured products row ─────────────────────────────────────────── */}
+      {/* ── 4. Featured products row ─────────────────────────────────────────── */}
       {featured.length > 0 && (
         <section className="border-t border-gray-100 bg-white">
           <div className="max-w-5xl mx-auto px-4 py-14">
@@ -186,7 +187,7 @@ export default async function Home() {
                 <Link
                   key={p.id}
                   href={`/product/${p.slug}`}
-                  className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-indigo-400 hover:shadow-sm transition-all"
+                  className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-400 hover:shadow-sm transition-all"
                 >
                   <div className="relative aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                     <Image
@@ -216,7 +217,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ── 6. How it works ──────────────────────────────────────────────────── */}
+      {/* ── 5. How it works ──────────────────────────────────────────────────── */}
       <section className="border-t border-gray-200 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 py-14">
           <div className="mb-10 text-center">
@@ -227,7 +228,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {HOW_IT_WORKS.map((step) => (
               <div key={step.n} className="flex flex-col items-center text-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
+                <div className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
                   {step.n}
                 </div>
                 <div>
@@ -241,7 +242,7 @@ export default async function Home() {
           <div className="mt-10 text-center">
             <Link
               href="/shop"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
             >
               Start now →
             </Link>
@@ -249,17 +250,17 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 8. Custom job CTA ────────────────────────────────────────────────── */}
-      <section className="bg-indigo-700 text-white">
+      {/* ── 6. Custom job CTA ────────────────────────────────────────────────── */}
+      <section className="bg-red-600 text-white">
         <div className="max-w-5xl mx-auto px-4 py-14 text-center">
           <h2 className="text-2xl font-bold mb-3">Did not find what you need?</h2>
-          <p className="text-indigo-200 text-sm leading-relaxed max-w-lg mx-auto mb-6">
+          <p className="text-red-100 text-sm leading-relaxed max-w-lg mx-auto mb-6">
             We also produce custom jobs, special formats, workwear, and installation work.
             Contact us and we will find the right solution for you.
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-indigo-700 text-sm font-semibold hover:bg-indigo-50 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
           >
             Contact us →
           </Link>

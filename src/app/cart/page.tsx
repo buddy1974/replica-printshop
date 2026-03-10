@@ -97,7 +97,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                         {size ? `${size} · ` : ''}Qty {item.quantity}
                       </p>
                       {item.design && (
-                        <span className="inline-block mt-0.5 text-xs bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md">
+                        <span className="inline-block mt-0.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md">
                           Custom design
                         </span>
                       )}
@@ -152,7 +152,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                             <p className="text-xs text-gray-500">{item.variant.name}</p>
                           )}
                           {item.design && (
-                            <span className="inline-block mt-0.5 text-xs bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-md">
+                            <span className="inline-block mt-0.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md">
                               Custom design
                             </span>
                           )}

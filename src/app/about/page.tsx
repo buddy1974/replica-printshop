@@ -1,6 +1,7 @@
 import { type Metadata } from 'next'
 import Link from 'next/link'
 import Container from '@/components/Container'
+import { BRANDING } from '@/config/branding'
 
 export const metadata: Metadata = {
   title: 'About',
@@ -42,7 +43,7 @@ export default function AboutPage() {
 
         <h1 className="text-3xl font-bold text-gray-900 mb-2">About us</h1>
         <p className="text-gray-500 mb-10 leading-relaxed">
-          replica printshop is an in-house print production facility. We design, print and install.
+          {BRANDING.name} is an in-house print production facility. We design, print and install.
           No middlemen — everything is produced in our own workshop.
         </p>
 
@@ -69,7 +70,7 @@ export default function AboutPage() {
         <div className="flex gap-3">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
+            className="btn-primary"
           >
             Browse products →
           </Link>
