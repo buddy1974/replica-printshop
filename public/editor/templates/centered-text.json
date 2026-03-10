@@ -1,0 +1,22 @@
+{
+  "version": "6.0.0",
+  "objects": [
+    {
+      "type": "textbox",
+      "version": "6.0.0",
+      "left": 140,
+      "top": 200,
+      "width": 280,
+      "fill": "#000000",
+      "stroke": null,
+      "strokeWidth": 0,
+      "text": "Your Text Here",
+      "fontSize": 40,
+      "fontFamily": "Arial",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textAlign": "center",
+      "__uppercase": false
+    }
+  ]
+}

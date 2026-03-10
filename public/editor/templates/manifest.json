@@ -1,0 +1,6 @@
+{
+  "templates": [
+    { "name": "Centered Text", "file": "centered-text.json" },
+    { "name": "Bold Banner", "file": "bold-banner.json" }
+  ]
+}

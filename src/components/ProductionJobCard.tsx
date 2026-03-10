@@ -51,7 +51,7 @@ export default function ProductionJobCard({
   const update = (status: JobStatus) => onStatusChange(job.id, status)
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -91,7 +91,7 @@ export default function ProductionJobCard({
       {job.orderItem.previewUrl && (
         <div>
           <p className="text-xs text-gray-500 mb-1">Preview</p>
-          <img src={job.orderItem.previewUrl} alt="Print preview" loading="lazy" className="max-w-48 rounded border border-gray-200" />
+          <img src={job.orderItem.previewUrl} alt="Print preview" loading="lazy" className="max-h-40 object-contain rounded-xl border border-gray-200" />
         </div>
       )}
 

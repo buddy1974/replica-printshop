@@ -41,7 +41,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
     <Container>
       <div className="flex items-center justify-between mb-6">
         <h1>Products</h1>
-        <Link href="/admin/products/new" className="inline-flex items-center rounded bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors">
+        <Link href="/admin/products/new" className="btn-primary">
           + New product
         </Link>
       </div>
@@ -62,7 +62,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
       {products.length === 0 ? (
         <p className="text-sm text-gray-500">{q ? 'No products match that search.' : 'No products yet. Create your first product above.'}</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>

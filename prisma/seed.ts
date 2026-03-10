@@ -135,6 +135,11 @@ async function seedCategories() {
       description: 'Internal and special orders. Not visible in the public shop.',
       imageUrl: null,
     },
+    {
+      name: 'Graphic Installation', slug: 'graphic-installation', sortOrder: 11, defaultPriceMode: 'PIECE',
+      description: 'Car lettering, window foil, signs, lightbox, plexiglass, furniture montage, vinyl floor, boat lettering, truck banners, and event graphics.',
+      imageUrl: '/products/graphic-installation-hero.png',
+    },
   ]
 
   for (const cat of categories) {

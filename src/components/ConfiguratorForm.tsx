@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import Button from '@/components/Button'
 import ProductPreview from '@/components/ProductPreview'
 
 interface OptionValue {
@@ -62,9 +61,26 @@ interface PriceResult {
   shippingPrice: number
 }
 
-const inputCls = 'rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full'
+const inputCls = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 w-full'
 const labelCls = 'flex flex-col gap-1'
 const labelTextCls = 'text-sm font-medium text-gray-700'
+
+function PillButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors',
+        active
+          ? 'bg-indigo-600 border-indigo-600 text-white'
+          : 'border-gray-300 text-gray-700 bg-white hover:border-indigo-400 hover:text-indigo-700',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  )
+}
 
 export default function ConfiguratorForm({ product }: { product: Product }) {
   const cfg = product.config
@@ -168,7 +184,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex flex-col gap-5 max-w-md">
+    <div className="flex flex-col gap-5">
       {showVariants && (
         <label className={labelCls}>
           <span className={labelTextCls}>Variant</span>
@@ -181,23 +197,20 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       )}
 
       {showOptions && product.options.map((option) => (
-        <div key={option.id} className="flex flex-col gap-1.5">
+        <div key={option.id} className="flex flex-col gap-2">
           <span className={labelTextCls}>{option.name}</span>
           <div className="flex flex-wrap gap-2">
             {option.values.map((val) => (
-              <label key={val.id} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input
-                  type="radio"
-                  name={option.id}
-                  checked={optionValueIds.includes(val.id)}
-                  onChange={() => toggleOptionValue(val.id, option.id)}
-                  className="accent-gray-900"
-                />
+              <PillButton
+                key={val.id}
+                active={optionValueIds.includes(val.id)}
+                onClick={() => toggleOptionValue(val.id, option.id)}
+              >
                 {val.name}
                 {Number(val.priceModifier) !== 0 && (
-                  <span className="text-gray-500">(+€{Number(val.priceModifier).toFixed(2)})</span>
+                  <span className="ml-1 opacity-80">+€{Number(val.priceModifier).toFixed(2)}</span>
                 )}
-              </label>
+              </PillButton>
             ))}
           </div>
         </div>
@@ -250,33 +263,30 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         {quantity < 1 && <p className="text-sm text-red-600">Quantity must be at least 1.</p>}
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         <span className={labelTextCls}>Delivery</span>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           {(['STANDARD', 'EXPRESS'] as const).map((type) => (
-            <label key={type} className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="delivery" checked={deliveryType === type} onChange={() => setDeliveryType(type)} className="accent-gray-900" />
+            <PillButton key={type} active={deliveryType === type} onClick={() => setDeliveryType(type)}>
               {type.charAt(0) + type.slice(1).toLowerCase()}
-            </label>
+            </PillButton>
           ))}
           {cfg?.pickupAllowed && (
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="delivery" checked={deliveryType === 'PICKUP'} onChange={() => setDeliveryType('PICKUP')} className="accent-gray-900" />
+            <PillButton active={deliveryType === 'PICKUP'} onClick={() => setDeliveryType('PICKUP')}>
               Pickup
-            </label>
+            </PillButton>
           )}
         </div>
       </div>
 
       {showPlacement && (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <span className={labelTextCls}>Placement</span>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             {(['front', 'back'] as const).map((p) => (
-              <label key={p} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="placement" checked={placement === p} onChange={() => setPlacement(p)} className="accent-gray-900" />
+              <PillButton key={p} active={placement === p} onClick={() => setPlacement(p)}>
                 {p.charAt(0).toUpperCase() + p.slice(1)}
-              </label>
+              </PillButton>
             ))}
           </div>
           <ProductPreview placement={placement} width={width} height={height} />
@@ -284,14 +294,14 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       )}
 
       {price && (
-        <div className="rounded border border-gray-200 bg-gray-50 p-4 text-sm flex flex-col gap-1">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm flex flex-col gap-1.5">
           <div className="flex justify-between text-gray-600">
             <span>Unit price</span><span>€{price.unitPrice.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Shipping</span><span>€{price.shippingPrice.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between font-semibold border-t border-gray-200 pt-2 mt-1">
+          <div className="flex justify-between font-semibold text-gray-900 border-t border-gray-200 pt-2 mt-0.5">
             <span>Total</span><span>€{price.totalPrice.toFixed(2)}</span>
           </div>
         </div>
@@ -303,9 +313,14 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       </label>
 
       <div className="flex flex-col gap-2">
-        <Button onClick={handleAddToCart} disabled={!!sizeError || quantity < 1}>
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={!!sizeError || quantity < 1}
+          className="btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {addedToCart ? 'Added to cart!' : 'Add to cart'}
-        </Button>
+        </button>
         {cartError && <p className="text-sm text-red-600">{cartError}</p>}
       </div>
     </div>

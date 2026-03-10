@@ -10,6 +10,10 @@ interface Params {
 
 export async function DELETE(req: NextRequest, { params }: Params) {
   try {
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(params.id)) {
+      return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
+    }
+
     // Step 302 — verify cart item belongs to the session user
     const cookieUserId = req.cookies.get('replica_uid')?.value
     if (cookieUserId) {

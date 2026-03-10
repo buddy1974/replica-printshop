@@ -28,7 +28,7 @@ export default async function AccountOrdersPage({ searchParams }: { searchParams
             <Link
               key={o.id}
               href={`/account/orders/${o.id}?userId=${userId}`}
-              className="block rounded border border-gray-200 bg-white p-4 hover:border-gray-400 transition-colors"
+              className="block rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-400 transition-colors"
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">

@@ -2,7 +2,9 @@ import fs from 'fs'
 import path from 'path'
 import { ValidationError } from '@/lib/errors'
 
-const STORAGE_DIR = path.resolve(process.cwd(), 'storage', 'uploads')
+const STORAGE_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.resolve(process.cwd(), 'storage', 'uploads')
 
 // Step 323 — max 50 MB (configurable via MAX_UPLOAD_SIZE env)
 const MAX_SIZE_BYTES = process.env.MAX_UPLOAD_SIZE

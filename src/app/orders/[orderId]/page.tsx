@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
-import Button from '@/components/Button'
 import { db } from '@/lib/db'
 import { orderStatusLabel } from '@/lib/statusLabel'
 
@@ -40,67 +39,88 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
 
   return (
     <Container>
+      {/* Header */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1>Order</h1>
-        <span className="font-mono text-sm text-gray-400">{order.id.slice(0, 8)}</span>
-        <Badge label={orderStatusLabel(order.status)} statusKey={order.status} />
+        <div>
+          <p className="text-xs text-gray-400 mb-0.5">Order</p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-mono">{order.id.slice(0, 8)}</h1>
+            <Badge label={orderStatusLabel(order.status)} statusKey={order.status} />
+          </div>
+        </div>
       </div>
 
+      {/* Status message */}
       {msg && (
-        <div className={`mb-6 rounded border px-4 py-3 text-sm font-medium ${msg.color}`}>
+        <div className={`mb-6 rounded-xl border px-4 py-3 text-sm font-medium ${msg.color}`}>
           {msg.text}
+          {order.status === 'CONFIRMED' && (
+            <span className="ml-2">
+              <Link href={`/orders/${order.id}/upload`} className="underline">Upload now →</Link>
+            </span>
+          )}
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+      {/* Meta */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-sm">
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Delivery</p>
-          <p className="font-medium">{order.deliveryType}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Delivery</p>
+          <p className="font-medium text-gray-800">{order.deliveryType}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Total</p>
-          <p className="font-medium">€{Number(order.total).toFixed(2)}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Total</p>
+          <p className="font-bold text-gray-900">€{Number(order.total).toFixed(2)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Placed</p>
-          <p className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Placed</p>
+          <p className="font-medium text-gray-800">{new Date(order.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
 
-      <h2 className="mb-3">Items</h2>
+      {/* Items */}
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        Items ({order.items.length})
+      </p>
       <div className="flex flex-col gap-3 mb-6">
         {order.items.map((item) => {
           const previews = item.uploadFiles.filter((u) => u.uploadType === 'PREVIEW')
           const artFiles = item.uploadFiles.filter((u) => u.uploadType !== 'PREVIEW')
           return (
-            <div key={item.id} className="rounded border border-gray-200 bg-white p-4">
+            <div key={item.id} className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="flex justify-between items-start gap-4 mb-3">
                 <div>
-                  <p className="font-medium text-sm">{item.productName}</p>
-                  {item.variantName && <p className="text-xs text-gray-500">{item.variantName}</p>}
+                  <p className="font-medium text-gray-900">{item.productName}</p>
+                  {item.variantName && <p className="text-xs text-gray-500 mt-0.5">{item.variantName}</p>}
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity}
+                    {Number(item.width)} × {Number(item.height)} cm · Qty {item.quantity}
                   </p>
                 </div>
-                <p className="text-sm font-medium text-gray-700 shrink-0">
+                <p className="text-sm font-semibold text-gray-900 shrink-0">
                   €{Number(item.priceSnapshot).toFixed(2)}
                 </p>
               </div>
 
               {previews.map((u) => (
                 <div key={u.id} className="mb-3">
-                  <p className="text-xs text-gray-500 mb-1">Preview</p>
-                  <img src={`/api/admin/files/${u.id}`} alt="Preview" loading="lazy" className="max-w-xs rounded border border-gray-200" />
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Preview</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/admin/files/${u.id}`}
+                    alt="Preview"
+                    loading="lazy"
+                    className="max-w-xs rounded-lg border border-gray-200"
+                  />
                 </div>
               ))}
 
               {artFiles.length > 0 && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5 mt-2">
                   {artFiles.map((u) => (
                     <div key={u.id} className="flex items-center gap-2 text-xs">
                       <span className="text-gray-700 truncate max-w-[200px]">{u.filename}</span>
                       {u.uploadType && (
-                        <span className="text-gray-400 bg-gray-100 rounded px-1">{u.uploadType}</span>
+                        <span className="text-gray-400 bg-gray-100 rounded-md px-1.5 py-0.5">{u.uploadType}</span>
                       )}
                       <Badge label={u.status} />
                     </div>
@@ -112,14 +132,16 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
         })}
       </div>
 
-      {order.status === 'CONFIRMED' && (
-        <Link href={`/orders/${order.id}/upload`}>
-          <Button>Upload files</Button>
+      {/* Actions */}
+      <div className="flex flex-wrap items-center gap-3">
+        {order.status === 'CONFIRMED' && (
+          <Link href={`/orders/${order.id}/upload`} className="btn-primary">
+            Upload files →
+          </Link>
+        )}
+        <Link href="/orders" className="btn-ghost">
+          ← Back to orders
         </Link>
-      )}
-
-      <div className="mt-6">
-        <Link href="/orders" className="text-sm text-gray-500 hover:text-gray-900">← Back to orders</Link>
       </div>
     </Container>
   )

@@ -3,6 +3,7 @@ import { getCart, addToCart } from '@/lib/cart'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
 import { logAction, logError } from '@/lib/log'
+import { isValidId, isValidQuantity } from '@/lib/inputValidation'
 
 // Step 302 — verify cookie userId matches requested userId (if cookie is set)
 function cartAccessDenied(req: NextRequest, userId: string): boolean {
@@ -35,16 +36,28 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { userId, productId, variantId, width, height, quantity, express, optionValueIds, placement } = body
+    const { userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = body
 
-    if (!userId || !productId || !quantity) {
-      return NextResponse.json({ error: 'userId, productId and quantity are required' }, { status: 400 })
+    if (!userId || typeof userId !== 'string') {
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+    }
+    if (!isValidId(productId)) {
+      return NextResponse.json({ error: 'productId is invalid' }, { status: 400 })
+    }
+    if (!isValidQuantity(quantity)) {
+      return NextResponse.json({ error: 'quantity must be an integer between 1 and 1000' }, { status: 400 })
+    }
+    if (variantId !== undefined && !isValidId(variantId)) {
+      return NextResponse.json({ error: 'variantId is invalid' }, { status: 400 })
+    }
+    if (designId !== undefined && !isValidId(designId)) {
+      return NextResponse.json({ error: 'designId is invalid' }, { status: 400 })
     }
     if (cartAccessDenied(req, userId)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    const cart = await addToCart({ userId, productId, variantId, width, height, quantity, express, optionValueIds, placement })
+    const cart = await addToCart({ userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement })
     // Step 334
     logAction('CART_ADD', 'cart', { userId, data: { productId, variantId, quantity, width, height } })
     return NextResponse.json(cart, { status: 201 })

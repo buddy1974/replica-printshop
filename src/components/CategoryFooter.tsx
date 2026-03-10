@@ -11,7 +11,7 @@ export default function CategoryFooter() {
         </p>
         <Link
           href="/contact"
-          className="inline-flex items-center rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          className="btn-primary"
         >
           Contact us →
         </Link>

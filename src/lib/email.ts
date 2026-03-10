@@ -5,7 +5,7 @@ import { uploadRejected } from '@/mailTemplates/uploadRejected'
 import { approved } from '@/mailTemplates/approved'
 import { done } from '@/mailTemplates/done'
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? ''
 
 // ---- Customer emails -------------------------------------------------------

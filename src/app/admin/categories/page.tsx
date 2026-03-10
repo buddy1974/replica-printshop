@@ -63,7 +63,7 @@ export default function AdminCategoriesPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {categories.map((cat) => (
-            <div key={cat.id} className="rounded border border-gray-200 bg-white p-4">
+            <div key={cat.id} className="rounded-xl border border-gray-200 bg-white p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className={labelCls}>Name</label>

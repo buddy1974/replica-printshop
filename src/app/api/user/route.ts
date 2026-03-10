@@ -3,6 +3,7 @@ import { getOrCreateUserByEmail } from '@/lib/user'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { logAction, logError } from '@/lib/log'
+import { isValidEmail, stripHtml } from '@/lib/inputValidation'
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,11 +15,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { email, name } = body
 
-    if (!email) {
-      return NextResponse.json({ error: 'email is required' }, { status: 400 })
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: 'A valid email address is required' }, { status: 400 })
     }
 
-    const user = await getOrCreateUserByEmail(email, name)
+    const safeName = name && typeof name === 'string' ? stripHtml(name).slice(0, 128) : undefined
+    const user = await getOrCreateUserByEmail(email, safeName)
     // Step 336
     logAction('LOGIN', 'user', { userId: user.id, data: { email } })
     return NextResponse.json(user)

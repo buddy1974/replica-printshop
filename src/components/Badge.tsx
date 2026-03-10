@@ -41,7 +41,7 @@ interface BadgeProps {
 export default function Badge({ label, statusKey, color }: BadgeProps) {
   const resolvedColor = color ?? statusColor[statusKey ?? label] ?? 'gray'
   return (
-    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colors[resolvedColor]}`}>
+    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colors[resolvedColor]}`}>
       {label}
     </span>
   )

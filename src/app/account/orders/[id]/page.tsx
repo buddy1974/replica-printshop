@@ -143,7 +143,7 @@ export default async function AccountOrderDetailPage({
           const previews = item.uploadFiles.filter((u) => u.uploadType === 'PREVIEW')
           const artFiles = item.uploadFiles.filter((u) => u.uploadType !== 'PREVIEW')
           return (
-            <div key={item.id} className="rounded border border-gray-200 bg-white p-4">
+            <div key={item.id} className="rounded-xl border border-gray-200 bg-white p-4">
               <div className="flex justify-between items-start gap-4 mb-3">
                 <div>
                   <p className="font-medium text-sm">{item.productName}</p>
@@ -160,7 +160,8 @@ export default async function AccountOrderDetailPage({
               {previews.map((u) => (
                 <div key={u.id} className="mb-3">
                   <p className="text-xs text-gray-500 mb-1">Preview</p>
-                  <img src={`/api/admin/files/${u.id}`} alt="Preview" className="max-w-xs rounded border border-gray-200" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/api/admin/files/${u.id}`} alt="Preview" className="max-w-xs max-h-40 object-contain rounded-xl border border-gray-200" />
                 </div>
               ))}
 
@@ -187,7 +188,7 @@ export default async function AccountOrderDetailPage({
         {order.status === 'CONFIRMED' && (
           <Link
             href={`/orders/${order.id}/upload`}
-            className="inline-flex items-center rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+            className="btn-primary"
           >
             Upload files
           </Link>

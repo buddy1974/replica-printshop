@@ -57,12 +57,12 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
     <Container>
       <h1 className="mb-6">Orders</h1>
 
-      <form method="GET" action="/admin/orders" className="mb-4 flex gap-2">
+      <form method="GET" action="/admin/orders" className="mb-4 flex gap-2 flex-wrap">
         <input
           name="q"
           defaultValue={q}
           placeholder="Search by order ID or email…"
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-64"
+          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 flex-1 sm:flex-none sm:w-64"
         />
         <button type="submit" className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:border-gray-500">Search</button>
         {q && (
@@ -73,7 +73,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
       {orders.length === 0 ? (
         <p className="text-sm text-gray-500">{q ? 'No orders match that search.' : 'No orders yet.'}</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
           <table className="w-full text-sm">
             <thead className="border-b border-gray-200 bg-gray-50">
               <tr>

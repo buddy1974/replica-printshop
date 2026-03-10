@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 import UploadForm from '@/components/UploadForm'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
@@ -23,12 +24,13 @@ function GuidePanel({ guide }: { guide: ProductGuide }) {
   if (!hasGuide) return null
 
   return (
-    <div className="rounded border border-blue-200 bg-blue-50 p-3 mt-3">
-      <p className="text-xs font-semibold text-blue-800 mb-1">File requirements</p>
-      <div className="space-y-0.5 text-xs text-blue-700">
+    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 mt-3">
+      <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-2">File requirements</p>
+      <div className="space-y-1 text-xs text-blue-700">
         {guide.guideText && <p>{guide.guideText}</p>}
-        {guide.minDpi && <p>Min DPI: {guide.minDpi}{guide.recommendedDpi ? ` (rec. ${guide.recommendedDpi})` : ''}</p>}
+        {guide.minDpi && <p>Min DPI: {guide.minDpi}{guide.recommendedDpi ? ` (recommended: ${guide.recommendedDpi})` : ''}</p>}
         {guide.bleedMm && <p>Bleed: {guide.bleedMm} mm</p>}
+        {guide.safeMarginMm && <p>Safe margin: {guide.safeMarginMm} mm</p>}
         {guide.allowedFormats && <p>Formats: {guide.allowedFormats}</p>}
       </div>
     </div>
@@ -61,30 +63,47 @@ export default async function UploadPage({ params }: { params: { orderId: string
 
   return (
     <Container>
-      <div className="mb-6 flex items-center gap-3">
-        <h1>Upload files</h1>
-        <Badge label={orderStatusLabel(order.status)} statusKey={order.status} />
-        <span className="text-sm text-gray-500 font-mono">{order.id.slice(0, 8)}</span>
+      <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div>
+          <p className="text-xs text-gray-400 mb-0.5">Upload files</p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-mono">{order.id.slice(0, 8)}</h1>
+            <Badge label={orderStatusLabel(order.status)} statusKey={order.status} />
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
         {order.items.map((item, i) => (
-          <section key={item.id} className="rounded border border-gray-200 bg-white p-5">
-            <h2 className="mb-1">{item.productName}{item.variantName ? ` — ${item.variantName}` : ''}</h2>
-            <p className="text-sm text-gray-500 mb-3">
-              {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity}
+          <section key={item.id} className="rounded-xl border border-gray-200 bg-white p-5">
+            <p className="font-semibold text-gray-900">
+              {item.productName}{item.variantName ? ` — ${item.variantName}` : ''}
             </p>
+            <p className="text-sm text-gray-500 mt-0.5 mb-4">
+              {Number(item.width)} × {Number(item.height)} cm · Qty {item.quantity}
+            </p>
+
             {guides[i]?.config?.uploadInstructions && (
-              <div className="rounded border border-amber-200 bg-amber-50 px-3 py-2 mt-3 text-xs text-amber-800">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 mb-3">
                 {guides[i]!.config!.uploadInstructions}
               </div>
             )}
             {guides[i] && <GuidePanel guide={guides[i]!} />}
-            <div className="mt-4">
+
+            <div className="mt-5">
               <UploadForm orderItemId={item.id} initialPreviewUrl={item.previewUrl} />
             </div>
           </section>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <Link href={`/orders/${order.id}`} className="btn-ghost">
+          ← Back to order
+        </Link>
+      </div>
       </div>
     </Container>
   )

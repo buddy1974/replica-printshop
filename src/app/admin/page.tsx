@@ -9,7 +9,7 @@ const fmt = (n: number) => `€${n.toFixed(2)}`
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
       <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{label}</p>
       <p className="text-2xl font-semibold text-gray-900">{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
@@ -93,7 +93,7 @@ export default async function AdminPage() {
 
           {/* Top products + categories — steps 285, 286 */}
           <div className="grid gap-4 mb-6 sm:grid-cols-2">
-            <div className="rounded border border-gray-200 bg-white overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">Top products</p>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
@@ -110,7 +110,7 @@ export default async function AdminPage() {
               </table>
             </div>
 
-            <div className="rounded border border-gray-200 bg-white overflow-hidden">
+            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">Top categories</p>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
@@ -136,7 +136,7 @@ export default async function AdminPage() {
       <Section title="Manage">
         <div className="grid gap-3">
           {navLinks.map(({ href, label, desc }) => (
-            <Link key={href} href={href} className="flex items-center justify-between rounded border border-gray-200 bg-white p-4 hover:border-gray-400 transition-colors">
+            <Link key={href} href={href} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-300 transition-colors">
               <div>
                 <p className="font-medium text-sm">{label}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{desc}</p>

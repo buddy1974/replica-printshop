@@ -9,6 +9,10 @@ const cartInclude = {
     include: {
       product: true,
       variant: true,
+      // Step 357 — include design preview for cart display
+      design: {
+        select: { id: true, preview: true },
+      },
     },
   },
 } as const
@@ -30,6 +34,7 @@ export interface AddToCartInput {
   userId: string
   productId: string
   variantId?: string
+  designId?: string
   width?: number
   height?: number
   quantity: number
@@ -39,9 +44,10 @@ export interface AddToCartInput {
 }
 
 export async function addToCart(input: AddToCartInput) {
-  const { userId, productId, variantId, width, height, quantity, express, optionValueIds, placement } = input
+  const { userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = input
 
   assert(quantity > 0, 'quantity must be greater than 0')
+  assert(quantity <= 1000, 'quantity must not exceed 1000')
   if (width != null) assert(width > 0, 'width must be greater than 0')
   if (height != null) assert(height > 0, 'height must be greater than 0')
 
@@ -102,6 +108,7 @@ export async function addToCart(input: AddToCartInput) {
       cartId: cart.id,
       productId,
       variantId: variantId ?? null,
+      designId: designId ?? null,
       width: width ?? 0,
       height: height ?? 0,
       quantity,

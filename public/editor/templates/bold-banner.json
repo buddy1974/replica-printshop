@@ -1,0 +1,35 @@
+{
+  "version": "6.0.0",
+  "objects": [
+    {
+      "type": "rect",
+      "version": "6.0.0",
+      "left": 80,
+      "top": 180,
+      "width": 400,
+      "height": 120,
+      "fill": "#1e1e1e",
+      "stroke": null,
+      "strokeWidth": 0,
+      "rx": 6,
+      "ry": 6
+    },
+    {
+      "type": "textbox",
+      "version": "6.0.0",
+      "left": 100,
+      "top": 208,
+      "width": 360,
+      "fill": "#ffffff",
+      "stroke": null,
+      "strokeWidth": 0,
+      "text": "BRAND NAME",
+      "fontSize": 48,
+      "fontFamily": "Impact",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textAlign": "center",
+      "__uppercase": true
+    }
+  ]
+}
