@@ -16,39 +16,39 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     id: 1,
-    gradient: 'from-gray-900 via-gray-800 to-red-950',
-    eyebrow: 'Large Format Print',
-    headline: 'From file to finish in 1–3 days',
-    sub: 'Banners, posters, signs — in-house production, pickup or shipping.',
+    gradient: 'from-gray-900/60 via-gray-800/30 to-transparent',
+    eyebrow: 'Print & Signage',
+    headline: 'Banner & signage',
+    sub: 'Printing, signage and professional installation. Fast in-house production.',
     cta: { label: 'Shop banners', href: '/shop/banners' },
-    image: '/products/banner-hero-section.png',
+    image: '/images/hero/slide1.png',
   },
   {
     id: 2,
-    gradient: 'from-slate-900 via-gray-900 to-slate-800',
+    gradient: 'from-gray-900/60 via-gray-800/30 to-transparent',
     eyebrow: 'Textile & DTF',
-    headline: 'Custom prints on any fabric',
-    sub: 'DTF gang sheets, flex — small run or bulk.',
+    headline: 'Custom fabric printing',
+    sub: 'Textile, DTF, full-color — small runs from 1 piece, no minimum.',
     cta: { label: 'Shop textile', href: '/shop/textile' },
-    image: '/products/dtf-hero-banner.png',
+    image: '/images/hero/slide2.png',
   },
   {
     id: 3,
-    gradient: 'from-red-950 via-gray-900 to-gray-900',
-    eyebrow: 'Vinyl & Foil',
-    headline: 'Cut vinyl, window foil, vehicle graphics',
-    sub: 'Precision plotting and professional installation by our crew.',
-    cta: { label: 'Shop vinyl', href: '/shop/vinyl' },
-    image: '/products/foil-adhessive-hero-banner.png',
+    gradient: 'from-gray-900/60 via-gray-800/30 to-transparent',
+    eyebrow: 'Print & Signage',
+    headline: 'Print & signage solutions',
+    sub: 'Signage, graphics and full installation by our crew.',
+    cta: { label: 'Shop now', href: '/shop' },
+    image: '/images/hero/slide3.png',
   },
   {
     id: 4,
-    gradient: 'from-gray-800 via-gray-900 to-slate-900',
-    eyebrow: 'Graphic Installation',
-    headline: 'Full service — design to installation',
-    sub: 'Storefronts, trade show stands, office branding and more.',
-    cta: { label: 'Get a quote', href: '/contact' },
-    image: '/products/graphic-installation-hero.png',
+    gradient: 'from-gray-900/60 via-gray-800/30 to-transparent',
+    eyebrow: 'Vinyl & Vehicle Graphics',
+    headline: 'Printing & graphics',
+    sub: 'Window graphics, perforated film, cut vinyl lettering — windows & vehicles.',
+    cta: { label: 'Shop vinyl', href: '/shop/vinyl' },
+    image: '/images/hero/slide4.png',
   },
 ]
 
@@ -89,8 +89,8 @@ export default function HeroSlider() {
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${s.image})` }}
           />
-          {/* Dark gradient overlay — always on top of image */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${s.gradient} opacity-80`} />
+          {/* Dark gradient overlay — left-side only so image shows through on right */}
+          <div className={`absolute inset-0 bg-gradient-to-r ${s.gradient}`} />
         </div>
       ))}
 
