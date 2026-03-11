@@ -98,8 +98,8 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
 
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
   const [optionValueIds, setOptionValueIds] = useState<string[]>([])
-  const [width, setWidth] = useState(fixedSizeOptions[0]?.w ?? 100)
-  const [height, setHeight] = useState(fixedSizeOptions[0]?.h ?? 100)
+  const [width, setWidth] = useState(fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
+  const [height, setHeight] = useState(fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
   const [quantity, setQuantity] = useState(1)
   const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS' | 'PICKUP'>('STANDARD')
   const [price, setPrice] = useState<PriceResult | null>(null)

@@ -1,5 +1,7 @@
 // Steps 342, 366 — Editor route: server component that loads product + config + category
 
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import EditorShell from './EditorShell'
