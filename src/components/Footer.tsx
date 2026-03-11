@@ -95,16 +95,13 @@ export default function Footer() {
 
           {/* Payment icons */}
           <div>
-            <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">We accept</p>
-            <div className="flex flex-wrap gap-1.5">
-              {['Visa', 'MC', 'PayPal', 'Apple Pay', 'G Pay', 'Bank'].map((p) => (
-                <span
-                  key={p}
-                  className="inline-flex items-center px-2 py-1 rounded-md bg-gray-800 text-[10px] font-semibold text-gray-300 border border-gray-700"
-                >
-                  {p}
-                </span>
-              ))}
+            <div className="rounded-lg bg-white p-2 inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/stripe.png"
+                alt="We accept Visa, Mastercard, Maestro and American Express via Stripe"
+                className="h-9 w-auto"
+              />
             </div>
           </div>
         </div>

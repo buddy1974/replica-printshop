@@ -56,8 +56,8 @@ export default function ContactPage() {
             {[
               'Custom print jobs — any size, any material',
               'Large format print: banners, foil, mesh, PVC',
-              'Textile print: DTF, sublimation, screen print',
-              'Graphic installation: wrapping, signage, mounting',
+              'Textile print: DTF, flex, flock, embroidery',
+              'Graphic installation: vehicle graphics, signage, mounting',
               'Foil lettering and vinyl cut',
               'Rush production available on request',
             ].map((item) => (

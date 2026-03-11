@@ -32,7 +32,7 @@ const CAPABILITIES = [
   },
   {
     title: 'Graphic installation',
-    text: 'We mount what we produce. Vehicle wrapping, building signage, window graphics and wall print installation. Professional mounting team.',
+    text: 'We mount what we produce. Vehicle graphics, building signage, window graphics and wall print installation. Professional mounting team.',
   },
 ]
 
