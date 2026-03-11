@@ -37,6 +37,8 @@ interface Product {
     hasCustomSize: boolean
     printAreaWidthCm: number | null
     printAreaHeightCm: number | null
+    bleedMm?: number | null
+    safeMm?: number | null
   } | null
 }
 
@@ -398,6 +400,8 @@ function handleSelectionChange(
               zone={activeZone}
               printWidthCm={widthCm ?? 100}
               printHeightCm={heightCm ?? 100}
+              bleedMm={product.config?.bleedMm ?? 10}
+              safeMm={product.config?.safeMm ?? 10}
               onSelectionChange={handleSelectionChange}
               onLayersChange={setLayers}
               onReady={() => setCanvasReady(true)}

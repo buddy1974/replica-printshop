@@ -146,6 +146,8 @@ interface Props {
   zone: PlacementZone | null
   printWidthCm?: number | null
   printHeightCm?: number | null
+  bleedMm?: number | null
+  safeMm?: number | null
   onSelectionChange?: (
     type: SelectionType,
     textProps?: TextProps,
@@ -253,7 +255,7 @@ function applyLock(obj: FabricObject, locked: boolean) {
 
 const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
   function EditorCanvas(
-    { mockupUrl, zone, printWidthCm, printHeightCm, onSelectionChange, onLayersChange, onReady },
+    { mockupUrl, zone, printWidthCm, printHeightCm, bleedMm, safeMm, onSelectionChange, onLayersChange, onReady },
     ref,
   ) {
     // Compute canvas pixel dimensions from print aspect ratio
@@ -268,6 +270,10 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     const fabricRef = useRef<FabricCanvas | null>(null)
     const sizeWRef = useRef(szW)
     const sizeHRef = useRef(szH)
+    const printWRef = useRef(printWidthCm ?? 100)
+    const printHRef = useRef(printHeightCm ?? 100)
+    const bleedMmRef = useRef(bleedMm ?? 10)
+    const safeMmRef = useRef(safeMm ?? 10)
     const zoneRef = useRef<PlacementZone | null>(zone)
     const onSelectionChangeRef = useRef(onSelectionChange)
     const onLayersChangeRef = useRef(onLayersChange)
@@ -376,44 +382,45 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           fireLayers()
         })
 
-        // ── Initial zone overlay: bleed / cut / safe ─────────────────────────
-        const initialZone = zoneRef.current
-        if (initialZone) {
-          const BLEED = 5, SAFE = 8
-          const z = initialZone
-          // Bleed (outer) — gray dashed
-          const bleedRect = new fab.Rect({
-            left: z.x * szW - BLEED, top: z.y * szH - BLEED,
-            width: z.w * szW + BLEED * 2, height: z.h * szH + BLEED * 2,
-            fill: 'transparent', stroke: 'rgba(156,163,175,0.7)',
-            strokeWidth: 1, strokeDashArray: [4, 4],
-            selectable: false, evented: false,
-          })
-          ;(bleedRect as FabricObject).__isZone = true
-          // Cut line — red dashed
+        // ── Initial margin overlay: cut / safe / label ───────────────────────
+        {
+          const pW = printWRef.current, pH = printHRef.current
+          const bMm = bleedMmRef.current, sMm = safeMmRef.current
+          const bX = bMm / (pW * 10), bY = bMm / (pH * 10)
+          const sX = sMm / (pW * 10), sY = sMm / (pH * 10)
+          // Cut line (red dashed) — trim edge
           const cutRect = new fab.Rect({
-            left: z.x * szW, top: z.y * szH,
-            width: z.w * szW, height: z.h * szH,
-            fill: 'rgba(239,68,68,0.04)', stroke: 'rgba(239,68,68,0.85)',
+            left: bX * szW, top: bY * szH,
+            width: (1 - bX * 2) * szW, height: (1 - bY * 2) * szH,
+            fill: 'rgba(239,68,68,0.03)', stroke: 'rgba(239,68,68,0.85)',
             strokeWidth: 1.5, strokeDashArray: [6, 3],
             selectable: false, evented: false,
           })
           ;(cutRect as FabricObject).__isZone = true
-          // Safe zone (inner) — green dashed
+          // Safe line (green dashed) — content safe area
           const safeRect = new fab.Rect({
-            left: z.x * szW + SAFE, top: z.y * szH + SAFE,
-            width: z.w * szW - SAFE * 2, height: z.h * szH - SAFE * 2,
+            left: (bX + sX) * szW, top: (bY + sY) * szH,
+            width: (1 - (bX + sX) * 2) * szW, height: (1 - (bY + sY) * 2) * szH,
             fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
             strokeWidth: 1, strokeDashArray: [4, 4],
             selectable: false, evented: false,
           })
           ;(safeRect as FabricObject).__isZone = true
-          canvas.add(bleedRect)
+          // Size label — top center
+          const fontSize = Math.max(11, Math.min(szW, szH) * 0.04)
+          const label = new fab.Text(`${pW} × ${pH} cm`, {
+            left: szW / 2, top: 4,
+            fontSize, fill: 'rgba(80,80,80,0.65)',
+            originX: 'center',
+            selectable: false, evented: false,
+          })
+          ;(label as FabricObject).__isZone = true
           canvas.add(cutRect)
           canvas.add(safeRect)
+          canvas.add(label)
+          canvas.sendObjectToBack(label)
           canvas.sendObjectToBack(safeRect)
           canvas.sendObjectToBack(cutRect)
-          canvas.sendObjectToBack(bleedRect)
           canvas.renderAll()
         }
       })
@@ -445,47 +452,51 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       })
     }, [mockupUrl])
 
-    // Zone overlay
+    // Zone overlay — redraws margin lines (used when zone changes after mount)
     useEffect(() => {
       const canvas: FabricCanvas = fabricRef.current
       if (!canvas) return
       const szW = sizeWRef.current
       const szH = sizeHRef.current
       canvas.getObjects().filter((o: FabricObject) => o.__isZone).forEach((o: FabricObject) => canvas.remove(o))
-      if (!zone) { canvas.renderAll(); return }
       import('fabric').then((fab) => {
-        const BLEED = 5, SAFE = 8
-        const z = zone
-        const bleedRect = new fab.Rect({
-          left: z.x * szW - BLEED, top: z.y * szH - BLEED,
-          width: z.w * szW + BLEED * 2, height: z.h * szH + BLEED * 2,
-          fill: 'transparent', stroke: 'rgba(156,163,175,0.7)',
-          strokeWidth: 1, strokeDashArray: [4, 4],
-          selectable: false, evented: false,
-        })
-        ;(bleedRect as FabricObject).__isZone = true
+        const pW = printWRef.current, pH = printHRef.current
+        const bMm = bleedMmRef.current, sMm = safeMmRef.current
+        const bX = bMm / (pW * 10), bY = bMm / (pH * 10)
+        const sX = sMm / (pW * 10), sY = sMm / (pH * 10)
+        // Cut line (red dashed) — trim edge
         const cutRect = new fab.Rect({
-          left: z.x * szW, top: z.y * szH,
-          width: z.w * szW, height: z.h * szH,
-          fill: 'rgba(239,68,68,0.04)', stroke: 'rgba(239,68,68,0.85)',
+          left: bX * szW, top: bY * szH,
+          width: (1 - bX * 2) * szW, height: (1 - bY * 2) * szH,
+          fill: 'rgba(239,68,68,0.03)', stroke: 'rgba(239,68,68,0.85)',
           strokeWidth: 1.5, strokeDashArray: [6, 3],
           selectable: false, evented: false,
         })
         ;(cutRect as FabricObject).__isZone = true
+        // Safe line (green dashed) — content safe area
         const safeRect = new fab.Rect({
-          left: z.x * szW + SAFE, top: z.y * szH + SAFE,
-          width: z.w * szW - SAFE * 2, height: z.h * szH - SAFE * 2,
+          left: (bX + sX) * szW, top: (bY + sY) * szH,
+          width: (1 - (bX + sX) * 2) * szW, height: (1 - (bY + sY) * 2) * szH,
           fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
           strokeWidth: 1, strokeDashArray: [4, 4],
           selectable: false, evented: false,
         })
         ;(safeRect as FabricObject).__isZone = true
-        canvas.add(bleedRect)
+        // Size label — top center
+        const fontSize = Math.max(11, Math.min(szW, szH) * 0.04)
+        const label = new fab.Text(`${pW} × ${pH} cm`, {
+          left: szW / 2, top: 4,
+          fontSize, fill: 'rgba(80,80,80,0.65)',
+          originX: 'center',
+          selectable: false, evented: false,
+        })
+        ;(label as FabricObject).__isZone = true
         canvas.add(cutRect)
         canvas.add(safeRect)
+        canvas.add(label)
+        canvas.sendObjectToBack(label)
         canvas.sendObjectToBack(safeRect)
         canvas.sendObjectToBack(cutRect)
-        canvas.sendObjectToBack(bleedRect)
         canvas.renderAll()
       })
     }, [zone])
