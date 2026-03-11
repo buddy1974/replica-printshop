@@ -159,6 +159,17 @@ interface Props {
 }
 
 const CANVAS_SIZE = 560
+const RULER_PX = 20   // ruler strip height/width in px
+const WS_GAP = 16     // workspace padding around print sheet
+
+function getMajorStepCm(totalCm: number): number {
+  if (totalCm > 200) return 50
+  if (totalCm > 100) return 20
+  if (totalCm > 50) return 10
+  if (totalCm > 20) return 5
+  if (totalCm > 10) return 2
+  return 1
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FabricCanvas = any
@@ -297,7 +308,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas = new fab.Canvas(el, {
           width: szW,
           height: szH,
-          backgroundColor: '#f3f4f6',
+          backgroundColor: '#ffffff',
           preserveObjectStacking: true,
         })
         fabricRef.current = canvas
@@ -406,19 +417,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             selectable: false, evented: false,
           })
           ;(safeRect as FabricObject).__isZone = true
-          // Size label — top center
-          const fontSize = Math.max(11, Math.min(szW, szH) * 0.04)
-          const label = new fab.Text(`${pW} × ${pH} cm`, {
-            left: szW / 2, top: 4,
-            fontSize, fill: 'rgba(80,80,80,0.65)',
-            originX: 'center',
-            selectable: false, evented: false,
-          })
-          ;(label as FabricObject).__isZone = true
           canvas.add(cutRect)
           canvas.add(safeRect)
-          canvas.add(label)
-          canvas.sendObjectToBack(label)
           canvas.sendObjectToBack(safeRect)
           canvas.sendObjectToBack(cutRect)
           canvas.renderAll()
@@ -482,19 +482,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           selectable: false, evented: false,
         })
         ;(safeRect as FabricObject).__isZone = true
-        // Size label — top center
-        const fontSize = Math.max(11, Math.min(szW, szH) * 0.04)
-        const label = new fab.Text(`${pW} × ${pH} cm`, {
-          left: szW / 2, top: 4,
-          fontSize, fill: 'rgba(80,80,80,0.65)',
-          originX: 'center',
-          selectable: false, evented: false,
-        })
-        ;(label as FabricObject).__isZone = true
         canvas.add(cutRect)
         canvas.add(safeRect)
-        canvas.add(label)
-        canvas.sendObjectToBack(label)
         canvas.sendObjectToBack(safeRect)
         canvas.sendObjectToBack(cutRect)
         canvas.renderAll()
@@ -955,9 +944,67 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       },
     }))
 
+    const pW = printWidthCm ?? 100
+    const pH = printHeightCm ?? 100
+    const hScale = szW / pW
+    const vScale = szH / pH
+    const hStep = getMajorStepCm(pW)
+    const vStep = getMajorStepCm(pH)
+    const wsW = RULER_PX + WS_GAP + szW + WS_GAP
+    const wsH = RULER_PX + WS_GAP + szH + WS_GAP
+
     return (
-      <div className="border border-gray-200 rounded-lg overflow-hidden shadow-inner bg-gray-100 flex items-center justify-center">
-        <canvas ref={canvasElRef} />
+      <div className="select-none">
+        {/* Size label */}
+        <p className="text-center text-xs text-gray-400 mb-1 font-mono tracking-wide">
+          {pW} × {pH} cm
+        </p>
+
+        {/* Print workspace */}
+        <div style={{ position: 'relative', width: wsW, height: wsH, background: '#6b7280' }}>
+
+          {/* Corner block */}
+          <div style={{ position: 'absolute', top: 0, left: 0, width: RULER_PX, height: RULER_PX, background: '#c4c8d0' }} />
+
+          {/* Top ruler */}
+          <div style={{ position: 'absolute', top: 0, left: RULER_PX, width: wsW - RULER_PX, height: RULER_PX, background: '#dde1ea', overflow: 'hidden' }}>
+            <svg width={wsW - RULER_PX} height={RULER_PX} style={{ display: 'block' }}>
+              {Array.from({ length: Math.floor(pW / hStep) + 1 }, (_, i) => {
+                const cm = i * hStep
+                const x = WS_GAP + cm * hScale
+                return (
+                  <g key={cm}>
+                    <line x1={x} y1={RULER_PX} x2={x} y2={RULER_PX - 8} stroke="#888" strokeWidth={0.75} />
+                    {i > 0 && <text x={x + 2} y={RULER_PX - 9} fontSize={7} fill="#666">{cm}</text>}
+                  </g>
+                )
+              })}
+            </svg>
+          </div>
+
+          {/* Left ruler */}
+          <div style={{ position: 'absolute', top: RULER_PX, left: 0, width: RULER_PX, height: wsH - RULER_PX, background: '#dde1ea', overflow: 'hidden' }}>
+            <svg width={RULER_PX} height={wsH - RULER_PX} style={{ display: 'block' }}>
+              {Array.from({ length: Math.floor(pH / vStep) + 1 }, (_, i) => {
+                const cm = i * vStep
+                const y = WS_GAP + cm * vScale
+                return (
+                  <g key={cm}>
+                    <line x1={RULER_PX} y1={y} x2={RULER_PX - 8} y2={y} stroke="#888" strokeWidth={0.75} />
+                    {i > 0 && (
+                      <text x={RULER_PX - 10} y={y} fontSize={7} fill="#666" textAnchor="end" dominantBaseline="middle">{cm}</text>
+                    )}
+                  </g>
+                )
+              })}
+            </svg>
+          </div>
+
+          {/* Print sheet (Fabric canvas) */}
+          <div style={{ position: 'absolute', top: RULER_PX + WS_GAP, left: RULER_PX + WS_GAP, boxShadow: '0 4px 20px rgba(0,0,0,0.45)' }}>
+            <canvas ref={canvasElRef} />
+          </div>
+        </div>
       </div>
     )
   },

@@ -393,7 +393,7 @@ function handleSelectionChange(
               <div className="w-9 h-9 border-[3px] border-indigo-500 border-t-transparent rounded-full animate-spin" />
             </div>
           )}
-          <div className="flex flex-col items-center gap-3 p-6 w-full max-w-2xl">
+          <div className="flex flex-col items-center gap-3 p-4">
             <EditorCanvas
               ref={canvasRef}
               mockupUrl={product.imageUrl}
