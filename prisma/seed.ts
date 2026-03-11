@@ -432,28 +432,22 @@ async function seedStickers() {
 // Banner finishing / material / print options (steps 231–234)
 // ---------------------------------------------------------------------------
 
-const BANNER_FINISHING_VALUES = [
-  { name: 'Nur Schnitt',              priceModifier: 0.00 },
-  { name: 'Nur Flachsaum',            priceModifier: 0.50 },
-  { name: 'Flachsaum + Ösen (Ecken)', priceModifier: 1.50 },
-  { name: 'Flachsaum + Ösen 100cm',   priceModifier: 2.00 },
-  { name: 'Flachsaum + Ösen 50cm',    priceModifier: 2.50 },
-  { name: 'Flachsaum + Ösen 30cm',    priceModifier: 3.00 },
-  { name: 'Hohlsaum 3cm',             priceModifier: 1.50 },
-  { name: 'Hohlsaum 6cm',             priceModifier: 2.00 },
-  { name: 'Hohlsaum 8cm',             priceModifier: 2.00 },
-  { name: 'Hohlsaum 10cm',            priceModifier: 2.50 },
-  { name: 'Rundkeder 6mm',            priceModifier: 2.50 },
-  { name: 'Rundkeder 8mm',            priceModifier: 3.00 },
-]
-
 async function applyBannerOptions(productId: string) {
-  // Remove legacy "Finishing" option (3-value version) if present
+  // Remove all per-side finishing options
+  for (const side of ['top', 'bottom', 'left', 'right']) {
+    const opt = await db.productOption.findFirst({ where: { productId, name: `Finishing ${side}` } })
+    if (opt) {
+      await db.productOptionValue.deleteMany({ where: { optionId: opt.id } })
+      await db.productOption.delete({ where: { id: opt.id } })
+      console.log(`    - removed Finishing ${side}`)
+    }
+  }
+
+  // Remove any previous "Finishing" option before recreating
   const legacy = await db.productOption.findFirst({ where: { productId, name: 'Finishing' } })
   if (legacy) {
     await db.productOptionValue.deleteMany({ where: { optionId: legacy.id } })
     await db.productOption.delete({ where: { id: legacy.id } })
-    console.log('    - removed legacy Finishing option')
   }
 
   await upsertOption(productId, 'Material', [
@@ -468,9 +462,9 @@ async function applyBannerOptions(productId: string) {
     { name: '4/4', priceModifier: 4 },
   ])
 
-  for (const side of ['top', 'bottom', 'left', 'right'] as const) {
-    await upsertOption(productId, `Finishing ${side}`, BANNER_FINISHING_VALUES)
-  }
+  await upsertOption(productId, 'Finishing', [
+    { name: 'Gesäumt, 20 Ösen ringsherum', priceModifier: 2 },
+  ])
 }
 
 // ---------------------------------------------------------------------------
