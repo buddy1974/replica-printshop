@@ -359,13 +359,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
 
           {/* File guide */}
           <FileGuide product={product} />
-
-          {/* CTA: scroll to configurator so user selects size first */}
-          <div className="flex flex-col gap-2 pt-1">
-            <a href="#configurator" className="btn-primary justify-center">
-              Configure & Design ↓
-            </a>
-          </div>
         </div>
       </div>
 

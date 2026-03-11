@@ -237,6 +237,34 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </div>
       )}
 
+      {width > 0 && height > 0 && (
+        <div className="mt-6 flex flex-col gap-3">
+
+          <button
+            className="btn-primary"
+            onClick={() => {
+              router.push(
+                `/editor/${product.id}?w=${width}&h=${height}`
+              )
+            }}
+          >
+            Use online designer
+          </button>
+
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              router.push(
+                `/upload/${product.id}?w=${width}&h=${height}`
+              )
+            }}
+          >
+            Upload print file
+          </button>
+
+        </div>
+      )}
+
       <div className="flex flex-col gap-1">
         <label className={labelCls}>
           <span className={labelTextCls}>Quantity</span>
@@ -295,24 +323,6 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </div>
       )}
 
-      {width > 0 && height > 0 && !sizeError && (
-        <div className="flex flex-col gap-2">
-          <button
-            type="button"
-            className="btn-primary justify-center"
-            onClick={() => router.push(`/editor/${product.id}?w=${width}&h=${height}`)}
-          >
-            Use online designer →
-          </button>
-          <button
-            type="button"
-            className="btn-outline justify-center"
-            onClick={() => router.push(`/upload/${product.id}?w=${width}&h=${height}`)}
-          >
-            Upload print file
-          </button>
-        </div>
-      )}
     </div>
   )
 }
