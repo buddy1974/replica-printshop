@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { BRANDING } from '@/config/branding'
 import { SERVICES } from '@/config/services'
 import HeroSlider from '@/components/HeroSlider'
+import ServiceImage from '@/components/ServiceImage'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,13 +93,7 @@ export default async function Home() {
             >
               {/* Service image */}
               <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={svc.image}
-                  alt={svc.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                />
+                <ServiceImage src={svc.image} alt={svc.name} />
                 {/* Fallback icon shown behind image */}
                 <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 z-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
