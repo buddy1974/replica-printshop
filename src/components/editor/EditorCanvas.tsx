@@ -1,6 +1,6 @@
 'use client'
 
-// Steps 345, 361, 367, 368, 371–410 — Fabric.js canvas + text + shapes + image tools + layers + group
+// Steps 345, 361, 367, 368, 371–410, 641 — Fabric.js canvas + text + shapes + image tools + layers + group
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import type { PlacementZone } from '@/lib/placementZones'
@@ -143,7 +143,7 @@ export interface EditorCanvasHandle {
 
 interface Props {
   mockupUrl: string | null
-  zone: PlacementZone | null
+  zone?: PlacementZone | null   // accepted for backwards compat, not used internally
   printWidthCm?: number | null
   printHeightCm?: number | null
   bleedMm?: number | null
@@ -162,7 +162,7 @@ interface Props {
 const MAX_SHEET_W = 700
 const MAX_SHEET_H = 540
 const RULER_PX = 20   // ruler strip height/width in px
-const WS_GAP = 16     // workspace padding around print sheet
+const WS_GAP = 16     // workspace padding around canvas
 
 function getMajorStepCm(totalCm: number): number {
   if (totalCm > 200) return 50
@@ -268,32 +268,40 @@ function applyLock(obj: FabricObject, locked: boolean) {
 
 const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
   function EditorCanvas(
-    { mockupUrl, zone, printWidthCm, printHeightCm, bleedMm, safeMm, onSelectionChange, onLayersChange, onReady },
+    { mockupUrl, printWidthCm, printHeightCm, bleedMm, safeMm, onSelectionChange, onLayersChange, onReady },
     ref,
   ) {
-    // Compute canvas pixel dimensions: scale print cm to fit inside workspace
+    // Compute canvas pixel dimensions: sheet + bleed on all sides
     const pW = printWidthCm ?? 100
     const pH = printHeightCm ?? 100
+    const bMm = bleedMm ?? 0
+    const sMm = safeMm ?? 0
     const scale = Math.min(MAX_SHEET_W / pW, MAX_SHEET_H / pH)
-    const szW = Math.round(pW * scale)
-    const szH = Math.round(pH * scale)
+    const bleedPx = Math.round((bMm / 10) * scale)
+    const safePx = Math.round((sMm / 10) * scale)
+    const sheetW = Math.round(pW * scale)
+    const sheetH = Math.round(pH * scale)
+    const sheetX = bleedPx   // sheet origin inside canvas
+    const sheetY = bleedPx
+    const szW = sheetW + 2 * bleedPx   // total canvas width (sheet + bleed)
+    const szH = sheetH + 2 * bleedPx   // total canvas height
 
     const canvasElRef = useRef<HTMLCanvasElement>(null)
     const fabricRef = useRef<FabricCanvas | null>(null)
-    const sizeWRef = useRef(szW)
-    const sizeHRef = useRef(szH)
-    const printWRef = useRef(printWidthCm ?? 100)
-    const printHRef = useRef(printHeightCm ?? 100)
-    const bleedMmRef = useRef(bleedMm ?? 10)
-    const safeMmRef = useRef(safeMm ?? 10)
-    const zoneRef = useRef<PlacementZone | null>(zone)
+    // Sheet geometry refs (stable values for Fabric event handlers)
+    const sheetXRef = useRef(sheetX)
+    const sheetYRef = useRef(sheetY)
+    const sheetWRef = useRef(sheetW)
+    const sheetHRef = useRef(sheetH)
+    const safePxRef = useRef(safePx)
+    const sheetRectRef = useRef<FabricObject | null>(null)
+    const drawSheetOverlayRef = useRef<(() => void) | null>(null)
     const onSelectionChangeRef = useRef(onSelectionChange)
     const onLayersChangeRef = useRef(onLayersChange)
     const onReadyRef = useRef(onReady)
     // Stored function to build + fire layers list — accessible in useImperativeHandle
     const fireLayersRef = useRef<(() => void) | null>(null)
 
-    useEffect(() => { zoneRef.current = zone }, [zone])
     useEffect(() => { onSelectionChangeRef.current = onSelectionChange }, [onSelectionChange])
     useEffect(() => { onLayersChangeRef.current = onLayersChange }, [onLayersChange])
     useEffect(() => { onReadyRef.current = onReady }, [onReady])
@@ -302,18 +310,67 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     useEffect(() => {
       if (!canvasElRef.current || fabricRef.current) return
       const el = canvasElRef.current
-      const szW = sizeWRef.current
-      const szH = sizeHRef.current
+      const sX = sheetXRef.current
+      const sY = sheetYRef.current
+      const sW = sheetWRef.current
+      const sH = sheetHRef.current
+      const sp = safePxRef.current
+      const canvasW = sW + 2 * sX
+      const canvasH = sH + 2 * sY
 
       import('fabric').then((fab) => {
         const canvas = new fab.Canvas(el, {
-          width: szW,
-          height: szH,
-          backgroundColor: '#ffffff',
+          width: canvasW,
+          height: canvasH,
+          backgroundColor: '#c8c8c8',   // gray = bleed area
           preserveObjectStacking: true,
         })
         fabricRef.current = canvas
         onReadyRef.current?.()
+
+        // ── drawSheetOverlay: white sheet + cut line + safe line ──────────────
+        const drawSheetOverlay = () => {
+          canvas.getObjects()
+            .filter((o: FabricObject) => o.__isZone)
+            .forEach((o: FabricObject) => canvas.remove(o))
+
+          // White sheet rect
+          const sheetRect = new fab.Rect({
+            left: sX, top: sY, width: sW, height: sH,
+            fill: '#ffffff',
+            selectable: false, evented: false,
+          })
+          ;(sheetRect as FabricObject).__isZone = true
+          sheetRectRef.current = sheetRect
+
+          // Cut line (red dashed) — trim edge
+          const cutRect = new fab.Rect({
+            left: sX, top: sY, width: sW, height: sH,
+            fill: 'rgba(239,68,68,0.03)', stroke: 'rgba(239,68,68,0.85)',
+            strokeWidth: 1.5, strokeDashArray: [6, 3],
+            selectable: false, evented: false,
+          })
+          ;(cutRect as FabricObject).__isZone = true
+
+          // Safe line (green dashed) — content safe area
+          const safeRect = new fab.Rect({
+            left: sX + sp, top: sY + sp, width: sW - 2 * sp, height: sH - 2 * sp,
+            fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
+            strokeWidth: 1, strokeDashArray: [4, 4],
+            selectable: false, evented: false,
+          })
+          ;(safeRect as FabricObject).__isZone = true
+
+          canvas.add(sheetRect)
+          canvas.add(cutRect)
+          canvas.add(safeRect)
+          canvas.sendObjectToBack(safeRect)
+          canvas.sendObjectToBack(cutRect)
+          canvas.sendObjectToBack(sheetRect)
+          canvas.renderAll()
+        }
+        drawSheetOverlayRef.current = drawSheetOverlay
+        drawSheetOverlay()
 
         // ── Layers helper stored in ref for use in handle methods ─────────────
         const fireLayers = () => {
@@ -333,24 +390,26 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         }
         fireLayersRef.current = fireLayers
 
-        // ── Zone clamping on move — clamp to safe zone ────────────────────────
+        // ── Clamping: keep objects inside safe area ────────────────────────────
         canvas.on('object:moving', ({ target }: FabricObject) => {
-          if (!target || target.__isZone || !zoneRef.current) return
-          const z = zoneRef.current
+          if (!target || target.__isZone) return
+          const sx = sheetXRef.current, sy = sheetYRef.current
+          const sw = sheetWRef.current, sh = sheetHRef.current
+          const spx = safePxRef.current
           const objW = (target.width ?? 0) * Math.abs(target.scaleX ?? 1)
           const objH = (target.height ?? 0) * Math.abs(target.scaleY ?? 1)
-          const zL = z.x * szW, zT = z.y * szH
-          const zR = (z.x + z.w) * szW, zB = (z.y + z.h) * szH
-          if (target.left < zL) target.set('left', zL)
-          if (target.top < zT) target.set('top', zT)
-          if (target.left + objW > zR) target.set('left', zR - objW)
-          if (target.top + objH > zB) target.set('top', zB - objH)
+          const minX = sx + spx, minY = sy + spx
+          const maxX = sx + sw - spx, maxY = sy + sh - spx
+          if (target.left < minX) target.set('left', minX)
+          if (target.top < minY) target.set('top', minY)
+          if (target.left + objW > maxX) target.set('left', maxX - objW)
+          if (target.top + objH > maxY) target.set('top', maxY - objH)
         })
 
         canvas.on('object:scaling', ({ target }: FabricObject) => {
-          if (!target || target.__isZone || !zoneRef.current) return
-          const z = zoneRef.current
-          const maxW = z.w * szW, maxH = z.h * szH
+          if (!target || target.__isZone) return
+          const maxW = sheetWRef.current - 2 * safePxRef.current
+          const maxH = sheetHRef.current - 2 * safePxRef.current
           const w = target.width ?? 1, h = target.height ?? 1
           if (w * Math.abs(target.scaleX ?? 1) > maxW) target.scaleX = maxW / w
           if (h * Math.abs(target.scaleY ?? 1) > maxH) target.scaleY = maxH / h
@@ -391,37 +450,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           }
           fireLayers()
         })
-
-        // ── Initial margin overlay: cut / safe / label ───────────────────────
-        {
-          const pW = printWRef.current, pH = printHRef.current
-          const bMm = bleedMmRef.current, sMm = safeMmRef.current
-          const bX = bMm / (pW * 10), bY = bMm / (pH * 10)
-          const sX = sMm / (pW * 10), sY = sMm / (pH * 10)
-          // Cut line (red dashed) — trim edge
-          const cutRect = new fab.Rect({
-            left: bX * szW, top: bY * szH,
-            width: (1 - bX * 2) * szW, height: (1 - bY * 2) * szH,
-            fill: 'rgba(239,68,68,0.03)', stroke: 'rgba(239,68,68,0.85)',
-            strokeWidth: 1.5, strokeDashArray: [6, 3],
-            selectable: false, evented: false,
-          })
-          ;(cutRect as FabricObject).__isZone = true
-          // Safe line (green dashed) — content safe area
-          const safeRect = new fab.Rect({
-            left: (bX + sX) * szW, top: (bY + sY) * szH,
-            width: (1 - (bX + sX) * 2) * szW, height: (1 - (bY + sY) * 2) * szH,
-            fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
-            strokeWidth: 1, strokeDashArray: [4, 4],
-            selectable: false, evented: false,
-          })
-          ;(safeRect as FabricObject).__isZone = true
-          canvas.add(cutRect)
-          canvas.add(safeRect)
-          canvas.sendObjectToBack(safeRect)
-          canvas.sendObjectToBack(cutRect)
-          canvas.renderAll()
-        }
       })
 
       return () => {
@@ -430,19 +458,17 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       }
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Mockup background
+    // Mockup background — positioned at sheet origin, scaled to sheet size
     useEffect(() => {
       const canvas: FabricCanvas = fabricRef.current
       if (!canvas) return
-      const szW = sizeWRef.current
-      const szH = sizeHRef.current
       if (!mockupUrl) { canvas.backgroundImage = null; canvas.renderAll(); return }
       import('fabric').then((fab) => {
         fab.FabricImage.fromURL(mockupUrl, { crossOrigin: 'anonymous' }).then((img: FabricObject) => {
           img.set({
-            left: 0, top: 0,
-            scaleX: szW / (img.width ?? szW),
-            scaleY: szH / (img.height ?? szH),
+            left: sheetXRef.current, top: sheetYRef.current,
+            scaleX: sheetWRef.current / (img.width ?? sheetWRef.current),
+            scaleY: sheetHRef.current / (img.height ?? sheetHRef.current),
             selectable: false, evented: false,
           })
           canvas.backgroundImage = img
@@ -451,44 +477,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       })
     }, [mockupUrl])
 
-    // Zone overlay — redraws margin lines (used when zone changes after mount)
-    useEffect(() => {
-      const canvas: FabricCanvas = fabricRef.current
-      if (!canvas) return
-      const szW = sizeWRef.current
-      const szH = sizeHRef.current
-      canvas.getObjects().filter((o: FabricObject) => o.__isZone).forEach((o: FabricObject) => canvas.remove(o))
-      import('fabric').then((fab) => {
-        const pW = printWRef.current, pH = printHRef.current
-        const bMm = bleedMmRef.current, sMm = safeMmRef.current
-        const bX = bMm / (pW * 10), bY = bMm / (pH * 10)
-        const sX = sMm / (pW * 10), sY = sMm / (pH * 10)
-        // Cut line (red dashed) — trim edge
-        const cutRect = new fab.Rect({
-          left: bX * szW, top: bY * szH,
-          width: (1 - bX * 2) * szW, height: (1 - bY * 2) * szH,
-          fill: 'rgba(239,68,68,0.03)', stroke: 'rgba(239,68,68,0.85)',
-          strokeWidth: 1.5, strokeDashArray: [6, 3],
-          selectable: false, evented: false,
-        })
-        ;(cutRect as FabricObject).__isZone = true
-        // Safe line (green dashed) — content safe area
-        const safeRect = new fab.Rect({
-          left: (bX + sX) * szW, top: (bY + sY) * szH,
-          width: (1 - (bX + sX) * 2) * szW, height: (1 - (bY + sY) * 2) * szH,
-          fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
-          strokeWidth: 1, strokeDashArray: [4, 4],
-          selectable: false, evented: false,
-        })
-        ;(safeRect as FabricObject).__isZone = true
-        canvas.add(cutRect)
-        canvas.add(safeRect)
-        canvas.sendObjectToBack(safeRect)
-        canvas.sendObjectToBack(cutRect)
-        canvas.renderAll()
-      })
-    }, [zone])
-
     useImperativeHandle(ref, () => ({
       // ── Image upload ──────────────────────────────────────────────────────
       async addImage(url: string) {
@@ -496,11 +484,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         if (!canvas) return
         const fab = await import('fabric')
         const img: FabricObject = await fab.FabricImage.fromURL(url, { crossOrigin: 'anonymous' })
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const maxSide = Math.min(szW, szH) * 0.5
-        const scale = Math.min(maxSide / (img.width ?? 1), maxSide / (img.height ?? 1))
-        img.set({ left: szW * 0.25, top: szH * 0.25, scaleX: scale, scaleY: scale })
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
+        const maxSide = Math.min(sW, sH) * 0.5
+        const sc = Math.min(maxSide / (img.width ?? 1), maxSide / (img.height ?? 1))
+        img.set({ left: sX + sW * 0.25, top: sY + sH * 0.25, scaleX: sc, scaleY: sc })
         canvas.add(img)
         canvas.setActiveObject(img)
         canvas.renderAll()
@@ -524,19 +512,20 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         fireLayersRef.current?.()
       },
 
-      fitSelected(z: PlacementZone) {
+      // fitSelected: zone param accepted for API compat but ignored — uses sheet geometry
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      fitSelected(_zone: PlacementZone) {
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const obj: FabricObject = canvas.getActiveObject()
         if (!obj) return
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const zw = z.w * szW, zh = z.h * szH
-        const scale = Math.min(zw / (obj.width ?? 1), zh / (obj.height ?? 1))
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
+        const sc = Math.min(sW / (obj.width ?? 1), sH / (obj.height ?? 1))
         obj.set({
-          scaleX: scale, scaleY: scale,
-          left: z.x * szW + (zw - (obj.width ?? 0) * scale) / 2,
-          top: z.y * szH + (zh - (obj.height ?? 0) * scale) / 2,
+          scaleX: sc, scaleY: sc,
+          left: sX + (sW - (obj.width ?? 0) * sc) / 2,
+          top: sY + (sH - (obj.height ?? 0) * sc) / 2,
         })
         canvas.renderAll()
         if (isImageObj(obj)) {
@@ -567,7 +556,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         await canvas.loadFromJSON(json)
         canvas.getObjects().filter((o: FabricObject) => o.__isZone).forEach((z: FabricObject) => canvas.remove(z))
         canvas.getObjects().forEach((o: FabricObject) => { if (o.__locked) applyLock(o, true) })
-        canvas.renderAll()
+        drawSheetOverlayRef.current?.()
         fireLayersRef.current?.()
       },
 
@@ -575,13 +564,12 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       addText(initialProps?: Partial<TextProps>) {
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const z = zoneRef.current
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
         const p: TextProps = { ...DEFAULT_TEXT_PROPS, ...initialProps }
-        const x = z ? z.x * szW + z.w * szW * 0.1 : szW * 0.1
-        const y = z ? z.y * szH + z.h * szH * 0.35 : szH * 0.35
-        const w = z ? z.w * szW * 0.8 : szW * 0.8
+        const x = sX + sW * 0.1
+        const y = sY + sH * 0.35
+        const w = sW * 0.8
         import('fabric').then((fab) => {
           const displayText = p.uppercase ? p.text.toUpperCase() : p.text
           const textbox = new fab.Textbox(displayText, {
@@ -657,11 +645,9 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
-        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
+        const cx = sX + sW / 2, cy = sY + sH / 2
         import('fabric').then((fab) => {
           const rect = new fab.Rect({ left: cx - 50, top: cy - 30, width: 100, height: 60, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
           canvas.add(rect); canvas.setActiveObject(rect); canvas.renderAll()
@@ -672,11 +658,9 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
-        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
+        const cx = sX + sW / 2, cy = sY + sH / 2
         import('fabric').then((fab) => {
           const circle = new fab.Circle({ left: cx - 40, top: cy - 40, radius: 40, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
           canvas.add(circle); canvas.setActiveObject(circle); canvas.renderAll()
@@ -687,11 +671,9 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
-        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
+        const cx = sX + sW / 2, cy = sY + sH / 2
         import('fabric').then((fab) => {
           const tri = new fab.Triangle({ left: cx - 40, top: cy - 40, width: 80, height: 80, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
           canvas.add(tri); canvas.setActiveObject(tri); canvas.renderAll()
@@ -702,11 +684,9 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
-        const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
-        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
+        const cx = sX + sW / 2, cy = sY + sH / 2
         import('fabric').then((fab) => {
           const line = new fab.Line([cx - 50, cy, cx + 50, cy], { stroke: p.stroke || p.fill || '#000000', strokeWidth: Math.max(p.strokeWidth, 2), fill: '' })
           canvas.add(line); canvas.setActiveObject(line); canvas.renderAll()
@@ -797,12 +777,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           if (obj.clipPath) {
             obj.clipPath = undefined
           } else {
-            const z = zoneRef.current
-            const szW = sizeWRef.current
-            const szH = sizeHRef.current
-            const clip = z
-              ? new fab.Rect({ left: z.x * szW, top: z.y * szH, width: z.w * szW, height: z.h * szH, absolutePositioned: true })
-              : new fab.Rect({ left: obj.left ?? 0, top: obj.top ?? 0, width: (obj.width ?? 100) * Math.abs(obj.scaleX ?? 1), height: (obj.height ?? 100) * Math.abs(obj.scaleY ?? 1), absolutePositioned: true })
+            const clip = new fab.Rect({
+              left: sheetXRef.current, top: sheetYRef.current,
+              width: sheetWRef.current, height: sheetHRef.current,
+              absolutePositioned: true,
+            })
             obj.clipPath = clip
           }
           canvas.renderAll()
@@ -815,13 +794,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         if (!canvas) return
         const obj: FabricObject = canvas.getActiveObject()
         if (!obj || obj.__isZone) return
-        const z = zoneRef.current
-        if (!z) return
-        const szW = sizeWRef.current
-        const szH = sizeHRef.current
+        const sX = sheetXRef.current, sY = sheetYRef.current
+        const sW = sheetWRef.current, sH = sheetHRef.current
         const objW = (obj.width ?? 0) * Math.abs(obj.scaleX ?? 1)
         const objH = (obj.height ?? 0) * Math.abs(obj.scaleY ?? 1)
-        obj.set({ left: z.x * szW + (z.w * szW - objW) / 2, top: z.y * szH + (z.h * szH - objH) / 2 })
+        obj.set({ left: sX + (sW - objW) / 2, top: sY + (sH - objH) / 2 })
         canvas.renderAll()
         if (isImageObj(obj)) {
           onSelectionChangeRef.current?.('image', undefined, undefined, getImagePropsFromObj(obj))
@@ -840,7 +817,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       },
 
       // ── Layers ─────────────────────────────────────────────────────────────
-      // Step 406 — select object by its index in the non-zone objects array
       selectObjectByIndex(index: number) {
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
@@ -852,13 +828,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       },
 
       // ── Group / Ungroup ────────────────────────────────────────────────────
-      // Step 408
       groupSelected() {
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const active: FabricObject = canvas.getActiveObject()
         if (!active || active.type !== 'activeselection') return
-        // toGroup() converts ActiveSelection → Group in Fabric.js
         const group = active.toGroup()
         canvas.setActiveObject(group)
         canvas.renderAll()
@@ -870,7 +844,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         if (!canvas) return
         const active: FabricObject = canvas.getActiveObject()
         if (!active || active.type !== 'group') return
-        // toActiveSelection() decomposes Group → individual objects
         const sel = active.toActiveSelection()
         canvas.setActiveObject(sel)
         canvas.renderAll()
@@ -886,14 +859,10 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const fab = await import('fabric')
         const newImg: FabricObject = await fab.FabricImage.fromURL(url, { crossOrigin: 'anonymous' })
         newImg.set({
-          left: obj.left,
-          top: obj.top,
-          scaleX: obj.scaleX,
-          scaleY: obj.scaleY,
-          angle: obj.angle,
-          opacity: obj.opacity,
-          flipX: obj.flipX,
-          flipY: obj.flipY,
+          left: obj.left, top: obj.top,
+          scaleX: obj.scaleX, scaleY: obj.scaleY,
+          angle: obj.angle, opacity: obj.opacity,
+          flipX: obj.flipX, flipY: obj.flipY,
         })
         if (obj.clipPath) newImg.clipPath = obj.clipPath
         canvas.remove(obj)
@@ -904,11 +873,13 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         fireLayersRef.current?.()
       },
 
-      // ── Canvas background (step 421) ──────────────────────────────────────
+      // ── Canvas background (step 421) — changes sheet fill ─────────────────
       setBackground(color: string) {
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
-        canvas.set('backgroundColor', color)
+        if (sheetRectRef.current) {
+          sheetRectRef.current.set('fill', color)
+        }
         canvas.renderAll()
       },
 
@@ -919,7 +890,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         await canvas.loadFromJSON(json)
         canvas.getObjects().filter((o: FabricObject) => o.__isZone).forEach((z: FabricObject) => canvas.remove(z))
         canvas.getObjects().forEach((o: FabricObject) => { if (o.__locked) applyLock(o, true) })
-        canvas.renderAll()
+        drawSheetOverlayRef.current?.()
         fireLayersRef.current?.()
       },
 
@@ -933,7 +904,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         obj.__locked = newLocked
         applyLock(obj, newLocked)
         canvas.renderAll()
-        // Sync panel state
         if (isImageObj(obj)) {
           onSelectionChangeRef.current?.('image', undefined, undefined, getImagePropsFromObj(obj))
         } else if (isShapeObj(obj)) {
@@ -943,10 +913,13 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       },
     }))
 
-    const hScale = szW / pW
-    const vScale = szH / pH
+    // ── JSX: workspace with rulers ────────────────────────────────────────────
+    // hScale / vScale: pixels per cm (for ruler tick placement)
+    const hScale = sheetW / pW
+    const vScale = sheetH / pH
     const hStep = getMajorStepCm(pW)
     const vStep = getMajorStepCm(pH)
+    // wsW/wsH: total workspace including ruler strips and gaps around canvas
     const wsW = RULER_PX + WS_GAP + szW + WS_GAP
     const wsH = RULER_PX + WS_GAP + szH + WS_GAP
 
@@ -963,12 +936,12 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           {/* Corner block */}
           <div style={{ position: 'absolute', top: 0, left: 0, width: RULER_PX, height: RULER_PX, background: '#c4c8d0' }} />
 
-          {/* Top ruler */}
+          {/* Top ruler — 0 aligns with cut line (sheet left edge = bleedPx into canvas) */}
           <div style={{ position: 'absolute', top: 0, left: RULER_PX, width: wsW - RULER_PX, height: RULER_PX, background: '#dde1ea', overflow: 'hidden' }}>
             <svg width={wsW - RULER_PX} height={RULER_PX} style={{ display: 'block' }}>
               {Array.from({ length: Math.floor(pW / hStep) + 1 }, (_, i) => {
                 const cm = i * hStep
-                const x = WS_GAP + cm * hScale
+                const x = WS_GAP + bleedPx + cm * hScale
                 return (
                   <g key={cm}>
                     <line x1={x} y1={RULER_PX} x2={x} y2={RULER_PX - 8} stroke="#888" strokeWidth={0.75} />
@@ -979,12 +952,12 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             </svg>
           </div>
 
-          {/* Left ruler */}
+          {/* Left ruler — 0 aligns with cut line (sheet top edge = bleedPx into canvas) */}
           <div style={{ position: 'absolute', top: RULER_PX, left: 0, width: RULER_PX, height: wsH - RULER_PX, background: '#dde1ea', overflow: 'hidden' }}>
             <svg width={RULER_PX} height={wsH - RULER_PX} style={{ display: 'block' }}>
               {Array.from({ length: Math.floor(pH / vStep) + 1 }, (_, i) => {
                 const cm = i * vStep
-                const y = WS_GAP + cm * vScale
+                const y = WS_GAP + bleedPx + cm * vScale
                 return (
                   <g key={cm}>
                     <line x1={RULER_PX} y1={y} x2={RULER_PX - 8} y2={y} stroke="#888" strokeWidth={0.75} />
@@ -997,7 +970,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             </svg>
           </div>
 
-          {/* Print sheet (Fabric canvas) */}
+          {/* Print sheet (Fabric canvas — includes bleed area) */}
           <div style={{ position: 'absolute', top: RULER_PX + WS_GAP, left: RULER_PX + WS_GAP, boxShadow: '0 4px 20px rgba(0,0,0,0.45)' }}>
             <canvas ref={canvasElRef} />
           </div>
