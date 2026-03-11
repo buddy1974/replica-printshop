@@ -44,6 +44,8 @@ interface Product {
 
 interface Props {
   product: Product
+  initialWidth?: number | null
+  initialHeight?: number | null
 }
 
 type CartStatus = 'idle' | 'saving' | 'added' | 'error'
@@ -51,7 +53,7 @@ type RightTab = 'text' | 'image' | 'shape' | 'layers'
 
 const RIGHT_TABS: RightTab[] = ['text', 'image', 'shape', 'layers']
 
-export default function EditorShell({ product }: Props) {
+export default function EditorShell({ product, initialWidth, initialHeight }: Props) {
   const canvasRef = useRef<EditorCanvasHandle | null>(null)
 
   const zones = getZonesByCategorySlug(product.categorySlug, product.config?.type)
@@ -77,8 +79,8 @@ export default function EditorShell({ product }: Props) {
   // Cart state
   const [userId, setUserId] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [width, setWidth] = useState<number>(product.config?.printAreaWidthCm ?? 0)
-  const [height, setHeight] = useState<number>(product.config?.printAreaHeightCm ?? 0)
+  const [width, setWidth] = useState<number>(initialWidth ?? product.config?.printAreaWidthCm ?? 0)
+  const [height, setHeight] = useState<number>(initialHeight ?? product.config?.printAreaHeightCm ?? 0)
   const [cartStatus, setCartStatus] = useState<CartStatus>('idle')
   const [cartError, setCartError] = useState<string | null>(null)
 

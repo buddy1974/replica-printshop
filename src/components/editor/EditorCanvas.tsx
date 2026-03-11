@@ -304,14 +304,15 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         }
         fireLayersRef.current = fireLayers
 
-        // ── Zone clamping on move ─────────────────────────────────────────────
+        // ── Zone clamping on move — clamp to safe zone ────────────────────────
         canvas.on('object:moving', ({ target }: FabricObject) => {
           if (!target || target.__isZone || !zoneRef.current) return
           const z = zoneRef.current
+          const SAFE = 8
           const objW = (target.width ?? 0) * Math.abs(target.scaleX ?? 1)
           const objH = (target.height ?? 0) * Math.abs(target.scaleY ?? 1)
-          const zL = z.x * sz, zT = z.y * sz
-          const zR = (z.x + z.w) * sz, zB = (z.y + z.h) * sz
+          const zL = z.x * sz + SAFE, zT = z.y * sz + SAFE
+          const zR = (z.x + z.w) * sz - SAFE, zB = (z.y + z.h) * sz - SAFE
           if (target.left < zL) target.set('left', zL)
           if (target.top < zT) target.set('top', zT)
           if (target.left + objW > zR) target.set('left', zR - objW)
@@ -321,7 +322,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         canvas.on('object:scaling', ({ target }: FabricObject) => {
           if (!target || target.__isZone || !zoneRef.current) return
           const z = zoneRef.current
-          const maxW = z.w * sz, maxH = z.h * sz
+          const SAFE = 8
+          const maxW = z.w * sz - SAFE * 2, maxH = z.h * sz - SAFE * 2
           const w = target.width ?? 1, h = target.height ?? 1
           if (w * Math.abs(target.scaleX ?? 1) > maxW) target.scaleX = maxW / w
           if (h * Math.abs(target.scaleY ?? 1) > maxH) target.scaleY = maxH / h
@@ -363,21 +365,44 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           fireLayers()
         })
 
-        // ── Initial zone overlay ──────────────────────────────────────────────
+        // ── Initial zone overlay: bleed / cut / safe ─────────────────────────
         const initialZone = zoneRef.current
         if (initialZone) {
-          const rect = new fab.Rect({
-            left: initialZone.x * sz, top: initialZone.y * sz,
-            width: initialZone.w * sz, height: initialZone.h * sz,
-            fill: 'rgba(99,102,241,0.07)',
-            stroke: 'rgba(99,102,241,0.65)',
-            strokeWidth: 1.5,
-            strokeDashArray: [6, 3],
+          const BLEED = 5, SAFE = 8
+          const z = initialZone
+          // Bleed (outer) — gray dashed
+          const bleedRect = new fab.Rect({
+            left: z.x * sz - BLEED, top: z.y * sz - BLEED,
+            width: z.w * sz + BLEED * 2, height: z.h * sz + BLEED * 2,
+            fill: 'transparent', stroke: 'rgba(156,163,175,0.7)',
+            strokeWidth: 1, strokeDashArray: [4, 4],
             selectable: false, evented: false,
           })
-          ;(rect as FabricObject).__isZone = true
-          canvas.add(rect)
-          canvas.sendObjectToBack(rect)
+          ;(bleedRect as FabricObject).__isZone = true
+          // Cut line — red dashed
+          const cutRect = new fab.Rect({
+            left: z.x * sz, top: z.y * sz,
+            width: z.w * sz, height: z.h * sz,
+            fill: 'rgba(239,68,68,0.04)', stroke: 'rgba(239,68,68,0.85)',
+            strokeWidth: 1.5, strokeDashArray: [6, 3],
+            selectable: false, evented: false,
+          })
+          ;(cutRect as FabricObject).__isZone = true
+          // Safe zone (inner) — green dashed
+          const safeRect = new fab.Rect({
+            left: z.x * sz + SAFE, top: z.y * sz + SAFE,
+            width: z.w * sz - SAFE * 2, height: z.h * sz - SAFE * 2,
+            fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
+            strokeWidth: 1, strokeDashArray: [4, 4],
+            selectable: false, evented: false,
+          })
+          ;(safeRect as FabricObject).__isZone = true
+          canvas.add(bleedRect)
+          canvas.add(cutRect)
+          canvas.add(safeRect)
+          canvas.sendObjectToBack(safeRect)
+          canvas.sendObjectToBack(cutRect)
+          canvas.sendObjectToBack(bleedRect)
           canvas.renderAll()
         }
       })
@@ -416,17 +441,38 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       canvas.getObjects().filter((o: FabricObject) => o.__isZone).forEach((o: FabricObject) => canvas.remove(o))
       if (!zone) { canvas.renderAll(); return }
       import('fabric').then((fab) => {
-        const rect = new fab.Rect({
-          left: zone.x * sz, top: zone.y * sz,
-          width: zone.w * sz, height: zone.h * sz,
-          fill: 'rgba(99,102,241,0.07)',
-          stroke: 'rgba(99,102,241,0.65)',
-          strokeWidth: 1.5, strokeDashArray: [6, 3],
-          selectable: false, evented: false, shadow: undefined,
+        const BLEED = 5, SAFE = 8
+        const z = zone
+        const bleedRect = new fab.Rect({
+          left: z.x * sz - BLEED, top: z.y * sz - BLEED,
+          width: z.w * sz + BLEED * 2, height: z.h * sz + BLEED * 2,
+          fill: 'transparent', stroke: 'rgba(156,163,175,0.7)',
+          strokeWidth: 1, strokeDashArray: [4, 4],
+          selectable: false, evented: false,
         })
-        ;(rect as FabricObject).__isZone = true
-        canvas.add(rect)
-        canvas.sendObjectToBack(rect)
+        ;(bleedRect as FabricObject).__isZone = true
+        const cutRect = new fab.Rect({
+          left: z.x * sz, top: z.y * sz,
+          width: z.w * sz, height: z.h * sz,
+          fill: 'rgba(239,68,68,0.04)', stroke: 'rgba(239,68,68,0.85)',
+          strokeWidth: 1.5, strokeDashArray: [6, 3],
+          selectable: false, evented: false,
+        })
+        ;(cutRect as FabricObject).__isZone = true
+        const safeRect = new fab.Rect({
+          left: z.x * sz + SAFE, top: z.y * sz + SAFE,
+          width: z.w * sz - SAFE * 2, height: z.h * sz - SAFE * 2,
+          fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
+          strokeWidth: 1, strokeDashArray: [4, 4],
+          selectable: false, evented: false,
+        })
+        ;(safeRect as FabricObject).__isZone = true
+        canvas.add(bleedRect)
+        canvas.add(cutRect)
+        canvas.add(safeRect)
+        canvas.sendObjectToBack(safeRect)
+        canvas.sendObjectToBack(cutRect)
+        canvas.sendObjectToBack(bleedRect)
         canvas.renderAll()
       })
     }, [zone])

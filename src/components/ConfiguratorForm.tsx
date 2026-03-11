@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import Link from 'next/link'
 import ProductPreview from '@/components/ProductPreview'
 import { setUserId as setSessionUserId, setUserEmail as setSessionUserEmail } from '@/lib/session'
 
@@ -103,16 +104,12 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const [price, setPrice] = useState<PriceResult | null>(null)
   const [sizeError, setSizeError] = useState<string | null>(null)
   const [placement, setPlacement] = useState<'front' | 'back'>('front')
-  const [userId, setUserId] = useState<string | null>(null)
-  const [addedToCart, setAddedToCart] = useState(false)
-  const [cartError, setCartError] = useState<string | null>(null)
 
-  // Load userId from session on mount — auto-create guest if not logged in
+  // Sync guest session on mount
   useEffect(() => {
     fetch('/api/user/me')
       .then(async (r) => {
         if (r.ok) return r.json()
-        // Not authenticated — create a guest user automatically
         const g = await fetch('/api/user/guest', { method: 'POST' })
         if (!g.ok) return null
         return g.json()
@@ -121,7 +118,6 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         if (u?.id) {
           setSessionUserId(u.id)
           if (u.email) setSessionUserEmail(u.email)
-          setUserId(u.id)
         }
       })
       .catch(() => {})
@@ -172,33 +168,6 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       const withoutThisOption = prev.filter((id) => !optionValueSet.has(id))
       return prev.includes(valueId) ? withoutThisOption : [...withoutThisOption, valueId]
     })
-  }
-
-  const handleAddToCart = async () => {
-    if (!userId) return
-    setCartError(null)
-    const res = await fetch('/api/cart', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        productId: product.id,
-        variantId: variantId || undefined,
-        width: (showCustomSize || showFixedSizes) ? width : undefined,
-        height: (showCustomSize || showFixedSizes) ? height : undefined,
-        quantity,
-        express: deliveryType === 'EXPRESS',
-        optionValueIds,
-        placement: showPlacement ? placement : undefined,
-      }),
-    })
-    if (res.ok) {
-      setAddedToCart(true)
-      setTimeout(() => setAddedToCart(false), 2000)
-    } else {
-      const body = await res.json().catch(() => ({}))
-      setCartError(body.error ?? 'Could not add to cart. Please try again.')
-    }
   }
 
   return (
@@ -326,15 +295,18 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       )}
 
       <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={!!sizeError || quantity < 1}
-          className="btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        <Link
+          href={`/editor/${product.id}?w=${width}&h=${height}`}
+          className="btn-primary justify-center text-center"
         >
-          {addedToCart ? 'Added to cart!' : 'Add to cart'}
-        </button>
-        {cartError && <p className="text-sm text-red-600">{cartError}</p>}
+          Design & Order →
+        </Link>
+        <Link
+          href={`/editor/${product.id}?w=${width}&h=${height}&upload=1`}
+          className="btn-outline justify-center text-center"
+        >
+          Upload image
+        </Link>
       </div>
     </div>
   )

@@ -55,13 +55,13 @@ export default async function CategoryShopPage({ params }: { params: { categoryS
   return (
     <Container>
       {cat.imageUrl && (
-        <div className="relative w-full aspect-[3/1] rounded-lg overflow-hidden mb-6 bg-gray-100">
+        <div className="relative w-full h-[320px] rounded-lg overflow-hidden mb-6 bg-gray-100">
           <Image
             src={cat.imageUrl}
             alt={cat.name}
             fill
             sizes="100vw"
-            className="object-contain"
+            className="object-cover"
             priority
           />
         </div>

@@ -366,9 +366,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
             <Link href={`/editor/${product.id}`} className="btn-primary justify-center">
               Design & Order →
             </Link>
-            <Link href={`/product/${product.slug}#configurator`} className="btn-outline justify-center">
-              Quick order (no design)
-            </Link>
           </div>
         </div>
       </div>

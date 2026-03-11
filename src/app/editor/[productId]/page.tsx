@@ -6,9 +6,10 @@ import EditorShell from './EditorShell'
 
 interface Props {
   params: { productId: string }
+  searchParams?: { w?: string; h?: string }
 }
 
-export default async function EditorPage({ params }: Props) {
+export default async function EditorPage({ params, searchParams }: Props) {
   const product = await db.product.findUnique({
     where: { id: params.productId, active: true },
     select: {
@@ -53,5 +54,8 @@ export default async function EditorPage({ params }: Props) {
       : null,
   }
 
-  return <EditorShell product={productForShell} />
+  const initialWidth = searchParams?.w ? Number(searchParams.w) : null
+  const initialHeight = searchParams?.h ? Number(searchParams.h) : null
+
+  return <EditorShell product={productForShell} initialWidth={initialWidth} initialHeight={initialHeight} />
 }
