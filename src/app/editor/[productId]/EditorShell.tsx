@@ -54,18 +54,20 @@ type RightTab = 'text' | 'image' | 'shape' | 'layers'
 const RIGHT_TABS: RightTab[] = ['text', 'image', 'shape', 'layers']
 
 /**
- * Build a PlacementZone that fills the canvas (which is already sized to the
- * correct aspect ratio). A 2% margin keeps bleed / cut lines visible at edges.
+ * Build the design zone from real print geometry.
+ * Zone = area inside bleed + safe margin, expressed as fractions of canvas.
  */
-function buildSizeZone(w: number, h: number): PlacementZone {
-  const MARGIN = 0.02
+function buildDesignZone(
+  widthCm: number, heightCm: number, bleedMm: number, safeMm: number,
+): PlacementZone {
+  const x = (bleedMm + safeMm) / (widthCm * 10)
+  const y = (bleedMm + safeMm) / (heightCm * 10)
   return {
-    id: 'print_area',
-    label: `${w} × ${h} cm`,
-    x: MARGIN,
-    y: MARGIN,
-    w: 1 - MARGIN * 2,
-    h: 1 - MARGIN * 2,
+    id: 'design',
+    label: `${widthCm} × ${heightCm} cm`,
+    x, y,
+    w: 1 - x * 2,
+    h: 1 - y * 2,
   }
 }
 
@@ -76,11 +78,12 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
   const widthCm = initialWidth ?? product.config?.printAreaWidthCm ?? null
   const heightCm = initialHeight ?? product.config?.printAreaHeightCm ?? null
 
-  console.log('SIZE', initialWidth, initialHeight)
-
-  const [activeZone] = useState<PlacementZone>(
-    () => buildSizeZone(widthCm ?? 100, heightCm ?? 100)
-  )
+  const [activeZone] = useState<PlacementZone>(() => buildDesignZone(
+    widthCm ?? 100,
+    heightCm ?? 100,
+    product.config?.bleedMm ?? 10,
+    product.config?.safeMm ?? 10,
+  ))
 
   // Selection state
   const [selectedType, setSelectedType] = useState<SelectionType>(null)

@@ -158,7 +158,9 @@ interface Props {
   onReady?: () => void
 }
 
-const CANVAS_SIZE = 560
+// Max print sheet pixel dimensions inside the workspace
+const MAX_SHEET_W = 700
+const MAX_SHEET_H = 540
 const RULER_PX = 20   // ruler strip height/width in px
 const WS_GAP = 16     // workspace padding around print sheet
 
@@ -269,13 +271,12 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     { mockupUrl, zone, printWidthCm, printHeightCm, bleedMm, safeMm, onSelectionChange, onLayersChange, onReady },
     ref,
   ) {
-    // Compute canvas pixel dimensions from print aspect ratio
-    const printRatio =
-      printWidthCm && printHeightCm && printWidthCm > 0 && printHeightCm > 0
-        ? printWidthCm / printHeightCm
-        : 1
-    const szW = printRatio >= 1 ? CANVAS_SIZE : Math.round(CANVAS_SIZE * printRatio)
-    const szH = printRatio <= 1 ? CANVAS_SIZE : Math.round(CANVAS_SIZE / printRatio)
+    // Compute canvas pixel dimensions: scale print cm to fit inside workspace
+    const pW = printWidthCm ?? 100
+    const pH = printHeightCm ?? 100
+    const scale = Math.min(MAX_SHEET_W / pW, MAX_SHEET_H / pH)
+    const szW = Math.round(pW * scale)
+    const szH = Math.round(pH * scale)
 
     const canvasElRef = useRef<HTMLCanvasElement>(null)
     const fabricRef = useRef<FabricCanvas | null>(null)
@@ -336,11 +337,10 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         canvas.on('object:moving', ({ target }: FabricObject) => {
           if (!target || target.__isZone || !zoneRef.current) return
           const z = zoneRef.current
-          const SAFE = 8
           const objW = (target.width ?? 0) * Math.abs(target.scaleX ?? 1)
           const objH = (target.height ?? 0) * Math.abs(target.scaleY ?? 1)
-          const zL = z.x * szW + SAFE, zT = z.y * szH + SAFE
-          const zR = (z.x + z.w) * szW - SAFE, zB = (z.y + z.h) * szH - SAFE
+          const zL = z.x * szW, zT = z.y * szH
+          const zR = (z.x + z.w) * szW, zB = (z.y + z.h) * szH
           if (target.left < zL) target.set('left', zL)
           if (target.top < zT) target.set('top', zT)
           if (target.left + objW > zR) target.set('left', zR - objW)
@@ -350,8 +350,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         canvas.on('object:scaling', ({ target }: FabricObject) => {
           if (!target || target.__isZone || !zoneRef.current) return
           const z = zoneRef.current
-          const SAFE = 8
-          const maxW = z.w * szW - SAFE * 2, maxH = z.h * szH - SAFE * 2
+          const maxW = z.w * szW, maxH = z.h * szH
           const w = target.width ?? 1, h = target.height ?? 1
           if (w * Math.abs(target.scaleX ?? 1) > maxW) target.scaleX = maxW / w
           if (h * Math.abs(target.scaleY ?? 1) > maxH) target.scaleY = maxH / h
@@ -944,8 +943,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       },
     }))
 
-    const pW = printWidthCm ?? 100
-    const pH = printHeightCm ?? 100
     const hScale = szW / pW
     const vScale = szH / pH
     const hStep = getMajorStepCm(pW)
