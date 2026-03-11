@@ -314,22 +314,18 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
       )}
 
       {width > 0 && height > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="mt-6 grid grid-cols-2 gap-4">
           <button
-            className="btn-primary"
-            onClick={() => {
-              router.push(`/editor/${product.id}?w=${width}&h=${height}`)
-            }}
+            className="bg-red-600 text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2"
+            onClick={() => { router.push(`/upload/${product.id}?w=${width}&h=${height}`) }}
           >
-            Use online designer
+            📤 Upload print file
           </button>
           <button
-            className="btn-secondary"
-            onClick={() => {
-              router.push(`/upload/${product.id}?w=${width}&h=${height}`)
-            }}
+            className="bg-black text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2"
+            onClick={() => { router.push(`/editor/${product.id}?w=${width}&h=${height}`) }}
           >
-            Upload print file
+            ✏️ Use online designer
           </button>
         </div>
       )}
