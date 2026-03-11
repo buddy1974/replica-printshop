@@ -16,7 +16,6 @@ import EditorCanvas, {
   DEFAULT_IMAGE_PROPS,
 } from '@/components/editor/EditorCanvas'
 import DesignUploadPanel from '@/components/editor/DesignUploadPanel'
-import PlacementSelector from '@/components/editor/PlacementSelector'
 import EditorToolbar from '@/components/editor/EditorToolbar'
 import TextToolPanel from '@/components/editor/TextToolPanel'
 import ShapeToolPanel from '@/components/editor/ShapeToolPanel'
@@ -25,7 +24,6 @@ import ImageToolPanel from '@/components/editor/ImageToolPanel'
 import LayersPanel from '@/components/editor/LayersPanel'
 import LogoLibraryPanel from '@/components/editor/LogoLibraryPanel'
 import TemplateLibraryPanel from '@/components/editor/TemplateLibraryPanel'
-import { getZonesByCategorySlug } from '@/lib/placementZones'
 import type { PlacementZone } from '@/lib/placementZones'
 
 interface Product {
@@ -54,33 +52,18 @@ type RightTab = 'text' | 'image' | 'shape' | 'layers'
 const RIGHT_TABS: RightTab[] = ['text', 'image', 'shape', 'layers']
 
 /**
- * Build a PlacementZone that matches the aspect ratio of the selected print size.
- * The zone is centered in the square canvas with a small margin so bleed lines
- * are visible outside it.
+ * Build a PlacementZone that fills the canvas (which is already sized to the
+ * correct aspect ratio). A 2% margin keeps bleed / cut lines visible at edges.
  */
-function buildSizeZone(w: number | null | undefined, h: number | null | undefined): PlacementZone | null {
-  if (!w || !h || w <= 0 || h <= 0) return null
-  const MARGIN = 0.04 // 4% canvas margin on each side
-  const aspect = w / h
-  let zw: number, zh: number
-  if (aspect >= 1) {
-    // landscape — fill full width
-    zw = 1 - MARGIN * 2
-    zh = zw / aspect
-    if (zh > 1 - MARGIN * 2) { zh = 1 - MARGIN * 2; zw = zh * aspect }
-  } else {
-    // portrait — fill full height
-    zh = 1 - MARGIN * 2
-    zw = zh * aspect
-    if (zw > 1 - MARGIN * 2) { zw = 1 - MARGIN * 2; zh = zw / aspect }
-  }
+function buildSizeZone(w: number, h: number): PlacementZone {
+  const MARGIN = 0.02
   return {
     id: 'print_area',
     label: `${w} × ${h} cm`,
-    x: (1 - zw) / 2,
-    y: (1 - zh) / 2,
-    w: zw,
-    h: zh,
+    x: MARGIN,
+    y: MARGIN,
+    w: 1 - MARGIN * 2,
+    h: 1 - MARGIN * 2,
   }
 }
 
@@ -93,9 +76,8 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
 
   console.log('SIZE', initialWidth, initialHeight)
 
-  const zones = getZonesByCategorySlug(product.categorySlug, product.config?.type)
-  const [activeZone, setActiveZone] = useState<PlacementZone | null>(
-    () => buildSizeZone(widthCm, heightCm) ?? zones[0] ?? null
+  const [activeZone] = useState<PlacementZone>(
+    () => buildSizeZone(widthCm ?? 100, heightCm ?? 100)
   )
 
   // Selection state
@@ -183,12 +165,7 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
     if (activeZone) setTimeout(() => canvasRef.current?.fitSelected(activeZone), 80)
   }
 
-  function handleZoneChange(zone: PlacementZone) {
-    setActiveZone(zone)
-    canvasRef.current?.fitSelected(zone)
-  }
-
-  function handleSelectionChange(
+function handleSelectionChange(
     type: SelectionType,
     tp?: TextProps,
     sp?: ShapeProps,
@@ -393,10 +370,7 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
               <div className="flex-1 overflow-y-auto p-4 space-y-6">
                 <DesignUploadPanel onImageReady={handleImageReady} />
                 <LogoLibraryPanel onAdd={(url) => canvasRef.current?.addImage(url)} />
-                {product.config?.needsPlacement !== false && zones.length > 0 && (
-                  <PlacementSelector zones={zones} selected={activeZone} onChange={handleZoneChange} />
-                )}
-                <TemplateLibraryPanel onLoad={handleLoadTemplate} />
+<TemplateLibraryPanel onLoad={handleLoadTemplate} />
                 <button
                   type="button"
                   onClick={handleSaveTemplate}
@@ -422,6 +396,8 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
               ref={canvasRef}
               mockupUrl={product.imageUrl}
               zone={activeZone}
+              printWidthCm={widthCm ?? 100}
+              printHeightCm={heightCm ?? 100}
               onSelectionChange={handleSelectionChange}
               onLayersChange={setLayers}
               onReady={() => setCanvasReady(true)}

@@ -144,7 +144,8 @@ export interface EditorCanvasHandle {
 interface Props {
   mockupUrl: string | null
   zone: PlacementZone | null
-  canvasSize?: number
+  printWidthCm?: number | null
+  printHeightCm?: number | null
   onSelectionChange?: (
     type: SelectionType,
     textProps?: TextProps,
@@ -252,12 +253,21 @@ function applyLock(obj: FabricObject, locked: boolean) {
 
 const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
   function EditorCanvas(
-    { mockupUrl, zone, canvasSize = CANVAS_SIZE, onSelectionChange, onLayersChange, onReady },
+    { mockupUrl, zone, printWidthCm, printHeightCm, onSelectionChange, onLayersChange, onReady },
     ref,
   ) {
+    // Compute canvas pixel dimensions from print aspect ratio
+    const printRatio =
+      printWidthCm && printHeightCm && printWidthCm > 0 && printHeightCm > 0
+        ? printWidthCm / printHeightCm
+        : 1
+    const szW = printRatio >= 1 ? CANVAS_SIZE : Math.round(CANVAS_SIZE * printRatio)
+    const szH = printRatio <= 1 ? CANVAS_SIZE : Math.round(CANVAS_SIZE / printRatio)
+
     const canvasElRef = useRef<HTMLCanvasElement>(null)
     const fabricRef = useRef<FabricCanvas | null>(null)
-    const sizeRef = useRef(canvasSize)
+    const sizeWRef = useRef(szW)
+    const sizeHRef = useRef(szH)
     const zoneRef = useRef<PlacementZone | null>(zone)
     const onSelectionChangeRef = useRef(onSelectionChange)
     const onLayersChangeRef = useRef(onLayersChange)
@@ -274,12 +284,13 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     useEffect(() => {
       if (!canvasElRef.current || fabricRef.current) return
       const el = canvasElRef.current
-      const sz = sizeRef.current
+      const szW = sizeWRef.current
+      const szH = sizeHRef.current
 
       import('fabric').then((fab) => {
         const canvas = new fab.Canvas(el, {
-          width: sz,
-          height: sz,
+          width: szW,
+          height: szH,
           backgroundColor: '#f3f4f6',
           preserveObjectStacking: true,
         })
@@ -311,8 +322,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           const SAFE = 8
           const objW = (target.width ?? 0) * Math.abs(target.scaleX ?? 1)
           const objH = (target.height ?? 0) * Math.abs(target.scaleY ?? 1)
-          const zL = z.x * sz + SAFE, zT = z.y * sz + SAFE
-          const zR = (z.x + z.w) * sz - SAFE, zB = (z.y + z.h) * sz - SAFE
+          const zL = z.x * szW + SAFE, zT = z.y * szH + SAFE
+          const zR = (z.x + z.w) * szW - SAFE, zB = (z.y + z.h) * szH - SAFE
           if (target.left < zL) target.set('left', zL)
           if (target.top < zT) target.set('top', zT)
           if (target.left + objW > zR) target.set('left', zR - objW)
@@ -323,7 +334,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           if (!target || target.__isZone || !zoneRef.current) return
           const z = zoneRef.current
           const SAFE = 8
-          const maxW = z.w * sz - SAFE * 2, maxH = z.h * sz - SAFE * 2
+          const maxW = z.w * szW - SAFE * 2, maxH = z.h * szH - SAFE * 2
           const w = target.width ?? 1, h = target.height ?? 1
           if (w * Math.abs(target.scaleX ?? 1) > maxW) target.scaleX = maxW / w
           if (h * Math.abs(target.scaleY ?? 1) > maxH) target.scaleY = maxH / h
@@ -372,8 +383,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           const z = initialZone
           // Bleed (outer) — gray dashed
           const bleedRect = new fab.Rect({
-            left: z.x * sz - BLEED, top: z.y * sz - BLEED,
-            width: z.w * sz + BLEED * 2, height: z.h * sz + BLEED * 2,
+            left: z.x * szW - BLEED, top: z.y * szH - BLEED,
+            width: z.w * szW + BLEED * 2, height: z.h * szH + BLEED * 2,
             fill: 'transparent', stroke: 'rgba(156,163,175,0.7)',
             strokeWidth: 1, strokeDashArray: [4, 4],
             selectable: false, evented: false,
@@ -381,8 +392,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           ;(bleedRect as FabricObject).__isZone = true
           // Cut line — red dashed
           const cutRect = new fab.Rect({
-            left: z.x * sz, top: z.y * sz,
-            width: z.w * sz, height: z.h * sz,
+            left: z.x * szW, top: z.y * szH,
+            width: z.w * szW, height: z.h * szH,
             fill: 'rgba(239,68,68,0.04)', stroke: 'rgba(239,68,68,0.85)',
             strokeWidth: 1.5, strokeDashArray: [6, 3],
             selectable: false, evented: false,
@@ -390,8 +401,8 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           ;(cutRect as FabricObject).__isZone = true
           // Safe zone (inner) — green dashed
           const safeRect = new fab.Rect({
-            left: z.x * sz + SAFE, top: z.y * sz + SAFE,
-            width: z.w * sz - SAFE * 2, height: z.h * sz - SAFE * 2,
+            left: z.x * szW + SAFE, top: z.y * szH + SAFE,
+            width: z.w * szW - SAFE * 2, height: z.h * szH - SAFE * 2,
             fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
             strokeWidth: 1, strokeDashArray: [4, 4],
             selectable: false, evented: false,
@@ -417,14 +428,15 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     useEffect(() => {
       const canvas: FabricCanvas = fabricRef.current
       if (!canvas) return
-      const sz = sizeRef.current
+      const szW = sizeWRef.current
+      const szH = sizeHRef.current
       if (!mockupUrl) { canvas.backgroundImage = null; canvas.renderAll(); return }
       import('fabric').then((fab) => {
         fab.FabricImage.fromURL(mockupUrl, { crossOrigin: 'anonymous' }).then((img: FabricObject) => {
           img.set({
             left: 0, top: 0,
-            scaleX: sz / (img.width ?? sz),
-            scaleY: sz / (img.height ?? sz),
+            scaleX: szW / (img.width ?? szW),
+            scaleY: szH / (img.height ?? szH),
             selectable: false, evented: false,
           })
           canvas.backgroundImage = img
@@ -437,31 +449,32 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     useEffect(() => {
       const canvas: FabricCanvas = fabricRef.current
       if (!canvas) return
-      const sz = sizeRef.current
+      const szW = sizeWRef.current
+      const szH = sizeHRef.current
       canvas.getObjects().filter((o: FabricObject) => o.__isZone).forEach((o: FabricObject) => canvas.remove(o))
       if (!zone) { canvas.renderAll(); return }
       import('fabric').then((fab) => {
         const BLEED = 5, SAFE = 8
         const z = zone
         const bleedRect = new fab.Rect({
-          left: z.x * sz - BLEED, top: z.y * sz - BLEED,
-          width: z.w * sz + BLEED * 2, height: z.h * sz + BLEED * 2,
+          left: z.x * szW - BLEED, top: z.y * szH - BLEED,
+          width: z.w * szW + BLEED * 2, height: z.h * szH + BLEED * 2,
           fill: 'transparent', stroke: 'rgba(156,163,175,0.7)',
           strokeWidth: 1, strokeDashArray: [4, 4],
           selectable: false, evented: false,
         })
         ;(bleedRect as FabricObject).__isZone = true
         const cutRect = new fab.Rect({
-          left: z.x * sz, top: z.y * sz,
-          width: z.w * sz, height: z.h * sz,
+          left: z.x * szW, top: z.y * szH,
+          width: z.w * szW, height: z.h * szH,
           fill: 'rgba(239,68,68,0.04)', stroke: 'rgba(239,68,68,0.85)',
           strokeWidth: 1.5, strokeDashArray: [6, 3],
           selectable: false, evented: false,
         })
         ;(cutRect as FabricObject).__isZone = true
         const safeRect = new fab.Rect({
-          left: z.x * sz + SAFE, top: z.y * sz + SAFE,
-          width: z.w * sz - SAFE * 2, height: z.h * sz - SAFE * 2,
+          left: z.x * szW + SAFE, top: z.y * szH + SAFE,
+          width: z.w * szW - SAFE * 2, height: z.h * szH - SAFE * 2,
           fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
           strokeWidth: 1, strokeDashArray: [4, 4],
           selectable: false, evented: false,
@@ -484,10 +497,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         if (!canvas) return
         const fab = await import('fabric')
         const img: FabricObject = await fab.FabricImage.fromURL(url, { crossOrigin: 'anonymous' })
-        const sz = sizeRef.current
-        const maxSide = sz * 0.5
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
+        const maxSide = Math.min(szW, szH) * 0.5
         const scale = Math.min(maxSide / (img.width ?? 1), maxSide / (img.height ?? 1))
-        img.set({ left: sz * 0.25, top: sz * 0.25, scaleX: scale, scaleY: scale })
+        img.set({ left: szW * 0.25, top: szH * 0.25, scaleX: scale, scaleY: scale })
         canvas.add(img)
         canvas.setActiveObject(img)
         canvas.renderAll()
@@ -516,13 +530,14 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         if (!canvas) return
         const obj: FabricObject = canvas.getActiveObject()
         if (!obj) return
-        const sz = sizeRef.current
-        const zw = z.w * sz, zh = z.h * sz
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
+        const zw = z.w * szW, zh = z.h * szH
         const scale = Math.min(zw / (obj.width ?? 1), zh / (obj.height ?? 1))
         obj.set({
           scaleX: scale, scaleY: scale,
-          left: z.x * sz + (zw - (obj.width ?? 0) * scale) / 2,
-          top: z.y * sz + (zh - (obj.height ?? 0) * scale) / 2,
+          left: z.x * szW + (zw - (obj.width ?? 0) * scale) / 2,
+          top: z.y * szH + (zh - (obj.height ?? 0) * scale) / 2,
         })
         canvas.renderAll()
         if (isImageObj(obj)) {
@@ -561,12 +576,13 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       addText(initialProps?: Partial<TextProps>) {
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
-        const sz = sizeRef.current
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
         const z = zoneRef.current
         const p: TextProps = { ...DEFAULT_TEXT_PROPS, ...initialProps }
-        const x = z ? z.x * sz + z.w * sz * 0.1 : sz * 0.1
-        const y = z ? z.y * sz + z.h * sz * 0.35 : sz * 0.35
-        const w = z ? z.w * sz * 0.8 : sz * 0.8
+        const x = z ? z.x * szW + z.w * szW * 0.1 : szW * 0.1
+        const y = z ? z.y * szH + z.h * szH * 0.35 : szH * 0.35
+        const w = z ? z.w * szW * 0.8 : szW * 0.8
         import('fabric').then((fab) => {
           const displayText = p.uppercase ? p.text.toUpperCase() : p.text
           const textbox = new fab.Textbox(displayText, {
@@ -642,10 +658,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const sz = sizeRef.current
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
         const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * sz : sz / 2
-        const cy = z ? (z.y + z.h / 2) * sz : sz / 2
+        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
+        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
         import('fabric').then((fab) => {
           const rect = new fab.Rect({ left: cx - 50, top: cy - 30, width: 100, height: 60, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
           canvas.add(rect); canvas.setActiveObject(rect); canvas.renderAll()
@@ -656,10 +673,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const sz = sizeRef.current
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
         const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * sz : sz / 2
-        const cy = z ? (z.y + z.h / 2) * sz : sz / 2
+        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
+        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
         import('fabric').then((fab) => {
           const circle = new fab.Circle({ left: cx - 40, top: cy - 40, radius: 40, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
           canvas.add(circle); canvas.setActiveObject(circle); canvas.renderAll()
@@ -670,10 +688,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const sz = sizeRef.current
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
         const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * sz : sz / 2
-        const cy = z ? (z.y + z.h / 2) * sz : sz / 2
+        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
+        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
         import('fabric').then((fab) => {
           const tri = new fab.Triangle({ left: cx - 40, top: cy - 40, width: 80, height: 80, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
           canvas.add(tri); canvas.setActiveObject(tri); canvas.renderAll()
@@ -684,10 +703,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const p = { ...DEFAULT_SHAPE_PROPS, ...initialProps }
-        const sz = sizeRef.current
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
         const z = zoneRef.current
-        const cx = z ? (z.x + z.w / 2) * sz : sz / 2
-        const cy = z ? (z.y + z.h / 2) * sz : sz / 2
+        const cx = z ? (z.x + z.w / 2) * szW : szW / 2
+        const cy = z ? (z.y + z.h / 2) * szH : szH / 2
         import('fabric').then((fab) => {
           const line = new fab.Line([cx - 50, cy, cx + 50, cy], { stroke: p.stroke || p.fill || '#000000', strokeWidth: Math.max(p.strokeWidth, 2), fill: '' })
           canvas.add(line); canvas.setActiveObject(line); canvas.renderAll()
@@ -779,9 +799,10 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             obj.clipPath = undefined
           } else {
             const z = zoneRef.current
-            const sz = sizeRef.current
+            const szW = sizeWRef.current
+            const szH = sizeHRef.current
             const clip = z
-              ? new fab.Rect({ left: z.x * sz, top: z.y * sz, width: z.w * sz, height: z.h * sz, absolutePositioned: true })
+              ? new fab.Rect({ left: z.x * szW, top: z.y * szH, width: z.w * szW, height: z.h * szH, absolutePositioned: true })
               : new fab.Rect({ left: obj.left ?? 0, top: obj.top ?? 0, width: (obj.width ?? 100) * Math.abs(obj.scaleX ?? 1), height: (obj.height ?? 100) * Math.abs(obj.scaleY ?? 1), absolutePositioned: true })
             obj.clipPath = clip
           }
@@ -797,10 +818,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         if (!obj || obj.__isZone) return
         const z = zoneRef.current
         if (!z) return
-        const sz = sizeRef.current
+        const szW = sizeWRef.current
+        const szH = sizeHRef.current
         const objW = (obj.width ?? 0) * Math.abs(obj.scaleX ?? 1)
         const objH = (obj.height ?? 0) * Math.abs(obj.scaleY ?? 1)
-        obj.set({ left: z.x * sz + (z.w * sz - objW) / 2, top: z.y * sz + (z.h * sz - objH) / 2 })
+        obj.set({ left: z.x * szW + (z.w * szW - objW) / 2, top: z.y * szH + (z.h * szH - objH) / 2 })
         canvas.renderAll()
         if (isImageObj(obj)) {
           onSelectionChangeRef.current?.('image', undefined, undefined, getImagePropsFromObj(obj))
