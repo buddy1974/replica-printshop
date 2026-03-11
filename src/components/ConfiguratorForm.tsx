@@ -25,6 +25,7 @@ interface Variant {
 }
 
 interface ProductConfig {
+  type?: string | null
   hasCustomSize: boolean
   hasFixedSizes: boolean
   hasVariants: boolean
@@ -88,6 +89,12 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const router = useRouter()
   const cfg = product.config
 
+  // Banner: auto-select 4/0 print mode, hide Print selector
+  const isBanner = cfg?.type === 'BANNER'
+  const print40Id = isBanner
+    ? (product.options.find((o) => o.name === 'Print')?.values.find((v) => v.name === '4/0')?.id ?? null)
+    : null
+
   const fixedSizeOptions = useMemo<{ label: string; w: number; h: number }[]>(() => {
     if (!cfg?.fixedSizes) return []
     return cfg.fixedSizes.split(',').map((s) => {
@@ -97,7 +104,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   }, [cfg?.fixedSizes])
 
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
-  const [optionValueIds, setOptionValueIds] = useState<string[]>([])
+  const [optionValueIds, setOptionValueIds] = useState<string[]>(print40Id ? [print40Id] : [])
   const [width, setWidth] = useState(fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
   const [height, setHeight] = useState(fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
   const [quantity, setQuantity] = useState(1)
@@ -217,25 +224,36 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </div>
       )}
 
-      {showOptions && product.options.map((option) => (
-        <div key={option.id} className="flex flex-col gap-2">
-          <span className={labelTextCls}>{option.name}</span>
-          <div className="flex flex-wrap gap-2">
-            {option.values.map((val) => (
-              <PillButton
-                key={val.id}
-                active={optionValueIds.includes(val.id)}
-                onClick={() => toggleOptionValue(val.id, option.id)}
-              >
-                {val.name}
-                {Number(val.priceModifier) !== 0 && (
-                  <span className="ml-1 opacity-80">+€{Number(val.priceModifier).toFixed(2)}</span>
-                )}
-              </PillButton>
-            ))}
+      {showOptions && product.options.map((option) => {
+        // Banner: replace Print selector with static info text
+        if (isBanner && option.name === 'Print') {
+          return (
+            <div key={option.id} className="flex flex-col gap-1">
+              <span className={labelTextCls}>Print</span>
+              <p className="text-sm text-gray-500">4/0 — single sided. Upload one-sided artwork only.</p>
+            </div>
+          )
+        }
+        return (
+          <div key={option.id} className="flex flex-col gap-2">
+            <span className={labelTextCls}>{option.name}</span>
+            <div className="flex flex-wrap gap-2">
+              {option.values.map((val) => (
+                <PillButton
+                  key={val.id}
+                  active={optionValueIds.includes(val.id)}
+                  onClick={() => toggleOptionValue(val.id, option.id)}
+                >
+                  {val.name}
+                  {Number(val.priceModifier) !== 0 && (
+                    <span className="ml-1 opacity-80">+€{Number(val.priceModifier).toFixed(2)}</span>
+                  )}
+                </PillButton>
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
 
       <div className="flex flex-col gap-1">
         <label className={labelCls}>
