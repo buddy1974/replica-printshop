@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { type Metadata } from 'next'
 import { db } from '@/lib/db'
 import { BRANDING } from '@/config/branding'
+import { SERVICES } from '@/config/services'
+import HeroSlider from '@/components/HeroSlider'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,70 +48,18 @@ const HOW_IT_WORKS = [
 // ---------------------------------------------------------------------------
 
 export default async function Home() {
-  const [categories, featured] = await Promise.all([
-    db.productCategory.findMany({
-      orderBy: { sortOrder: 'asc' },
-      select: { id: true, name: true, slug: true, description: true, imageUrl: true },
-    }),
-    db.product.findMany({
-      where: { active: true, imageUrl: { not: null } },
-      orderBy: { name: 'asc' },
-      take: 6,
-      select: { id: true, name: true, slug: true, imageUrl: true },
-    }),
-  ])
+  const featured = await db.product.findMany({
+    where: { active: true, imageUrl: { not: null } },
+    orderBy: { name: 'asc' },
+    take: 6,
+    select: { id: true, name: true, slug: true, imageUrl: true },
+  })
 
   return (
     <div>
 
-      {/* ── 1. Hero ─────────────────────────────────────────────────────────── */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 py-14 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-
-          {/* Left — text + CTAs */}
-          <div className="flex flex-col gap-6">
-            <div>
-              <span className="inline-block text-xs font-semibold tracking-widest text-red-600 uppercase mb-3">
-                Print · Textile · Werbetechnik
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-3">
-                Professional print, textile, banners and advertising technology
-              </h1>
-              <p className="text-base text-gray-500 leading-relaxed">
-                Order online, upload your design, customize and we produce it for you.
-                Fast turnaround, professional quality.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/shop"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors shadow-sm"
-              >
-                Go to shop →
-              </Link>
-              <Link
-                href="/shop/graphic-installation"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
-              >
-                Graphic Installation
-              </Link>
-            </div>
-          </div>
-
-          {/* Right — hero image */}
-          <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100">
-            <Image
-              src="/frontpage-hero.png"
-              alt="Print shop"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain"
-              priority
-            />
-          </div>
-        </div>
-      </section>
+      {/* ── 1. Hero slideshow ───────────────────────────────────────────────── */}
+      <HeroSlider />
 
       {/* ── 2. Trust / service strip ────────────────────────────────────────── */}
       <section className="bg-gray-50 border-b border-gray-200">
@@ -126,7 +76,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 3. Category blocks ──────────────────────────────────────────────── */}
+      {/* ── 3. Services — static config ─────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 py-14">
         <div className="mb-7">
           <h2 className="text-2xl font-bold text-gray-900">Our services</h2>
@@ -134,36 +84,31 @@ export default async function Home() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.map((cat) => (
+          {SERVICES.map((svc) => (
             <Link
-              key={cat.id}
-              href={`/shop/${cat.slug}`}
+              key={svc.href}
+              href={svc.href}
               className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-400 hover:shadow-md transition-all"
             >
-              {/* Category image */}
-              <div className="relative aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden">
-                {cat.imageUrl ? (
-                  <Image
-                    src={cat.imageUrl}
-                    alt={cat.name}
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-300">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                )}
+              {/* Service image */}
+              <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={svc.image}
+                  alt={svc.name}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+                {/* Fallback icon shown behind image */}
+                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 z-0">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
               </div>
               {/* Text */}
               <div className="p-3 flex-1">
-                <p className="text-sm font-semibold text-gray-900 leading-tight">{cat.name}</p>
-                {cat.description && (
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">{cat.description}</p>
-                )}
+                <p className="text-sm font-semibold text-gray-900 leading-tight">{svc.name}</p>
                 <p className="text-xs text-red-500 mt-2 font-medium group-hover:text-red-700">
                   Browse →
                 </p>

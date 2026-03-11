@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import ProductPreview from '@/components/ProductPreview'
+import { setUserId as setSessionUserId, setUserEmail as setSessionUserEmail } from '@/lib/session'
 
 interface OptionValue {
   id: string
@@ -106,11 +107,23 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   const [addedToCart, setAddedToCart] = useState(false)
   const [cartError, setCartError] = useState<string | null>(null)
 
-  // Load userId from server session on mount
+  // Load userId from session on mount — auto-create guest if not logged in
   useEffect(() => {
     fetch('/api/user/me')
-      .then((r) => r.ok ? r.json() : null)
-      .then((u) => { if (u?.id) setUserId(u.id) })
+      .then(async (r) => {
+        if (r.ok) return r.json()
+        // Not authenticated — create a guest user automatically
+        const g = await fetch('/api/user/guest', { method: 'POST' })
+        if (!g.ok) return null
+        return g.json()
+      })
+      .then((u) => {
+        if (u?.id) {
+          setSessionUserId(u.id)
+          if (u.email) setSessionUserEmail(u.email)
+          setUserId(u.id)
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -162,10 +175,7 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
   }
 
   const handleAddToCart = async () => {
-    if (!userId) {
-      setCartError('Please log in to add items to cart.')
-      return
-    }
+    if (!userId) return
     setCartError(null)
     const res = await fetch('/api/cart', {
       method: 'POST',
