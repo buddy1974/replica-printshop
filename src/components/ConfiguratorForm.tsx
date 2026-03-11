@@ -184,26 +184,6 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </label>
       )}
 
-      {showOptions && product.options.map((option) => (
-        <div key={option.id} className="flex flex-col gap-2">
-          <span className={labelTextCls}>{option.name}</span>
-          <div className="flex flex-wrap gap-2">
-            {option.values.map((val) => (
-              <PillButton
-                key={val.id}
-                active={optionValueIds.includes(val.id)}
-                onClick={() => toggleOptionValue(val.id, option.id)}
-              >
-                {val.name}
-                {Number(val.priceModifier) !== 0 && (
-                  <span className="ml-1 opacity-80">+€{Number(val.priceModifier).toFixed(2)}</span>
-                )}
-              </PillButton>
-            ))}
-          </div>
-        </div>
-      ))}
-
       {showFixedSizes && (
         <label className={labelCls}>
           <span className={labelTextCls}>Size</span>
@@ -237,33 +217,25 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </div>
       )}
 
-      {width > 0 && height > 0 && (
-        <div className="mt-6 flex flex-col gap-3">
-
-          <button
-            className="btn-primary"
-            onClick={() => {
-              router.push(
-                `/editor/${product.id}?w=${width}&h=${height}`
-              )
-            }}
-          >
-            Use online designer
-          </button>
-
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              router.push(
-                `/upload/${product.id}?w=${width}&h=${height}`
-              )
-            }}
-          >
-            Upload print file
-          </button>
-
+      {showOptions && product.options.map((option) => (
+        <div key={option.id} className="flex flex-col gap-2">
+          <span className={labelTextCls}>{option.name}</span>
+          <div className="flex flex-wrap gap-2">
+            {option.values.map((val) => (
+              <PillButton
+                key={val.id}
+                active={optionValueIds.includes(val.id)}
+                onClick={() => toggleOptionValue(val.id, option.id)}
+              >
+                {val.name}
+                {Number(val.priceModifier) !== 0 && (
+                  <span className="ml-1 opacity-80">+€{Number(val.priceModifier).toFixed(2)}</span>
+                )}
+              </PillButton>
+            ))}
+          </div>
         </div>
-      )}
+      ))}
 
       <div className="flex flex-col gap-1">
         <label className={labelCls}>
@@ -320,6 +292,27 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
           <div className="flex justify-between font-semibold text-gray-900 border-t border-gray-200 pt-2 mt-0.5">
             <span>Total</span><span>€{price.totalPrice.toFixed(2)}</span>
           </div>
+        </div>
+      )}
+
+      {width > 0 && height > 0 && (
+        <div className="flex flex-col gap-3">
+          <button
+            className="btn-primary"
+            onClick={() => {
+              router.push(`/editor/${product.id}?w=${width}&h=${height}`)
+            }}
+          >
+            Use online designer
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              router.push(`/upload/${product.id}?w=${width}&h=${height}`)
+            }}
+          >
+            Upload print file
+          </button>
         </div>
       )}
 
