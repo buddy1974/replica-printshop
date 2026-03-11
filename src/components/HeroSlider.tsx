@@ -20,7 +20,7 @@ const SLIDES: Slide[] = [
     eyebrow: 'Print & Signage',
     headline: 'Banner & signage',
     sub: 'Printing, signage and professional installation. Fast in-house production.',
-    cta: { label: 'Shop banners', href: '/shop/banners' },
+    cta: { label: 'Shop banners', href: '/shop/banner' },
     image: '/images/hero/slide1.png',
   },
   {
@@ -29,7 +29,7 @@ const SLIDES: Slide[] = [
     eyebrow: 'Textile & DTF',
     headline: 'Custom fabric printing',
     sub: 'Textile, DTF, full-color — small runs from 1 piece, no minimum.',
-    cta: { label: 'Shop textile', href: '/shop/textile' },
+    cta: { label: 'Shop textile', href: '/shop/textile-print' },
     image: '/images/hero/slide2.png',
   },
   {
@@ -47,7 +47,7 @@ const SLIDES: Slide[] = [
     eyebrow: 'Vinyl & Vehicle Graphics',
     headline: 'Printing & graphics',
     sub: 'Window graphics, perforated film, cut vinyl lettering — windows & vehicles.',
-    cta: { label: 'Shop vinyl', href: '/shop/vinyl' },
+    cta: { label: 'Shop vinyl', href: '/shop/vinyl-plot' },
     image: '/images/hero/slide4.png',
   },
 ]
