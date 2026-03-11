@@ -57,5 +57,7 @@ export default async function EditorPage({ params, searchParams }: Props) {
   const initialWidth = searchParams?.w ? Number(searchParams.w) : null
   const initialHeight = searchParams?.h ? Number(searchParams.h) : null
 
+  console.log('EDITOR PARAMS', initialWidth, initialHeight)
+
   return <EditorShell product={productForShell} initialWidth={initialWidth} initialHeight={initialHeight} />
 }

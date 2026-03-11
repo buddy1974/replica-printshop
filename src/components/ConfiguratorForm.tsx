@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import ProductPreview from '@/components/ProductPreview'
 import { setUserId as setSessionUserId, setUserEmail as setSessionUserEmail } from '@/lib/session'
 
@@ -85,6 +85,7 @@ function PillButton({ active, onClick, children }: { active: boolean; onClick: (
 }
 
 export default function ConfiguratorForm({ product }: { product: Product }) {
+  const router = useRouter()
   const cfg = product.config
 
   const fixedSizeOptions = useMemo<{ label: string; w: number; h: number }[]>(() => {
@@ -294,20 +295,24 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <Link
-          href={`/editor/${product.id}?w=${width}&h=${height}`}
-          className="btn-primary justify-center text-center"
-        >
-          Design & Order →
-        </Link>
-        <Link
-          href={`/editor/${product.id}?w=${width}&h=${height}&upload=1`}
-          className="btn-outline justify-center text-center"
-        >
-          Upload image
-        </Link>
-      </div>
+      {width > 0 && height > 0 && !sizeError && (
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            className="btn-primary justify-center"
+            onClick={() => router.push(`/editor/${product.id}?w=${width}&h=${height}`)}
+          >
+            Use online designer →
+          </button>
+          <button
+            type="button"
+            className="btn-outline justify-center"
+            onClick={() => router.push(`/upload/${product.id}?w=${width}&h=${height}`)}
+          >
+            Upload print file
+          </button>
+        </div>
+      )}
     </div>
   )
 }
