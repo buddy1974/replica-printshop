@@ -8,6 +8,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { productId, variantId, width, height, quantity, deliveryType, optionValueIds } = body
 
+    console.log('[price] input:', { width, height, optionValueIds, deliveryType, quantity })
+
     if (!productId || !quantity) {
       return NextResponse.json({ error: 'productId and quantity are required' }, { status: 400 })
     }

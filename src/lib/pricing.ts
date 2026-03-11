@@ -194,9 +194,12 @@ export async function calculatePrice(input: PricingInput): Promise<PricingResult
   }
   unitPrice = (unitPrice + optionAdded) * optionMultiplier
 
-  // Express multiplier — applied last to unit price
-  if (express && pricingRule) {
-    unitPrice *= toNum(pricingRule.expressMultiplier)
+  // Express multiplier — applied last to unit price.
+  // Use pricingRule.expressMultiplier when available; fall back to 1.5 (schema default)
+  // for products that use pricingTables and have no PricingRule row.
+  if (express) {
+    const mult = pricingRule ? toNum(pricingRule.expressMultiplier) : 1.5
+    unitPrice *= mult
   }
 
   const subtotal = parseFloat((unitPrice * quantity).toFixed(2))
