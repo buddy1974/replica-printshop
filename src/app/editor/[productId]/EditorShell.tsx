@@ -87,12 +87,15 @@ function buildSizeZone(w: number | null | undefined, h: number | null | undefine
 export default function EditorShell({ product, initialWidth, initialHeight }: Props) {
   const canvasRef = useRef<EditorCanvasHandle | null>(null)
 
-  // Debug: confirm size is received from URL params
+  // Resolve final print dimensions: URL params take priority over config defaults
+  const widthCm = initialWidth ?? product.config?.printAreaWidthCm ?? null
+  const heightCm = initialHeight ?? product.config?.printAreaHeightCm ?? null
+
   console.log('SIZE', initialWidth, initialHeight)
 
   const zones = getZonesByCategorySlug(product.categorySlug, product.config?.type)
   const [activeZone, setActiveZone] = useState<PlacementZone | null>(
-    () => buildSizeZone(initialWidth, initialHeight) ?? zones[0] ?? null
+    () => buildSizeZone(widthCm, heightCm) ?? zones[0] ?? null
   )
 
   // Selection state
@@ -115,8 +118,8 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
   // Cart state
   const [userId, setUserId] = useState('')
   const [quantity, setQuantity] = useState(1)
-  const [width, setWidth] = useState<number>(initialWidth ?? product.config?.printAreaWidthCm ?? 0)
-  const [height, setHeight] = useState<number>(initialHeight ?? product.config?.printAreaHeightCm ?? 0)
+  const [width, setWidth] = useState<number>(widthCm ?? 0)
+  const [height, setHeight] = useState<number>(heightCm ?? 0)
   const [cartStatus, setCartStatus] = useState<CartStatus>('idle')
   const [cartError, setCartError] = useState<string | null>(null)
 
