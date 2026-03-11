@@ -94,14 +94,12 @@ export default function Footer() {
           </div>
 
           {/* Payment icons */}
-          <div className="bg-white rounded p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/stripe.png"
-              alt="We accept Visa, Mastercard, Maestro and American Express via Stripe"
-              className="w-full object-contain"
-            />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/stripe.png"
+            alt="We accept Visa, Mastercard, Maestro and American Express via Stripe"
+            className="w-full object-contain"
+          />
         </div>
       </div>
 
