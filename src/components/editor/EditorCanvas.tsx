@@ -390,31 +390,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         }
         fireLayersRef.current = fireLayers
 
-        // ── Clamping: keep objects inside safe area ────────────────────────────
-        canvas.on('object:moving', ({ target }: FabricObject) => {
-          if (!target || target.__isZone) return
-          const sx = sheetXRef.current, sy = sheetYRef.current
-          const sw = sheetWRef.current, sh = sheetHRef.current
-          const spx = safePxRef.current
-          const objW = (target.width ?? 0) * Math.abs(target.scaleX ?? 1)
-          const objH = (target.height ?? 0) * Math.abs(target.scaleY ?? 1)
-          const minX = sx + spx, minY = sy + spx
-          const maxX = sx + sw - spx, maxY = sy + sh - spx
-          if (target.left < minX) target.set('left', minX)
-          if (target.top < minY) target.set('top', minY)
-          if (target.left + objW > maxX) target.set('left', maxX - objW)
-          if (target.top + objH > maxY) target.set('top', maxY - objH)
-        })
-
-        canvas.on('object:scaling', ({ target }: FabricObject) => {
-          if (!target || target.__isZone) return
-          const maxW = sheetWRef.current - 2 * safePxRef.current
-          const maxH = sheetHRef.current - 2 * safePxRef.current
-          const w = target.width ?? 1, h = target.height ?? 1
-          if (w * Math.abs(target.scaleX ?? 1) > maxW) target.scaleX = maxW / w
-          if (h * Math.abs(target.scaleY ?? 1) > maxH) target.scaleY = maxH / h
-        })
-
         // ── Selection tracking ────────────────────────────────────────────────
         const fireSelection = (selected: FabricObject[] | undefined) => {
           const obj = selected?.[0]
@@ -769,24 +744,14 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       },
 
       cropSelected() {
+        // clipPath removed — objects are not clipped to any zone
         const canvas: FabricCanvas = fabricRef.current
         if (!canvas) return
         const obj: FabricObject = canvas.getActiveObject()
         if (!obj || !isImageObj(obj)) return
-        import('fabric').then((fab) => {
-          if (obj.clipPath) {
-            obj.clipPath = undefined
-          } else {
-            const clip = new fab.Rect({
-              left: sheetXRef.current, top: sheetYRef.current,
-              width: sheetWRef.current, height: sheetHRef.current,
-              absolutePositioned: true,
-            })
-            obj.clipPath = clip
-          }
-          canvas.renderAll()
-          onSelectionChangeRef.current?.('image', undefined, undefined, getImagePropsFromObj(obj))
-        })
+        obj.clipPath = undefined
+        canvas.renderAll()
+        onSelectionChangeRef.current?.('image', undefined, undefined, getImagePropsFromObj(obj))
       },
 
       centerInZone() {

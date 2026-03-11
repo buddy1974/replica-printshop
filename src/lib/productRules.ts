@@ -25,8 +25,8 @@ export function validateProductSize(
   if (config.dtfMaxWidthCm && width > Number(config.dtfMaxWidthCm)) {
     return { ok: false, message: `Width ${width} cm exceeds DTF maximum of ${config.dtfMaxWidthCm} cm` }
   }
-  if (config.rollWidthCm && width > Number(config.rollWidthCm)) {
-    return { ok: false, message: `Width ${width} cm exceeds roll width of ${config.rollWidthCm} cm` }
+  if (config.rollWidthCm && Math.min(width, height) > Number(config.rollWidthCm)) {
+    return { ok: false, message: `Smallest side ${Math.min(width, height)} cm exceeds roll width of ${config.rollWidthCm} cm` }
   }
   if (config.printAreaWidthCm && width > Number(config.printAreaWidthCm)) {
     return { ok: false, message: `Width ${width} cm exceeds print area width of ${config.printAreaWidthCm} cm` }
