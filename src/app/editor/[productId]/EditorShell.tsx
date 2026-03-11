@@ -53,11 +53,47 @@ type RightTab = 'text' | 'image' | 'shape' | 'layers'
 
 const RIGHT_TABS: RightTab[] = ['text', 'image', 'shape', 'layers']
 
+/**
+ * Build a PlacementZone that matches the aspect ratio of the selected print size.
+ * The zone is centered in the square canvas with a small margin so bleed lines
+ * are visible outside it.
+ */
+function buildSizeZone(w: number | null | undefined, h: number | null | undefined): PlacementZone | null {
+  if (!w || !h || w <= 0 || h <= 0) return null
+  const MARGIN = 0.04 // 4% canvas margin on each side
+  const aspect = w / h
+  let zw: number, zh: number
+  if (aspect >= 1) {
+    // landscape — fill full width
+    zw = 1 - MARGIN * 2
+    zh = zw / aspect
+    if (zh > 1 - MARGIN * 2) { zh = 1 - MARGIN * 2; zw = zh * aspect }
+  } else {
+    // portrait — fill full height
+    zh = 1 - MARGIN * 2
+    zw = zh * aspect
+    if (zw > 1 - MARGIN * 2) { zw = 1 - MARGIN * 2; zh = zw / aspect }
+  }
+  return {
+    id: 'print_area',
+    label: `${w} × ${h} cm`,
+    x: (1 - zw) / 2,
+    y: (1 - zh) / 2,
+    w: zw,
+    h: zh,
+  }
+}
+
 export default function EditorShell({ product, initialWidth, initialHeight }: Props) {
   const canvasRef = useRef<EditorCanvasHandle | null>(null)
 
+  // Debug: confirm size is received from URL params
+  console.log('SIZE', initialWidth, initialHeight)
+
   const zones = getZonesByCategorySlug(product.categorySlug, product.config?.type)
-  const [activeZone, setActiveZone] = useState<PlacementZone | null>(zones[0] ?? null)
+  const [activeZone, setActiveZone] = useState<PlacementZone | null>(
+    () => buildSizeZone(initialWidth, initialHeight) ?? zones[0] ?? null
+  )
 
   // Selection state
   const [selectedType, setSelectedType] = useState<SelectionType>(null)

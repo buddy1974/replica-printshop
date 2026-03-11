@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 import { type Metadata } from 'next'
-import Link from 'next/link'
 import ConfiguratorForm from '@/components/ConfiguratorForm'
 import Container from '@/components/Container'
 import CategoryFooter from '@/components/CategoryFooter'
@@ -361,11 +360,11 @@ export default async function ProductPage({ params }: { params: { slug: string }
           {/* File guide */}
           <FileGuide product={product} />
 
-          {/* CTA: configure & order */}
+          {/* CTA: scroll to configurator so user selects size first */}
           <div className="flex flex-col gap-2 pt-1">
-            <Link href={`/editor/${product.id}`} className="btn-primary justify-center">
-              Design & Order →
-            </Link>
+            <a href="#configurator" className="btn-primary justify-center">
+              Configure & Design ↓
+            </a>
           </div>
         </div>
       </div>
