@@ -24,6 +24,11 @@ export async function getOrCreateCart(userId: string) {
   })
   if (existing) return existing
 
+  // Verify the user exists before attempting to create the cart —
+  // Cart has a required FK to User; a missing User would throw a raw DB error.
+  const user = await db.user.findUnique({ where: { id: userId }, select: { id: true } })
+  if (!user) throw new ValidationError('User not found. Please log in.')
+
   return db.cart.create({
     data: { userId },
     include: cartInclude,

@@ -18,19 +18,20 @@ export function saveDesignPreview(id: string, dataUrl: string): string | null {
   const base64 = dataUrl.split(',')[1]
   if (!base64) return null
 
-  ensureDir()
-  const filename = `${id}.png`
-  const diskPath = path.resolve(DESIGNS_DIR, filename)
-
-  // Guard against path traversal (id should be a CUID)
-  if (!diskPath.startsWith(DESIGNS_DIR + path.sep) && diskPath !== path.resolve(DESIGNS_DIR, filename)) {
-    return null
-  }
-
   try {
+    ensureDir()
+    const filename = `${id}.png`
+    const diskPath = path.resolve(DESIGNS_DIR, filename)
+
+    // Guard against path traversal (id should be a CUID)
+    if (!diskPath.startsWith(DESIGNS_DIR + path.sep) && diskPath !== path.resolve(DESIGNS_DIR, filename)) {
+      return null
+    }
+
     fs.writeFileSync(diskPath, Buffer.from(base64, 'base64'))
     return `storage/designs/${filename}`
   } catch {
+    // Filesystem unavailable (e.g. read-only on serverless) — preview is optional
     return null
   }
 }
