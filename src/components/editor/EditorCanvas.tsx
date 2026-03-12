@@ -1,7 +1,6 @@
 'use client'
 
-// Steps 345, 361, 367, 368, 371–410, 641, 645 — Fabric.js canvas + text + shapes + image tools + layers + group
-console.log('EDITOR CANVAS VERSION 999 — enableRetinaScaling:false')
+// Steps 345, 361, 367, 368, 371–410, 641 — Fabric.js canvas + text + shapes + image tools + layers + group
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 
@@ -341,48 +340,33 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       const canvasW = sW + 2 * sX
       const canvasH = sH + 2 * sY
 
-      // Debug: verify geometry before canvas boot
-      console.log('CUT', sX, sY, sW, sH)
-      console.log('SAFE', sX + sp, sY + sp, sW - 2 * sp, sH - 2 * sp)
-
       import('fabric').then((fab) => {
         const canvas = new fab.Canvas(el, {
           width: canvasW,
           height: canvasH,
-          // Disable retina scaling: Fabric v7 default (true) halves CSS canvas dimensions
-          // (cssW = logicalW / DPR) which breaks ruler alignment and object placement.
-          // With false, CSS px = logical px = canvas coords — 1:1 everywhere.
+          // Fabric v7 changed default originX/originY to 'center'/'center'.
+          // We explicitly set originX/originY: 'left'/'top' on every object we create,
+          // so left/top coords always refer to the top-left corner of the bounding box.
           enableRetinaScaling: false,
           backgroundColor: '#c8c8c8',   // gray = bleed area
           preserveObjectStacking: true,
         })
         fabricRef.current = canvas
 
-        // ── Runtime dimension probe (debug 646) ───────────────────────────────
-        console.log('CANVAS LOGICAL', canvas.getWidth(), 'x', canvas.getHeight())
-        setTimeout(() => {
-          // After Fabric wraps the canvas, read actual DOM dimensions
-          const lc = (canvas as FabricCanvas).lowerCanvasEl ?? el
-          const bcr = lc.getBoundingClientRect()
-          console.log('CANVAS ATTR', lc.width, 'x', lc.height)
-          console.log('CANVAS CSS', lc.style.width, 'x', lc.style.height)
-          console.log('CANVAS BCR', Math.round(bcr.width), 'x', Math.round(bcr.height))
-        }, 200)
-
         onReadyRef.current?.()
 
         // ── drawSheetOverlay: white sheet + cut line + safe line ──────────────
         const drawSheetOverlay = () => {
-          console.log('DRAW OVERLAY sX/sY/sW/sH', sX, sY, sW, sH, '| canvas', canvas.getWidth(), canvas.getHeight())
           canvas.getObjects()
             .filter((o: FabricObject) => o.__isZone)
             .forEach((o: FabricObject) => canvas.remove(o))
 
-          // White sheet rect
+          // White sheet rect — originX/Y: 'left'/'top' so left/top = top-left corner
           const sheetRect = new fab.Rect({
             left: sX, top: sY, width: sW, height: sH,
             fill: '#ffffff',
             selectable: false, evented: false,
+            originX: 'left', originY: 'top',
           })
           ;(sheetRect as FabricObject).__isZone = true
           sheetRectRef.current = sheetRect
@@ -393,6 +377,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             fill: 'rgba(239,68,68,0.03)', stroke: 'rgba(239,68,68,0.85)',
             strokeWidth: 1.5, strokeDashArray: [6, 3],
             selectable: false, evented: false,
+            originX: 'left', originY: 'top',
           })
           ;(cutRect as FabricObject).__isZone = true
 
@@ -402,6 +387,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             fill: 'transparent', stroke: 'rgba(34,197,94,0.8)',
             strokeWidth: 1, strokeDashArray: [4, 4],
             selectable: false, evented: false,
+            originX: 'left', originY: 'top',
           })
           ;(safeRect as FabricObject).__isZone = true
 
@@ -412,15 +398,6 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           canvas.sendObjectToBack(cutRect)
           canvas.sendObjectToBack(sheetRect)
           canvas.renderAll()
-
-          // Debug 648 — log viewport transform + full object stack after draw
-          console.log('VPT', JSON.stringify(canvas.viewportTransform))
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          console.log('CANVAS OBJECTS', canvas.getObjects().map((o: any) => ({
-            type: o.type, left: o.left, top: o.top, width: o.width, height: o.height,
-            fill: typeof o.fill === 'string' ? o.fill.slice(0, 20) : o.fill,
-            __isZone: o.__isZone,
-          })))
         }
         drawSheetOverlayRef.current = drawSheetOverlay
         drawSheetOverlay()
@@ -498,6 +475,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             scaleX: sheetWRef.current / (img.width ?? sheetWRef.current),
             scaleY: sheetHRef.current / (img.height ?? sheetHRef.current),
             selectable: false, evented: false,
+            originX: 'left', originY: 'top',
           })
           canvas.backgroundImage = img
           canvas.renderAll()
@@ -520,6 +498,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           left: eX + (eW - (img.width ?? 0) * sc) / 2,
           top:  eY + (eH - (img.height ?? 0) * sc) / 2,
           scaleX: sc, scaleY: sc,
+          originX: 'left', originY: 'top',
         })
         canvas.add(img)
         canvas.setActiveObject(img)
@@ -557,6 +536,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           scaleX: sc, scaleY: sc,
           left: eX + (eW - (obj.width ?? 0) * sc) / 2,
           top:  eY + (eH - (obj.height ?? 0) * sc) / 2,
+          originX: 'left', originY: 'top',
         })
         canvas.renderAll()
         if (isImageObj(obj)) {
@@ -608,6 +588,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
             fontFamily: p.fontFamily, fontSize: p.fontSize,
             fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth,
             textAlign: p.textAlign, fontWeight: p.fontWeight, fontStyle: p.fontStyle,
+            originX: 'left', originY: 'top',
           })
           ;(textbox as FabricObject).__uppercase = p.uppercase
           canvas.add(textbox)
@@ -680,7 +661,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const eW = safeWRef.current, eH = safeHRef.current
         const cx = eX + eW / 2, cy = eY + eH / 2
         import('fabric').then((fab) => {
-          const rect = new fab.Rect({ left: cx - 50, top: cy - 30, width: 100, height: 60, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
+          const rect = new fab.Rect({ left: cx - 50, top: cy - 30, width: 100, height: 60, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth, originX: 'left', originY: 'top' })
           canvas.add(rect); canvas.setActiveObject(rect); canvas.renderAll()
         })
       },
@@ -693,7 +674,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const eW = safeWRef.current, eH = safeHRef.current
         const cx = eX + eW / 2, cy = eY + eH / 2
         import('fabric').then((fab) => {
-          const circle = new fab.Circle({ left: cx - 40, top: cy - 40, radius: 40, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
+          const circle = new fab.Circle({ left: cx - 40, top: cy - 40, radius: 40, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth, originX: 'left', originY: 'top' })
           canvas.add(circle); canvas.setActiveObject(circle); canvas.renderAll()
         })
       },
@@ -706,7 +687,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const eW = safeWRef.current, eH = safeHRef.current
         const cx = eX + eW / 2, cy = eY + eH / 2
         import('fabric').then((fab) => {
-          const tri = new fab.Triangle({ left: cx - 40, top: cy - 40, width: 80, height: 80, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth })
+          const tri = new fab.Triangle({ left: cx - 40, top: cy - 40, width: 80, height: 80, fill: p.fill, stroke: p.stroke || '', strokeWidth: p.strokeWidth, originX: 'left', originY: 'top' })
           canvas.add(tri); canvas.setActiveObject(tri); canvas.renderAll()
         })
       },
@@ -819,7 +800,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
         const eW = safeWRef.current, eH = safeHRef.current
         const objW = (obj.width ?? 0) * Math.abs(obj.scaleX ?? 1)
         const objH = (obj.height ?? 0) * Math.abs(obj.scaleY ?? 1)
-        obj.set({ left: eX + (eW - objW) / 2, top: eY + (eH - objH) / 2 })
+        obj.set({ left: eX + (eW - objW) / 2, top: eY + (eH - objH) / 2, originX: 'left', originY: 'top' })
         canvas.renderAll()
         if (isImageObj(obj)) {
           onSelectionChangeRef.current?.('image', undefined, undefined, getImagePropsFromObj(obj))
@@ -884,6 +865,7 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           scaleX: obj.scaleX, scaleY: obj.scaleY,
           angle: obj.angle, opacity: obj.opacity,
           flipX: obj.flipX, flipY: obj.flipY,
+          originX: 'left', originY: 'top',
         })
         if (obj.clipPath) newImg.clipPath = obj.clipPath
         canvas.remove(obj)
