@@ -23,6 +23,8 @@ interface Item {
   id: string
   productName: string
   variantName: string | null
+  designId: string | null
+  previewUrl: string | null
   width: number
   height: number
   quantity: number
@@ -36,8 +38,21 @@ interface Order {
   paymentStatus: string
   deliveryType: string
   total: number
+  shippingPrice: number
+  stripePaymentIntentId: string | null
+  billingName: string | null
+  billingStreet: string | null
+  billingCity: string | null
+  billingZip: string | null
+  billingCountry: string | null
+  shippingName: string | null
+  shippingStreet: string | null
+  shippingCity: string | null
+  shippingZip: string | null
+  shippingCountry: string | null
   createdAt: string
   user?: { email: string; name: string | null } | null
+  shippingMethod?: { name: string } | null
   items: Item[]
 }
 
@@ -109,7 +124,7 @@ export default function AdminOrderDetailPage() {
       </div>
 
       {/* Meta row */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</p>
           <Badge label={orderStatusLabel(order.status)} statusKey={order.status} />
@@ -121,6 +136,15 @@ export default function AdminOrderDetailPage() {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Delivery</p>
           <p className="text-sm font-medium text-gray-800">{order.deliveryType}</p>
+          {order.shippingMethod && (
+            <p className="text-xs text-gray-400 mt-0.5">{order.shippingMethod.name}</p>
+          )}
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Shipping</p>
+          <p className="text-sm text-gray-700">
+            {Number(order.shippingPrice) === 0 ? 'Free' : `€${Number(order.shippingPrice).toFixed(2)}`}
+          </p>
         </div>
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Total</p>
@@ -134,10 +158,65 @@ export default function AdminOrderDetailPage() {
 
       {/* Customer */}
       {order.user && (
-        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-6">
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Customer</p>
           <p className="text-sm font-medium text-gray-900">{order.user.name ?? order.user.email}</p>
           {order.user.name && <p className="text-xs text-gray-500 mt-0.5">{order.user.email}</p>}
+        </div>
+      )}
+
+      {/* Addresses */}
+      {(order.billingName || order.shippingName) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          {order.billingName && (
+            <div className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Billing address</p>
+              <p className="text-sm text-gray-900">{order.billingName}</p>
+              {order.billingStreet && <p className="text-xs text-gray-500">{order.billingStreet}</p>}
+              {(order.billingZip || order.billingCity) && (
+                <p className="text-xs text-gray-500">
+                  {[order.billingZip, order.billingCity].filter(Boolean).join(' ')}
+                  {order.billingCountry ? `, ${order.billingCountry}` : ''}
+                </p>
+              )}
+            </div>
+          )}
+          {order.shippingName && (
+            <div className="rounded-xl border border-gray-200 bg-white px-5 py-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                {order.deliveryType === 'PICKUP' ? 'Pickup address' : 'Delivery address'}
+              </p>
+              <p className="text-sm text-gray-900">{order.shippingName}</p>
+              {order.shippingStreet && <p className="text-xs text-gray-500">{order.shippingStreet}</p>}
+              {(order.shippingZip || order.shippingCity) && (
+                <p className="text-xs text-gray-500">
+                  {[order.shippingZip, order.shippingCity].filter(Boolean).join(' ')}
+                  {order.shippingCountry ? `, ${order.shippingCountry}` : ''}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Payment */}
+      {order.stripePaymentIntentId && (
+        <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-6">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment</p>
+          <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            <div>
+              <span className="text-gray-400 text-xs">Status </span>
+              <span className="font-medium text-gray-900">{order.paymentStatus}</span>
+            </div>
+            <div>
+              <span className="text-gray-400 text-xs">Amount </span>
+              <span className="font-medium text-gray-900">€{Number(order.total).toFixed(2)}</span>
+            </div>
+            <div className="min-w-0">
+              <span className="text-gray-400 text-xs">Stripe PI </span>
+              <span className="font-mono text-xs text-gray-600 break-all">{order.stripePaymentIntentId}</span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -158,9 +237,26 @@ export default function AdminOrderDetailPage() {
                 <p className="font-semibold text-gray-900 mb-0.5">
                   {item.productName}{item.variantName ? ` — ${item.variantName}` : ''}
                 </p>
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-gray-500 mb-3">
                   {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity} &middot; €{Number(item.priceSnapshot).toFixed(2)}
                 </p>
+
+                {/* Design link */}
+                {item.designId && (
+                  <div className="mb-4 flex items-start gap-4">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Design</p>
+                      <p className="font-mono text-xs text-gray-500 mb-2">{item.designId}</p>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/api/design/${item.designId}/preview`}
+                        alt="Design preview"
+                        loading="lazy"
+                        className="max-w-[120px] rounded-lg border border-gray-200 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {previews.map((f) => (
                   <div key={f.id} className="mb-4">

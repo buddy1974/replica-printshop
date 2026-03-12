@@ -15,9 +15,10 @@ export async function GET(req: NextRequest, { params }: Params) {
       where: { id: params.id },
       include: {
         shippingMethod: true,
+        user: { select: { email: true, name: true } },
         items: {
           include: {
-            uploadFiles: true,
+            uploadFiles: { orderBy: { uploadType: 'asc' } },
             productionJob: true,
           },
         },
