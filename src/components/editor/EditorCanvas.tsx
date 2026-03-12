@@ -412,6 +412,15 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           canvas.sendObjectToBack(cutRect)
           canvas.sendObjectToBack(sheetRect)
           canvas.renderAll()
+
+          // Debug 648 — log viewport transform + full object stack after draw
+          console.log('VPT', JSON.stringify(canvas.viewportTransform))
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          console.log('CANVAS OBJECTS', canvas.getObjects().map((o: any) => ({
+            type: o.type, left: o.left, top: o.top, width: o.width, height: o.height,
+            fill: typeof o.fill === 'string' ? o.fill.slice(0, 20) : o.fill,
+            __isZone: o.__isZone,
+          })))
         }
         drawSheetOverlayRef.current = drawSheetOverlay
         drawSheetOverlay()
