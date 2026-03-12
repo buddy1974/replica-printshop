@@ -357,10 +357,23 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
           preserveObjectStacking: true,
         })
         fabricRef.current = canvas
+
+        // ── Runtime dimension probe (debug 646) ───────────────────────────────
+        console.log('CANVAS LOGICAL', canvas.getWidth(), 'x', canvas.getHeight())
+        setTimeout(() => {
+          // After Fabric wraps the canvas, read actual DOM dimensions
+          const lc = (canvas as FabricCanvas).lowerCanvasEl ?? el
+          const bcr = lc.getBoundingClientRect()
+          console.log('CANVAS ATTR', lc.width, 'x', lc.height)
+          console.log('CANVAS CSS', lc.style.width, 'x', lc.style.height)
+          console.log('CANVAS BCR', Math.round(bcr.width), 'x', Math.round(bcr.height))
+        }, 200)
+
         onReadyRef.current?.()
 
         // ── drawSheetOverlay: white sheet + cut line + safe line ──────────────
         const drawSheetOverlay = () => {
+          console.log('DRAW OVERLAY sX/sY/sW/sH', sX, sY, sW, sH, '| canvas', canvas.getWidth(), canvas.getHeight())
           canvas.getObjects()
             .filter((o: FabricObject) => o.__isZone)
             .forEach((o: FabricObject) => canvas.remove(o))
