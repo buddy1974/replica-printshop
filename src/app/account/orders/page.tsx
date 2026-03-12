@@ -5,10 +5,12 @@ import Badge from '@/components/Badge'
 import { db } from '@/lib/db'
 import { orderStatusLabel } from '@/lib/statusLabel'
 
+import { cookies } from 'next/headers'
+
 export const dynamic = 'force-dynamic'
 
-export default async function AccountOrdersPage({ searchParams }: { searchParams: { userId?: string } }) {
-  const userId = searchParams.userId
+export default async function AccountOrdersPage() {
+  const userId = cookies().get('replica_uid')?.value
   if (!userId) notFound()
 
   const orders = await db.order.findMany({
@@ -27,7 +29,7 @@ export default async function AccountOrdersPage({ searchParams }: { searchParams
           {orders.map((o) => (
             <Link
               key={o.id}
-              href={`/account/orders/${o.id}?userId=${userId}`}
+              href={`/account/orders/${o.id}`}
               className="block rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-400 transition-colors"
             >
               <div className="flex items-center justify-between gap-4">

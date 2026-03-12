@@ -1,25 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCart, addToCart } from '@/lib/cart'
 import { AppError } from '@/lib/errors'
+import { db } from '@/lib/db'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
 import { logAction, logError } from '@/lib/log'
 import { isValidId, isValidQuantity } from '@/lib/inputValidation'
 
-// Step 302 — verify cookie userId matches requested userId (if cookie is set)
-function cartAccessDenied(req: NextRequest, userId: string): boolean {
-  const cookieUserId = req.cookies.get('replica_uid')?.value
-  return !!cookieUserId && cookieUserId !== userId
-}
-
 export async function GET(req: NextRequest) {
   try {
-    const userId = req.nextUrl.searchParams.get('userId')
-    if (!userId) {
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 })
-    }
-    if (cartAccessDenied(req, userId)) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
+    const userId = req.cookies.get('replica_uid')?.value ?? null
+    if (!userId) return NextResponse.json(null)
     const cart = await getCart(userId)
     return NextResponse.json(cart)
   } catch (e) {
@@ -36,12 +26,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = body
-    console.log('CART BODY', { userId, productId, variantId, designId, quantity, width, height })
+    const { productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = body
+    console.log('CART BODY', { productId, variantId, designId, quantity, width, height })
 
-    if (!userId || typeof userId !== 'string') {
-      return NextResponse.json({ error: 'userId is required' }, { status: 400 })
-    }
     if (!isValidId(productId)) {
       return NextResponse.json({ error: 'productId is invalid' }, { status: 400 })
     }
@@ -54,14 +41,33 @@ export async function POST(req: NextRequest) {
     if (designId !== undefined && !isValidId(designId)) {
       return NextResponse.json({ error: 'designId is invalid' }, { status: 400 })
     }
-    if (cartAccessDenied(req, userId)) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+
+    // Resolve userId from cookie; auto-create a guest session if no cookie is set.
+    // Cart requires a valid User FK — guest User is created with a generated email.
+    let userId = req.cookies.get('replica_uid')?.value ?? null
+    let guestCreated = false
+    if (!userId) {
+      const guest = await db.user.create({
+        data: { email: `guest_${crypto.randomUUID()}@noemail.local` },
+      })
+      userId = guest.id
+      guestCreated = true
     }
 
     const cart = await addToCart({ userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement })
-    // Step 334
     logAction('CART_ADD', 'cart', { userId, data: { productId, variantId, quantity, width, height } })
-    return NextResponse.json(cart, { status: 201 })
+
+    const response = NextResponse.json(cart, { status: 201 })
+    if (guestCreated) {
+      // Set the cookie so all subsequent requests (cart, checkout, orders) use this session
+      response.cookies.set('replica_uid', userId, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+        httpOnly: false,   // must be readable by JS (EditorShell, etc.)
+      })
+    }
+    return response
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
     const err = e instanceof Error ? e : new Error(String(e))

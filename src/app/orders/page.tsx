@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import Badge from '@/components/Badge'
@@ -6,8 +7,8 @@ import { orderStatusLabel } from '@/lib/statusLabel'
 
 export const dynamic = 'force-dynamic'
 
-export default async function OrdersPage({ searchParams }: { searchParams: { userId?: string } }) {
-  const userId = searchParams.userId ?? null
+export default async function OrdersPage() {
+  const userId = cookies().get('replica_uid')?.value ?? null
 
   const orders = userId
     ? await db.order.findMany({
@@ -20,11 +21,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { use
     <Container>
       <h1 className="mb-6">My orders</h1>
 
-      {!userId && (
-        <p className="text-sm text-gray-500">No user session. Append <code>?userId=…</code> to the URL.</p>
-      )}
-
-      {userId && orders.length === 0 && (
+      {orders.length === 0 && (
         <p className="text-sm text-gray-500">No orders yet.</p>
       )}
 

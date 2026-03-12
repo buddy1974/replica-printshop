@@ -11,24 +11,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many requests. Try again in a minute.' }, { status: 429 })
     }
 
+    // Resolve session from cookie — no userId in body required
+    const cookieUserId = req.cookies.get('replica_uid')?.value ?? null
+
     const body = await req.json()
-    // cartUserId: identifies the cart (required). userId: stored on order (null = guest)
-    const { userId, cartUserId, deliveryType, billingAddress, shippingAddress, saveAddress } = body as {
-      userId?: string | null
-      cartUserId?: string
+    const { deliveryType, billingAddress, shippingAddress, saveAddress } = body as {
       deliveryType: DeliveryType
       billingAddress?: { name: string; street: string; city: string; zip: string; country: string }
       shippingAddress?: { name: string; street: string; city: string; zip: string; country: string }
       saveAddress?: boolean
     }
 
-    const resolvedCartUserId = cartUserId ?? userId
-    if (!resolvedCartUserId || !deliveryType) {
-      return NextResponse.json({ error: 'cartUserId (or userId) and deliveryType are required' }, { status: 400 })
+    if (!cookieUserId || !deliveryType) {
+      return NextResponse.json({ error: 'No active session or missing deliveryType' }, { status: 400 })
     }
 
-    const order = await createOrderFromCart(resolvedCartUserId, deliveryType, {
-      orderUserId: userId ?? null,
+    const order = await createOrderFromCart(cookieUserId, deliveryType, {
+      orderUserId: cookieUserId,
       billingAddress,
       shippingAddress,
       saveAddress,

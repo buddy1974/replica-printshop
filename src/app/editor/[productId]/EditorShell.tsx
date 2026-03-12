@@ -558,7 +558,7 @@ function handleSelectionChange(
                 {cartStatus === 'added' && (
                   <p className="text-xs text-green-600">
                     Saved.{' '}
-                    <a href={`/cart?userId=${encodeURIComponent(userId)}`} className="underline">
+                    <a href="/cart" className="underline">
                       View cart
                     </a>
                   </p>

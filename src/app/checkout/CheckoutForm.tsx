@@ -2,11 +2,6 @@
 
 import { useState } from 'react'
 
-interface CheckoutFormProps {
-  userId: string
-  cartUserId: string
-}
-
 type DeliveryType = 'STANDARD' | 'EXPRESS' | 'PICKUP'
 
 const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] = [
@@ -15,7 +10,7 @@ const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] =
   { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store' },
 ]
 
-export default function CheckoutForm({ userId, cartUserId }: CheckoutFormProps) {
+export default function CheckoutForm() {
   const [delivery, setDelivery] = useState<DeliveryType>('STANDARD')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,11 +19,11 @@ export default function CheckoutForm({ userId, cartUserId }: CheckoutFormProps) 
     setLoading(true)
     setError(null)
     try {
-      // Create order from cart
+      // Create order from cart — userId resolved server-side from cookie
       const orderRes = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, cartUserId, deliveryType: delivery }),
+        body: JSON.stringify({ deliveryType: delivery }),
       })
       if (!orderRes.ok) {
         const body = await orderRes.json().catch(() => ({}))

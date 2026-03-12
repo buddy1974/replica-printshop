@@ -1,17 +1,12 @@
-// Step 357 — Cart page with design preview thumbnails
-
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-interface CartPageProps {
-  searchParams: { userId?: string }
-}
-
-export default async function CartPage({ searchParams }: CartPageProps) {
-  const userId = searchParams.userId ?? null
+export default async function CartPage() {
+  const userId = cookies().get('replica_uid')?.value ?? null
 
   const cart = userId
     ? await db.cart.findUnique({
@@ -38,13 +33,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
     <Container>
       <h1 className="mb-6">Your Cart</h1>
 
-      {!userId && (
-        <p className="text-sm text-gray-500">
-          No user session. Append <code>?userId=…</code> to the URL.
-        </p>
-      )}
-
-      {userId && items.length === 0 && (
+      {items.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 gap-5 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-200">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
@@ -196,7 +185,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
             </div>
             <div className="mt-5 flex flex-col gap-2">
               <Link
-                href={`/checkout?userId=${userId}`}
+                href="/checkout"
                 className="btn-primary justify-center"
               >
                 Proceed to checkout →

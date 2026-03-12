@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Container from '@/components/Container'
@@ -6,12 +7,8 @@ import CheckoutForm from './CheckoutForm'
 
 export const dynamic = 'force-dynamic'
 
-interface CheckoutPageProps {
-  searchParams: { userId?: string }
-}
-
-export default async function CheckoutPage({ searchParams }: CheckoutPageProps) {
-  const userId = searchParams.userId ?? null
+export default async function CheckoutPage() {
+  const userId = cookies().get('replica_uid')?.value ?? null
   if (!userId) redirect('/cart')
 
   const cart = await db.cart.findUnique({
@@ -38,7 +35,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
       {/* Breadcrumb + title */}
       <div className="mb-6">
         <p className="text-xs text-gray-400 mb-1">
-          <Link href={`/cart?userId=${userId}`} className="hover:text-gray-700 transition-colors">
+          <Link href="/cart" className="hover:text-gray-700 transition-colors">
             Cart
           </Link>
           {' → '}
@@ -97,7 +94,7 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
             </div>
           </div>
 
-          <CheckoutForm userId={userId} cartUserId={userId} />
+          <CheckoutForm />
         </div>
 
       </div>

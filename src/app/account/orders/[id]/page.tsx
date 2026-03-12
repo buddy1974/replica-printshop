@@ -39,12 +39,11 @@ function AddressBlock({ label, address }: {
 
 export default async function AccountOrderDetailPage({
   params,
-  searchParams,
 }: {
   params: { id: string }
-  searchParams: { userId?: string }
 }) {
-  const userId = searchParams.userId
+  const { cookies } = await import('next/headers')
+  const userId = cookies().get('replica_uid')?.value
   if (!userId) notFound()
 
   const order = await db.order.findUnique({
@@ -196,7 +195,7 @@ export default async function AccountOrderDetailPage({
         <ReorderButton orderId={order.id} items={reorderItems} userId={userId} />
       </div>
 
-      <Link href={`/account/orders?userId=${userId}`} className="text-sm text-gray-500 hover:text-gray-900">
+      <Link href="/account/orders" className="text-sm text-gray-500 hover:text-gray-900">
         ← Back to my orders
       </Link>
     </Container>
