@@ -340,10 +340,18 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
       const canvasW = sW + 2 * sX
       const canvasH = sH + 2 * sY
 
+      // Debug: verify geometry before canvas boot
+      console.log('CUT', sX, sY, sW, sH)
+      console.log('SAFE', sX + sp, sY + sp, sW - 2 * sp, sH - 2 * sp)
+
       import('fabric').then((fab) => {
         const canvas = new fab.Canvas(el, {
           width: canvasW,
           height: canvasH,
+          // Disable retina scaling: Fabric v7 default (true) halves CSS canvas dimensions
+          // (cssW = logicalW / DPR) which breaks ruler alignment and object placement.
+          // With false, CSS px = logical px = canvas coords — 1:1 everywhere.
+          enableRetinaScaling: false,
           backgroundColor: '#c8c8c8',   // gray = bleed area
           preserveObjectStacking: true,
         })
