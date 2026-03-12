@@ -4,11 +4,9 @@
 
 import { useRef } from 'react'
 import type { ImageProps } from './EditorCanvas'
-import type { PlacementZone } from '@/lib/placementZones'
 
 interface Props {
   imageProps: ImageProps
-  activeZone: PlacementZone | null
   onChange: (props: Partial<ImageProps>) => void
   onCrop: () => void
   onFitToZone: () => void
@@ -26,7 +24,7 @@ const btnNormal =
 const btnActive =
   'w-full px-2 py-1.5 rounded-lg border border-indigo-500 bg-indigo-50 text-xs text-indigo-700 font-medium text-left transition-colors'
 
-export default function ImageToolPanel({ imageProps, activeZone, onChange, onCrop, onFitToZone, onCenter, onReset, onReplace }: Props) {
+export default function ImageToolPanel({ imageProps, onChange, onCrop, onFitToZone, onCenter, onReset, onReplace }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -149,19 +147,15 @@ export default function ImageToolPanel({ imageProps, activeZone, onChange, onCro
           {imageProps.cropActive ? 'Remove crop' : 'Crop to zone'}
         </button>
 
-        {/* Step 397 — Fit to zone */}
-        {activeZone && (
-          <button type="button" onClick={onFitToZone} className={btnNormal}>
-            Fit to zone
-          </button>
-        )}
+        {/* Step 397 — Fit to design area */}
+        <button type="button" onClick={onFitToZone} className={btnNormal}>
+          Fit to design area
+        </button>
 
-        {/* Step 398 — Center */}
-        {activeZone && (
-          <button type="button" onClick={onCenter} className={btnNormal}>
-            Center in zone
-          </button>
-        )}
+        {/* Step 398 — Center in design area */}
+        <button type="button" onClick={onCenter} className={btnNormal}>
+          Center in design area
+        </button>
 
         {/* Step 399 — Reset */}
         <button type="button" onClick={onReset} className={btnNormal}>

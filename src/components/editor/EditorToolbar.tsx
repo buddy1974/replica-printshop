@@ -16,12 +16,10 @@ import {
   Undo2,
   Redo2,
 } from 'lucide-react'
-import type { PlacementZone } from '@/lib/placementZones'
 import type { EditorCanvasHandle } from './EditorCanvas'
 
 interface Props {
   canvasRef: React.RefObject<EditorCanvasHandle | null>
-  activeZone: PlacementZone | null
 }
 
 const row = 'flex gap-1'
@@ -31,7 +29,7 @@ const normal = `${btn} border-gray-200 bg-white text-gray-700 hover:border-indig
 const danger = `${btn} border-gray-200 bg-white text-gray-700 hover:border-red-400 hover:text-red-600`
 const muted = `${btn} border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed`
 
-export default function EditorToolbar({ canvasRef, activeZone }: Props) {
+export default function EditorToolbar({ canvasRef }: Props) {
   return (
     <div className="space-y-1">
       <div className={row}>
@@ -45,10 +43,9 @@ export default function EditorToolbar({ canvasRef, activeZone }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => activeZone && canvasRef.current?.fitSelected(activeZone)}
-          disabled={!activeZone}
-          className={`${normal} disabled:opacity-40`}
-          title="Fit to zone"
+          onClick={() => canvasRef.current?.fitSelected()}
+          className={normal}
+          title="Fit to design area"
         >
           <Maximize2 size={12} /><span className="truncate">Fit</span>
         </button>

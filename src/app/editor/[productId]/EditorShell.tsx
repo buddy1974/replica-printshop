@@ -24,7 +24,6 @@ import ImageToolPanel from '@/components/editor/ImageToolPanel'
 import LayersPanel from '@/components/editor/LayersPanel'
 import LogoLibraryPanel from '@/components/editor/LogoLibraryPanel'
 import TemplateLibraryPanel from '@/components/editor/TemplateLibraryPanel'
-import type { PlacementZone } from '@/lib/placementZones'
 
 interface Product {
   id: string
@@ -53,37 +52,12 @@ type RightTab = 'text' | 'image' | 'shape' | 'layers'
 
 const RIGHT_TABS: RightTab[] = ['text', 'image', 'shape', 'layers']
 
-/**
- * Build the design zone from real print geometry.
- * Zone = area inside bleed + safe margin, expressed as fractions of canvas.
- */
-function buildDesignZone(
-  widthCm: number, heightCm: number, bleedMm: number, safeMm: number,
-): PlacementZone {
-  const x = (bleedMm + safeMm) / (widthCm * 10)
-  const y = (bleedMm + safeMm) / (heightCm * 10)
-  return {
-    id: 'design',
-    label: `${widthCm} × ${heightCm} cm`,
-    x, y,
-    w: 1 - x * 2,
-    h: 1 - y * 2,
-  }
-}
-
 export default function EditorShell({ product, initialWidth, initialHeight }: Props) {
   const canvasRef = useRef<EditorCanvasHandle | null>(null)
 
   // Resolve final print dimensions: URL params take priority over config defaults
   const widthCm = initialWidth ?? product.config?.printAreaWidthCm ?? null
   const heightCm = initialHeight ?? product.config?.printAreaHeightCm ?? null
-
-  const [activeZone] = useState<PlacementZone>(() => buildDesignZone(
-    widthCm ?? 100,
-    heightCm ?? 100,
-    product.config?.bleedMm ?? 10,
-    product.config?.safeMm ?? 10,
-  ))
 
   // Selection state
   const [selectedType, setSelectedType] = useState<SelectionType>(null)
@@ -167,7 +141,6 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
 
   async function handleImageReady(url: string) {
     await canvasRef.current?.addImage(url)
-    canvasRef.current?.fitSelected(activeZone)
   }
 
 function handleSelectionChange(
@@ -400,7 +373,6 @@ function handleSelectionChange(
             <EditorCanvas
               ref={canvasRef}
               mockupUrl={product.imageUrl}
-              zone={activeZone}
               printWidthCm={widthCm ?? 100}
               printHeightCm={heightCm ?? 100}
               bleedMm={product.config?.bleedMm ?? 10}
@@ -444,7 +416,7 @@ function handleSelectionChange(
 
               {/* Toolbar icon strip */}
               <div className="px-3 py-2.5 border-b border-gray-100 shrink-0">
-                <EditorToolbar canvasRef={canvasRef} activeZone={activeZone} />
+                <EditorToolbar canvasRef={canvasRef} />
               </div>
 
               {/* Canvas background picker */}
@@ -491,10 +463,9 @@ function handleSelectionChange(
                 {activeTab === 'image' && (
                   <ImageToolPanel
                     imageProps={imageProps}
-                    activeZone={activeZone}
                     onChange={handleImageChange}
                     onCrop={() => canvasRef.current?.cropSelected()}
-                    onFitToZone={() => activeZone && canvasRef.current?.fitSelected(activeZone)}
+                    onFitToZone={() => canvasRef.current?.fitSelected()}
                     onCenter={() => canvasRef.current?.centerInZone()}
                     onReset={() => {
                       canvasRef.current?.resetImage()
