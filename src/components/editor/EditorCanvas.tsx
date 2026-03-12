@@ -1,6 +1,7 @@
 'use client'
 
-// Steps 345, 361, 367, 368, 371–410, 641 — Fabric.js canvas + text + shapes + image tools + layers + group
+// Steps 345, 361, 367, 368, 371–410, 641, 645 — Fabric.js canvas + text + shapes + image tools + layers + group
+console.log('EDITOR CANVAS VERSION 999 — enableRetinaScaling:false')
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 
