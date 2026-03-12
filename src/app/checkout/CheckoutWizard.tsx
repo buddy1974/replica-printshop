@@ -586,7 +586,7 @@ function PaymentForm({
         const data = await res.json()
         if (res.ok && data.orderId) {
           sessionStorage.removeItem('checkout_wizard')
-          window.location.href = `/orders/${data.orderId}`
+          window.location.href = `/order-success?order=${data.orderId}`
           return
         }
         setPayError(data.error ?? 'Order could not be created')

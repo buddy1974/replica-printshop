@@ -49,7 +49,7 @@ export default function CheckoutProcessingPage() {
       .then(d => {
         if (d.orderId) {
           sessionStorage.removeItem('checkout_wizard')
-          router.replace(`/orders/${d.orderId}`)
+          router.replace(`/order-success?order=${d.orderId}`)
         } else {
           setMessage(d.error ?? 'Order could not be completed. Please contact support.')
         }

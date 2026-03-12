@@ -63,6 +63,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Idempotency: return existing order if this PI was already confirmed
+    const existingOrder = await db.order.findFirst({
+      where: { stripePaymentIntentId: paymentIntentId },
+      select: { id: true },
+    })
+    if (existingOrder) {
+      return NextResponse.json({ orderId: existingOrder.id })
+    }
+
     // Map wizard address format to GuestAddress
     const billingAddress = {
       name: `${billing.firstName} ${billing.lastName}`.trim(),
@@ -89,10 +98,14 @@ export async function POST(req: NextRequest) {
       shippingAddress,
     })
 
-    // Mark order as paid (payment already confirmed by Stripe)
+    // Mark order as paid and store PI ID for idempotency
     await db.order.update({
       where: { id: order.id },
-      data: { paymentStatus: 'PAID', status: 'CONFIRMED' },
+      data: {
+        paymentStatus: 'PAID',
+        status: 'CONFIRMED',
+        stripePaymentIntentId: paymentIntentId,
+      },
     })
 
     // Email notifications
