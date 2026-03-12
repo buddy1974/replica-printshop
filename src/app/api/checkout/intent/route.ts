@@ -45,10 +45,9 @@ export async function POST(req: NextRequest) {
     const intent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'eur',
-      automatic_payment_methods: {
-        enabled: true,
-        allow_redirects: 'never',
-      },
+      // Explicit allowlist: card covers Apple Pay + Google Pay (wallet buttons)
+      // Klarna, Bancontact, EPS, iDEAL, giropay etc. are excluded
+      payment_method_types: ['card'],
       metadata: { userId },
     })
 
