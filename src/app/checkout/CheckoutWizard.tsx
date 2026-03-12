@@ -1,6 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+
+const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -432,15 +437,166 @@ function PaymentStep({
   subtotal,
   deliveryType,
   deliveryPrice,
+  billing,
+  deliveryAddr,
+  sameAsBilling,
   onBack,
 }: {
   itemCount: number
   subtotal: number
   deliveryType: DeliveryType
   deliveryPrice: number
+  billing: BillingAddress
+  deliveryAddr: DeliveryAddress
+  sameAsBilling: boolean
   onBack: () => void
 }) {
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [serverTotal, setServerTotal] = useState<number | null>(null)
+  const [intentError, setIntentError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    setIntentError(null)
+    fetch('/api/checkout/intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deliveryType }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (d.clientSecret) {
+          setClientSecret(d.clientSecret)
+          setServerTotal(d.total ?? null)
+        } else {
+          setIntentError(d.error ?? 'Could not initialize payment')
+        }
+      })
+      .catch(() => setIntentError('Could not connect to payment service'))
+      .finally(() => setLoading(false))
+  }, [deliveryType])
+
+  if (loading) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-center min-h-[220px]">
+        <div className="flex flex-col items-center gap-2 text-gray-400">
+          <div className="animate-spin w-6 h-6 border-2 border-gray-200 border-t-red-600 rounded-full" />
+          <p className="text-sm">Setting up payment…</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (intentError || !clientSecret || !stripePromise) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {intentError ?? 'Payment is not available. Please contact support.'}
+        </p>
+        <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
+          ← Back to delivery
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <Elements
+      stripe={stripePromise}
+      options={{
+        clientSecret,
+        appearance: { theme: 'stripe', variables: { colorPrimary: '#dc2626' } },
+      }}
+    >
+      <PaymentForm
+        itemCount={itemCount}
+        subtotal={subtotal}
+        deliveryType={deliveryType}
+        deliveryPrice={deliveryPrice}
+        serverTotal={serverTotal}
+        billing={billing}
+        deliveryAddr={deliveryAddr}
+        sameAsBilling={sameAsBilling}
+        onBack={onBack}
+      />
+    </Elements>
+  )
+}
+
+function PaymentForm({
+  itemCount,
+  subtotal,
+  deliveryType,
+  serverTotal,
+  billing,
+  deliveryAddr,
+  sameAsBilling,
+  onBack,
+}: {
+  itemCount: number
+  subtotal: number
+  deliveryType: DeliveryType
+  deliveryPrice: number
+  serverTotal: number | null
+  billing: BillingAddress
+  deliveryAddr: DeliveryAddress
+  sameAsBilling: boolean
+  onBack: () => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
+  const displayTotal = serverTotal ?? subtotal
   const deliveryOption = DELIVERY_OPTIONS.find(o => o.value === deliveryType) ?? DELIVERY_OPTIONS[0]
+
+  const handlePay = async () => {
+    if (!stripe || !elements) return
+    setPaying(true)
+    setPayError(null)
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout/processing`,
+      },
+      redirect: 'if_required',
+    })
+
+    if (error) {
+      setPayError(error.message ?? 'Payment failed')
+      setPaying(false)
+      return
+    }
+
+    if (paymentIntent?.status === 'succeeded') {
+      try {
+        const res = await fetch('/api/checkout/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentIntentId: paymentIntent.id,
+            deliveryType,
+            billing,
+            deliveryAddr: sameAsBilling ? null : deliveryAddr,
+            sameAsBilling,
+          }),
+        })
+        const data = await res.json()
+        if (res.ok && data.orderId) {
+          sessionStorage.removeItem('checkout_wizard')
+          window.location.href = `/orders/${data.orderId}`
+          return
+        }
+        setPayError(data.error ?? 'Order could not be created')
+      } catch {
+        setPayError('Connection error. Please contact support.')
+      }
+    }
+
+    setPaying(false)
+  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
@@ -451,36 +607,38 @@ function PaymentStep({
         <h2 className="text-base font-semibold text-gray-900">Secure payment</h2>
       </div>
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-4 text-sm text-gray-500 text-center">
-        Payment integration coming in Phase 3
-      </div>
+      <PaymentElement options={{ layout: 'tabs' }} />
 
-      <div className="bg-gray-50 rounded-lg px-4 py-4 space-y-2 text-sm text-gray-700">
-        <div className="flex justify-between">
-          <span>{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
-          <span>€{subtotal.toFixed(2)}</span>
+      <div className="bg-gray-50 rounded-lg px-4 py-3 text-sm border border-gray-100">
+        <div className="flex justify-between text-gray-600 mb-1">
+          <span>{itemCount} item{itemCount !== 1 ? 's' : ''} · {deliveryOption.label}</span>
         </div>
-        <div className="flex justify-between text-gray-500">
-          <span>{deliveryOption.label}</span>
-          <span>{deliveryPrice === 0 ? 'Free' : `€${deliveryPrice.toFixed(2)}`}</span>
-        </div>
-        <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-200">
+        <div className="flex justify-between font-semibold text-gray-900 text-base">
           <span>Total</span>
-          <span>€{(subtotal + deliveryPrice).toFixed(2)}</span>
+          <span>€{displayTotal.toFixed(2)}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-1">
-        <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
+      {payError && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{payError}</p>
+      )}
+
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={paying}
+          className="text-sm text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
+        >
           ← Back to delivery
         </button>
         <button
           type="button"
-          disabled
-          title="Coming soon"
-          className="bg-gray-300 text-gray-500 px-5 py-2.5 rounded-lg font-medium cursor-not-allowed text-sm"
+          onClick={handlePay}
+          disabled={!stripe || !elements || paying}
+          className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Place Order
+          {paying ? 'Processing…' : `Pay €${displayTotal.toFixed(2)}`}
         </button>
       </div>
     </div>
@@ -693,6 +851,9 @@ export default function CheckoutWizard(props: Props) {
                 subtotal={subtotal}
                 deliveryType={deliveryType}
                 deliveryPrice={deliveryPrice}
+                billing={billing}
+                deliveryAddr={deliveryAddr}
+                sameAsBilling={sameAsBilling}
                 onBack={() => setStep('delivery')}
               />
             )}
