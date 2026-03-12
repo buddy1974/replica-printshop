@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface CartItem {
   id: string
   name: string
@@ -23,6 +25,29 @@ interface Props {
 type Step = 'account' | 'address' | 'delivery' | 'payment'
 type DeliveryType = 'STANDARD' | 'EXPRESS' | 'PICKUP'
 
+interface BillingAddress {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  country: string
+  street: string
+  city: string
+  postalCode: string
+}
+
+interface DeliveryAddress {
+  firstName: string
+  lastName: string
+  phone: string
+  country: string
+  street: string
+  city: string
+  postalCode: string
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
 const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] = [
   { value: 'STANDARD', label: 'Standard', desc: '3–5 business days' },
   { value: 'EXPRESS', label: 'Express', desc: '1–2 business days' },
@@ -38,58 +63,37 @@ const STEPS: { key: Step; label: string }[] = [
 
 const STEP_ORDER: Step[] = ['account', 'address', 'delivery', 'payment']
 
-function stepIndex(s: Step) {
-  return STEP_ORDER.indexOf(s)
-}
+const IC = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400'
 
-// ── StepIndicator ────────────────────────────────────────────────────────────
+function stepIndex(s: Step) { return STEP_ORDER.indexOf(s) }
+
+// ── StepIndicator ─────────────────────────────────────────────────────────────
 
 function StepIndicator({ currentStep, isGuest }: { currentStep: Step; isGuest: boolean }) {
   const current = stepIndex(currentStep)
-
   return (
     <div className="flex items-start justify-between mb-2">
       {STEPS.map(({ key, label }, idx) => {
         const isSkipped = key === 'account' && !isGuest
         const isDone = isSkipped || idx < current
         const isActive = idx === current && !isSkipped
-
         return (
           <div key={key} className="flex flex-col items-center flex-1">
             <div className="flex items-center w-full">
-              {/* Left connector */}
               <div className={`flex-1 h-px ${idx === 0 ? 'opacity-0' : isDone || isActive ? 'bg-red-600' : 'bg-gray-200'}`} />
-
-              {/* Circle */}
-              <div
-                className={[
-                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0',
-                  isDone
-                    ? 'bg-red-600 text-white'
-                    : isActive
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-200 text-gray-500',
-                ].join(' ')}
-              >
+              <div className={[
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0',
+                isDone || isActive ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-500',
+              ].join(' ')}>
                 {isDone ? (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                ) : (
-                  idx + 1
-                )}
+                ) : idx + 1}
               </div>
-
-              {/* Right connector */}
               <div className={`flex-1 h-px ${idx === STEPS.length - 1 ? 'opacity-0' : isDone ? 'bg-red-600' : 'bg-gray-200'}`} />
             </div>
-
-            <span
-              className={[
-                'text-xs mt-1.5',
-                isActive ? 'text-red-600 font-semibold' : isDone ? 'text-red-500' : 'text-gray-400',
-              ].join(' ')}
-            >
+            <span className={['text-xs mt-1.5', isActive ? 'text-red-600 font-semibold' : isDone ? 'text-red-500' : 'text-gray-400'].join(' ')}>
               {label}
             </span>
           </div>
@@ -99,7 +103,7 @@ function StepIndicator({ currentStep, isGuest }: { currentStep: Step; isGuest: b
   )
 }
 
-// ── AccountStep ──────────────────────────────────────────────────────────────
+// ── AccountStep ───────────────────────────────────────────────────────────────
 
 function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegisterDone: () => void }) {
   const [mode, setMode] = useState<'choose' | 'register'>('choose')
@@ -132,35 +136,19 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
   if (mode === 'register') {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">Create account</h2>
-
-        <div className="space-y-3">
-          <input
-            type="text"
-            placeholder="Full name"
-            value={regName}
-            onChange={e => setRegName(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-          />
-          <input
-            type="email"
-            placeholder="Email address"
-            value={regEmail}
-            onChange={e => setRegEmail(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-          />
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Create account</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Create account for faster future orders</p>
         </div>
-
+        <div className="space-y-3">
+          <input type="text" placeholder="Full name" value={regName} onChange={e => setRegName(e.target.value)} className={IC} />
+          <input type="email" placeholder="Email address" value={regEmail} onChange={e => setRegEmail(e.target.value)} className={IC} />
+        </div>
         {regError && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{regError}</p>
         )}
-
         <div className="flex items-center gap-4 pt-1">
-          <button
-            type="button"
-            onClick={() => setMode('choose')}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
+          <button type="button" onClick={() => setMode('choose')} className="text-sm text-gray-500 hover:text-gray-700 underline">
             ← Back
           </button>
           <button
@@ -180,20 +168,18 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-3">
       <h2 className="text-base font-semibold text-gray-900 mb-1">How do you want to continue?</h2>
 
-      {/* Continue as guest */}
       <button
         type="button"
         onClick={onGuest}
-        className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors cursor-pointer"
+        className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors"
       >
         <span className="text-lg">🛍️</span>
         <div>
           <p className="text-sm font-medium text-gray-900">Continue as guest</p>
-          <p className="text-xs text-gray-500">No account needed</p>
+          <p className="text-xs text-gray-500">Guest checkout — your data will not be saved</p>
         </div>
       </button>
 
-      {/* Sign in with Google */}
       <a
         href="/login"
         className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors"
@@ -201,98 +187,143 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
         <span className="text-lg">🔑</span>
         <div>
           <p className="text-sm font-medium text-gray-900">Sign in with Google</p>
-          <p className="text-xs text-gray-500">Use your existing account</p>
+          <p className="text-xs text-gray-500">Sign in with Google for quick checkout</p>
         </div>
       </a>
 
-      {/* Create account */}
       <button
         type="button"
         onClick={() => setMode('register')}
-        className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors cursor-pointer"
+        className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors"
       >
         <span className="text-lg">✉️</span>
         <div>
           <p className="text-sm font-medium text-gray-900">Create account</p>
-          <p className="text-xs text-gray-500">Register with email</p>
+          <p className="text-xs text-gray-500">Create account for faster future orders</p>
         </div>
       </button>
     </div>
   )
 }
 
-// ── AddressStep ──────────────────────────────────────────────────────────────
-
-interface Address {
-  fullName: string
-  email: string
-  phone: string
-  country: string
-  street1: string
-  street2: string
-  city: string
-  postalCode: string
-}
+// ── AddressStep ───────────────────────────────────────────────────────────────
 
 function AddressStep({
   isGuest,
-  address,
-  onChange,
+  billing,
+  onBilling,
+  deliveryAddr,
+  onDeliveryAddr,
+  sameAsBilling,
+  onSameAsBilling,
   onBack,
   onNext,
 }: {
   isGuest: boolean
-  address: Address
-  onChange: (a: Address) => void
+  billing: BillingAddress
+  onBilling: (a: BillingAddress) => void
+  deliveryAddr: DeliveryAddress
+  onDeliveryAddr: (a: DeliveryAddress) => void
+  sameAsBilling: boolean
+  onSameAsBilling: (v: boolean) => void
   onBack: () => void
   onNext: () => void
 }) {
   const [error, setError] = useState<string | null>(null)
 
-  const set = (field: keyof Address) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    onChange({ ...address, [field]: e.target.value })
+  const setB = (field: keyof BillingAddress) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      onBilling({ ...billing, [field]: e.target.value })
+
+  const setD = (field: keyof DeliveryAddress) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      onDeliveryAddr({ ...deliveryAddr, [field]: e.target.value })
 
   const handleNext = () => {
-    const required: (keyof Address)[] = ['fullName', 'email', 'country', 'street1', 'city', 'postalCode']
-    for (const f of required) {
-      if (!address[f].trim()) {
-        setError('Please fill in all required fields.')
+    const billingReq: (keyof BillingAddress)[] = ['firstName', 'lastName', 'email', 'country', 'street', 'city', 'postalCode']
+    for (const f of billingReq) {
+      if (!billing[f].trim()) {
+        setError('Please fill in all required billing fields.')
         return
+      }
+    }
+    if (!sameAsBilling) {
+      const deliveryReq: (keyof DeliveryAddress)[] = ['firstName', 'lastName', 'country', 'street', 'city', 'postalCode']
+      for (const f of deliveryReq) {
+        if (!deliveryAddr[f].trim()) {
+          setError('Please fill in all required delivery fields.')
+          return
+        }
       }
     }
     setError(null)
     onNext()
   }
 
-  const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400'
-
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-      <h2 className="text-base font-semibold text-gray-900">Delivery address</h2>
+    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="sm:col-span-2">
-          <input type="text" placeholder="Full name *" value={address.fullName} onChange={set('fullName')} className={inputClass} />
+      {/* Billing address */}
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">Billing address</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input type="text" placeholder="First name *" value={billing.firstName} onChange={setB('firstName')} className={IC} />
+          <input type="text" placeholder="Last name *" value={billing.lastName} onChange={setB('lastName')} className={IC} />
+          <input type="email" placeholder="Email address *" value={billing.email} onChange={setB('email')} className={IC} />
+          <input type="tel" placeholder="Phone (optional)" value={billing.phone} onChange={setB('phone')} className={IC} />
+          <div className="sm:col-span-2">
+            <select value={billing.country} onChange={setB('country')} className={IC}>
+              <option value="AT">Austria</option>
+              <option value="DE">Germany</option>
+              <option value="CH">Switzerland</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <input type="text" placeholder="Street address *" value={billing.street} onChange={setB('street')} className={IC} />
+          </div>
+          <input type="text" placeholder="City *" value={billing.city} onChange={setB('city')} className={IC} />
+          <input type="text" placeholder="Postal code *" value={billing.postalCode} onChange={setB('postalCode')} className={IC} />
         </div>
-        <input type="email" placeholder="Email address *" value={address.email} onChange={set('email')} className={inputClass} />
-        <input type="tel" placeholder="Phone (optional)" value={address.phone} onChange={set('phone')} className={inputClass} />
-        <div className="sm:col-span-2">
-          <select value={address.country} onChange={set('country')} className={inputClass}>
-            <option value="AT">Austria</option>
-            <option value="DE">Germany</option>
-            <option value="CH">Switzerland</option>
-            <option value="OTHER">Other</option>
-          </select>
-        </div>
-        <div className="sm:col-span-2">
-          <input type="text" placeholder="Address line 1 *" value={address.street1} onChange={set('street1')} className={inputClass} />
-        </div>
-        <div className="sm:col-span-2">
-          <input type="text" placeholder="Apartment, suite… (optional)" value={address.street2} onChange={set('street2')} className={inputClass} />
-        </div>
-        <input type="text" placeholder="City *" value={address.city} onChange={set('city')} className={inputClass} />
-        <input type="text" placeholder="Postal code *" value={address.postalCode} onChange={set('postalCode')} className={inputClass} />
       </div>
+
+      {/* Same as billing checkbox */}
+      <label className="flex items-center gap-2.5 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={sameAsBilling}
+          onChange={e => onSameAsBilling(e.target.checked)}
+          className="w-4 h-4 accent-red-600"
+        />
+        <span className="text-sm text-gray-700">Delivery address same as billing</span>
+      </label>
+
+      {/* Delivery address — shown when different */}
+      {!sameAsBilling && (
+        <div className="space-y-3 pt-1">
+          <h3 className="text-sm font-semibold text-gray-900">Delivery address</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input type="text" placeholder="First name *" value={deliveryAddr.firstName} onChange={setD('firstName')} className={IC} />
+            <input type="text" placeholder="Last name *" value={deliveryAddr.lastName} onChange={setD('lastName')} className={IC} />
+            <div className="sm:col-span-2">
+              <input type="tel" placeholder="Phone (optional)" value={deliveryAddr.phone} onChange={setD('phone')} className={IC} />
+            </div>
+            <div className="sm:col-span-2">
+              <select value={deliveryAddr.country} onChange={setD('country')} className={IC}>
+                <option value="AT">Austria</option>
+                <option value="DE">Germany</option>
+                <option value="CH">Switzerland</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <input type="text" placeholder="Street address *" value={deliveryAddr.street} onChange={setD('street')} className={IC} />
+            </div>
+            <input type="text" placeholder="City *" value={deliveryAddr.city} onChange={setD('city')} className={IC} />
+            <input type="text" placeholder="Postal code *" value={deliveryAddr.postalCode} onChange={setD('postalCode')} className={IC} />
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
@@ -300,9 +331,7 @@ function AddressStep({
 
       <div className="flex items-center justify-between pt-1">
         {isGuest ? (
-          <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
-            ← Back
-          </button>
+          <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← Back</button>
         ) : (
           <span />
         )}
@@ -318,16 +347,16 @@ function AddressStep({
   )
 }
 
-// ── DeliveryStep ─────────────────────────────────────────────────────────────
+// ── DeliveryStep ──────────────────────────────────────────────────────────────
 
 function DeliveryStep({
-  delivery,
-  setDelivery,
+  deliveryType,
+  setDeliveryType,
   onBack,
   onNext,
 }: {
-  delivery: DeliveryType
-  setDelivery: (d: DeliveryType) => void
+  deliveryType: DeliveryType
+  setDeliveryType: (d: DeliveryType) => void
   onBack: () => void
   onNext: () => void
 }) {
@@ -340,24 +369,22 @@ function DeliveryStep({
           <button
             key={value}
             type="button"
-            onClick={() => setDelivery(value)}
+            onClick={() => setDeliveryType(value)}
             className={[
               'flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors',
-              delivery === value
+              deliveryType === value
                 ? 'border-red-600 bg-red-50 text-gray-900'
                 : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300',
             ].join(' ')}
           >
             <span className="font-medium">{label}</span>
-            <span className={delivery === value ? 'text-red-600 text-xs' : 'text-gray-400 text-xs'}>{desc}</span>
+            <span className={deliveryType === value ? 'text-red-600 text-xs' : 'text-gray-400 text-xs'}>{desc}</span>
           </button>
         ))}
       </div>
 
       <div className="flex items-center justify-between pt-1">
-        <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
-          ← Back
-        </button>
+        <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← Back</button>
         <button
           type="button"
           onClick={onNext}
@@ -370,20 +397,20 @@ function DeliveryStep({
   )
 }
 
-// ── PaymentStep ──────────────────────────────────────────────────────────────
+// ── PaymentStep ───────────────────────────────────────────────────────────────
 
 function PaymentStep({
-  cartItems,
+  itemCount,
   subtotal,
-  delivery,
+  deliveryType,
   onBack,
 }: {
-  cartItems: CartItem[]
+  itemCount: number
   subtotal: number
-  delivery: DeliveryType
+  deliveryType: DeliveryType
   onBack: () => void
 }) {
-  const deliveryLabel = DELIVERY_OPTIONS.find(o => o.value === delivery)?.label ?? delivery
+  const deliveryLabel = DELIVERY_OPTIONS.find(o => o.value === deliveryType)?.label ?? deliveryType
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
@@ -400,7 +427,7 @@ function PaymentStep({
 
       <div className="bg-gray-50 rounded-lg px-4 py-4 space-y-2 text-sm text-gray-700">
         <div className="flex justify-between">
-          <span>{cartItems.length} item{cartItems.length !== 1 ? 's' : ''}</span>
+          <span>{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
           <span>€{subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-gray-500">
@@ -426,24 +453,63 @@ function PaymentStep({
   )
 }
 
-// ── CartSummary ──────────────────────────────────────────────────────────────
+// ── CartSummary ───────────────────────────────────────────────────────────────
 
-function CartSummary({ cartItems, subtotal }: { cartItems: CartItem[]; subtotal: number }) {
+function CartSummary({
+  items,
+  subtotal,
+  onDeleted,
+}: {
+  items: CartItem[]
+  subtotal: number
+  onDeleted: (id: string) => void
+}) {
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  const handleDelete = async (id: string) => {
+    setDeleting(id)
+    try {
+      const res = await fetch(`/api/cart/item/${id}`, { method: 'DELETE' })
+      if (res.ok) onDeleted(id)
+    } finally {
+      setDeleting(null)
+    }
+  }
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-4">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Order summary</p>
-      <div className="space-y-2 mb-4">
-        {cartItems.map(item => (
-          <div key={item.id} className="flex justify-between items-start gap-2 text-sm">
+
+      <div className="space-y-3 mb-4">
+        {items.map(item => (
+          <div key={item.id} className="flex items-start gap-2 text-sm">
             <div className="flex-1 min-w-0">
               <p className="text-gray-900 truncate">{item.name}</p>
               {item.variant && <p className="text-xs text-gray-400 truncate">{item.variant}</p>}
               <p className="text-xs text-gray-400">Qty {item.quantity}</p>
             </div>
-            <span className="text-gray-900 shrink-0 font-medium">€{item.lineTotal.toFixed(2)}</span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="font-medium text-gray-900">€{item.lineTotal.toFixed(2)}</span>
+              <button
+                type="button"
+                onClick={() => handleDelete(item.id)}
+                disabled={deleting === item.id}
+                title="Remove item"
+                className="w-5 h-5 flex items-center justify-center rounded text-red-500 hover:text-red-700 hover:bg-red-50 disabled:opacity-40 transition-colors"
+              >
+                {deleting === item.id ? (
+                  <span className="text-xs leading-none">…</span>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
       <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
         <div className="flex justify-between text-gray-600">
           <span>Subtotal</span>
@@ -458,22 +524,33 @@ function CartSummary({ cartItems, subtotal }: { cartItems: CartItem[]; subtotal:
   )
 }
 
-// ── CheckoutWizard ───────────────────────────────────────────────────────────
+// ── CheckoutWizard (root) ─────────────────────────────────────────────────────
 
 export default function CheckoutWizard(props: Props) {
-  const { isGuest, cartItems, subtotal } = props
+  const { isGuest } = props
+
   const [step, setStep] = useState<Step>(isGuest ? 'account' : 'address')
-  const [delivery, setDelivery] = useState<DeliveryType>('STANDARD')
-  const [address, setAddress] = useState<Address>({
-    fullName: '',
-    email: '',
-    phone: '',
-    country: 'AT',
-    street1: '',
-    street2: '',
-    city: '',
-    postalCode: '',
+  const [deliveryType, setDeliveryType] = useState<DeliveryType>('STANDARD')
+
+  const [billing, setBilling] = useState<BillingAddress>({
+    firstName: '', lastName: '', email: '', phone: '',
+    country: 'AT', street: '', city: '', postalCode: '',
   })
+  const [deliveryAddr, setDeliveryAddr] = useState<DeliveryAddress>({
+    firstName: '', lastName: '', phone: '',
+    country: 'AT', street: '', city: '', postalCode: '',
+  })
+  const [sameAsBilling, setSameAsBilling] = useState(true)
+
+  // Items in local state so cart edits (delete) update the summary live
+  const [items, setItems] = useState<CartItem[]>(props.cartItems)
+  const subtotal = items.reduce((s, i) => s + i.lineTotal, 0)
+
+  const handleItemDeleted = (id: string) => {
+    const next = items.filter(i => i.id !== id)
+    setItems(next)
+    if (next.length === 0) window.location.href = '/cart'
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -483,7 +560,8 @@ export default function CheckoutWizard(props: Props) {
         </a>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          {/* Left — wizard */}
+
+          {/* Left — wizard steps */}
           <div className="lg:col-span-2 space-y-5">
             <StepIndicator currentStep={step} isGuest={isGuest} />
 
@@ -497,8 +575,12 @@ export default function CheckoutWizard(props: Props) {
             {step === 'address' && (
               <AddressStep
                 isGuest={isGuest}
-                address={address}
-                onChange={setAddress}
+                billing={billing}
+                onBilling={setBilling}
+                deliveryAddr={deliveryAddr}
+                onDeliveryAddr={setDeliveryAddr}
+                sameAsBilling={sameAsBilling}
+                onSameAsBilling={setSameAsBilling}
                 onBack={() => setStep('account')}
                 onNext={() => setStep('delivery')}
               />
@@ -506,8 +588,8 @@ export default function CheckoutWizard(props: Props) {
 
             {step === 'delivery' && (
               <DeliveryStep
-                delivery={delivery}
-                setDelivery={setDelivery}
+                deliveryType={deliveryType}
+                setDeliveryType={setDeliveryType}
                 onBack={() => setStep('address')}
                 onNext={() => setStep('payment')}
               />
@@ -515,16 +597,21 @@ export default function CheckoutWizard(props: Props) {
 
             {step === 'payment' && (
               <PaymentStep
-                cartItems={cartItems}
+                itemCount={items.length}
                 subtotal={subtotal}
-                delivery={delivery}
+                deliveryType={deliveryType}
                 onBack={() => setStep('delivery')}
               />
             )}
           </div>
 
-          {/* Right — cart summary */}
-          <CartSummary cartItems={cartItems} subtotal={subtotal} />
+          {/* Right — editable cart summary */}
+          <CartSummary
+            items={items}
+            subtotal={subtotal}
+            onDeleted={handleItemDeleted}
+          />
+
         </div>
       </div>
     </div>
