@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -111,6 +111,7 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
   const [regFirstName, setRegFirstName] = useState('')
   const [regLastName, setRegLastName] = useState('')
   const [regEmail, setRegEmail] = useState('')
+  const [regPassword, setRegPassword] = useState('')
   const [regError, setRegError] = useState<string | null>(null)
   const [regLoading, setRegLoading] = useState(false)
 
@@ -149,6 +150,9 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
           <div className="col-span-2">
             <input type="email" placeholder="Email address" value={regEmail} onChange={e => setRegEmail(e.target.value)} className={IC} />
           </div>
+          <div className="col-span-2">
+            <input type="password" placeholder="Password *" value={regPassword} onChange={e => setRegPassword(e.target.value)} className={IC} />
+          </div>
         </div>
         {regError && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{regError}</p>
@@ -160,7 +164,7 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
           <button
             type="button"
             onClick={handleRegister}
-            disabled={regLoading || !regFirstName.trim() || !regLastName.trim() || !regEmail.trim()}
+            disabled={regLoading || !regFirstName.trim() || !regLastName.trim() || !regEmail.trim() || !regPassword}
             className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {regLoading ? 'Creating…' : 'Create account'}
@@ -562,6 +566,36 @@ export default function CheckoutWizard(props: Props) {
     country: 'AT', street: '', city: '', postalCode: '',
   })
   const [sameAsBilling, setSameAsBilling] = useState(true)
+
+  // Restore wizard state from sessionStorage on mount (survives page refresh)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('checkout_wizard')
+      if (!saved) return
+      const d = JSON.parse(saved) as {
+        step?: Step
+        billing?: BillingAddress
+        deliveryAddr?: DeliveryAddress
+        sameAsBilling?: boolean
+        deliveryType?: DeliveryType
+      }
+      if (d.billing) setBilling(d.billing)
+      if (d.deliveryAddr) setDeliveryAddr(d.deliveryAddr)
+      if (typeof d.sameAsBilling === 'boolean') setSameAsBilling(d.sameAsBilling)
+      if (d.deliveryType) setDeliveryType(d.deliveryType)
+      // Guard: if user is now registered, don't restore account step
+      if (d.step) setStep(d.step === 'account' && !isGuest ? 'address' : d.step)
+    } catch {}
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist wizard state to sessionStorage on every relevant change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('checkout_wizard', JSON.stringify({
+        step, billing, deliveryAddr, sameAsBilling, deliveryType,
+      }))
+    } catch {}
+  }, [step, billing, deliveryAddr, sameAsBilling, deliveryType])
 
   // Items in local state so cart edits (delete) update the summary live
   const [items, setItems] = useState<CartItem[]>(props.cartItems)
