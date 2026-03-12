@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOrCreateUserByEmail } from '@/lib/user'
+import { mergeGuestCart } from '@/lib/cart'
 import { logAction, logError } from '@/lib/log'
 
 export async function GET(req: NextRequest) {
@@ -34,6 +35,13 @@ export async function GET(req: NextRequest) {
     loginUrl.searchParams.set('error', 'Google OAuth not configured')
     return NextResponse.redirect(loginUrl.toString())
   }
+
+  // Capture the current session before overwriting (for guest cart merge)
+  const guestUserId = req.cookies.get('replica_uid')?.value ?? null
+
+  // Return URL stored by /api/auth/google (e.g. /checkout)
+  const authReturn = req.cookies.get('auth_return')?.value ?? ''
+  const safeReturn = authReturn.startsWith('/') && !authReturn.startsWith('//') ? authReturn : ''
 
   try {
     const redirectUri = `${baseUrl}/api/auth/google/callback`
@@ -78,20 +86,28 @@ export async function GET(req: NextRequest) {
     }
 
     const user = await getOrCreateUserByEmail(email, name)
+
+    // Merge any guest cart items into the authenticated user's cart
+    if (guestUserId && guestUserId !== user.id) {
+      mergeGuestCart(guestUserId, user.id).catch(() => {})
+    }
+
     logAction('LOGIN', 'user', { userId: user.id, data: { email, provider: 'google' } })
 
-    // Set session — redirect to /auth/complete for localStorage sync
+    // Build /auth/complete URL, carrying returnTo if one was set
     const completeUrl = new URL('/auth/complete', baseUrl)
-    const response = NextResponse.redirect(completeUrl.toString())
+    if (safeReturn) completeUrl.searchParams.set('returnTo', safeReturn)
 
+    const response = NextResponse.redirect(completeUrl.toString())
     response.cookies.set('replica_uid', user.id, {
       path: '/',
       maxAge: 60 * 60 * 24 * 365,
       sameSite: 'lax',
       httpOnly: false, // must be readable by client JS (session.ts)
     })
-    // Clear CSRF state
+    // Clear CSRF state and return cookie
     response.cookies.delete('oauth_state')
+    response.cookies.delete('auth_return')
 
     return response
   } catch (e) {

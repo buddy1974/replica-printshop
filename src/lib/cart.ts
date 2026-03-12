@@ -141,3 +141,37 @@ export async function getCart(userId: string) {
     include: cartInclude,
   })
 }
+
+/**
+ * Merge a guest cart into an authenticated user's cart.
+ * Only moves items if the source user is a guest (email starts with 'guest_').
+ * Called after login/OAuth to preserve items added while browsing as a guest.
+ */
+export async function mergeGuestCart(guestUserId: string, authUserId: string): Promise<void> {
+  if (guestUserId === authUserId) return
+
+  const guestUser = await db.user.findUnique({
+    where: { id: guestUserId },
+    select: { email: true },
+  })
+  // Only merge if source is truly a guest session
+  if (!guestUser?.email?.startsWith('guest_')) return
+
+  const guestCart = await db.cart.findUnique({
+    where: { userId: guestUserId },
+    select: { id: true, items: { select: { id: true } } },
+  })
+  if (!guestCart || guestCart.items.length === 0) return
+
+  // Ensure auth user has a cart to merge into
+  const authCart = await getOrCreateCart(authUserId)
+
+  // Move all items from guest cart → auth cart
+  await db.cartItem.updateMany({
+    where: { cartId: guestCart.id },
+    data: { cartId: authCart.id },
+  })
+
+  // Clean up the now-empty guest cart
+  await db.cart.delete({ where: { id: guestCart.id } })
+}

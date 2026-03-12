@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
 
 export interface CartItem {
   id: string
@@ -29,6 +30,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname()
 
   const refresh = useCallback(async () => {
     try {
@@ -41,8 +43,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Re-fetch cart on every navigation (catches post-login redirects)
   useEffect(() => {
     refresh()
+  }, [refresh, pathname])
+
+  // Re-fetch when tab regains focus (catches OAuth redirect returning to the app)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [refresh])
 
   const removeItem = useCallback(async (id: string) => {

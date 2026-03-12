@@ -107,7 +107,8 @@ function StepIndicator({ currentStep, isGuest }: { currentStep: Step; isGuest: b
 
 function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegisterDone: () => void }) {
   const [mode, setMode] = useState<'choose' | 'register'>('choose')
-  const [regName, setRegName] = useState('')
+  const [regFirstName, setRegFirstName] = useState('')
+  const [regLastName, setRegLastName] = useState('')
   const [regEmail, setRegEmail] = useState('')
   const [regError, setRegError] = useState<string | null>(null)
   const [regLoading, setRegLoading] = useState(false)
@@ -116,10 +117,11 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
     setRegLoading(true)
     setRegError(null)
     try {
+      const fullName = `${regFirstName.trim()} ${regLastName.trim()}`.trim()
       const res = await fetch('/api/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: regName.trim(), email: regEmail.trim() }),
+        body: JSON.stringify({ name: fullName, email: regEmail.trim() }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -140,9 +142,12 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
           <h2 className="text-base font-semibold text-gray-900">Create account</h2>
           <p className="text-xs text-gray-500 mt-0.5">Create account for faster future orders</p>
         </div>
-        <div className="space-y-3">
-          <input type="text" placeholder="Full name" value={regName} onChange={e => setRegName(e.target.value)} className={IC} />
-          <input type="email" placeholder="Email address" value={regEmail} onChange={e => setRegEmail(e.target.value)} className={IC} />
+        <div className="grid grid-cols-2 gap-3">
+          <input type="text" placeholder="First name" value={regFirstName} onChange={e => setRegFirstName(e.target.value)} className={IC} />
+          <input type="text" placeholder="Last name" value={regLastName} onChange={e => setRegLastName(e.target.value)} className={IC} />
+          <div className="col-span-2">
+            <input type="email" placeholder="Email address" value={regEmail} onChange={e => setRegEmail(e.target.value)} className={IC} />
+          </div>
         </div>
         {regError && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{regError}</p>
@@ -154,7 +159,7 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
           <button
             type="button"
             onClick={handleRegister}
-            disabled={regLoading || !regName.trim() || !regEmail.trim()}
+            disabled={regLoading || !regFirstName.trim() || !regLastName.trim() || !regEmail.trim()}
             className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {regLoading ? 'Creating…' : 'Create account'}
@@ -180,8 +185,9 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
         </div>
       </button>
 
+      {/* Direct OAuth link — carries returnTo=/checkout so after login we land back here */}
       <a
-        href="/login"
+        href="/api/auth/google?returnTo=/checkout"
         className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors"
       >
         <span className="text-lg">🔑</span>

@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
   // CSRF state token
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36)
 
+  // Optional return URL — e.g. ?returnTo=/checkout
+  const returnTo = req.nextUrl.searchParams.get('returnTo') ?? ''
+  const safeReturn = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : ''
+
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
   authUrl.searchParams.set('client_id', clientId)
   authUrl.searchParams.set('redirect_uri', redirectUri)
@@ -27,5 +31,14 @@ export async function GET(req: NextRequest) {
     maxAge: 300, // 5 min
     path: '/',
   })
+  // Persist the return destination across the OAuth redirect
+  if (safeReturn) {
+    res.cookies.set('auth_return', safeReturn, {
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 300, // 5 min
+      path: '/',
+    })
+  }
   return res
 }
