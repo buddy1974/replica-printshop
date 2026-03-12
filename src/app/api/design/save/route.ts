@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const userId = req.cookies.get('replica_uid')?.value ?? null
     const body = await req.json()
     const { productId, data, previewDataUrl } = body
+    console.log('DESIGN SAVE BODY', { productId, userId, hasData: !!data, hasPreview: !!previewDataUrl })
 
     if (!productId || !isValidId(productId)) throw new ValidationError('productId is required')
     if (!data || typeof data !== 'object') throw new ValidationError('data is required')

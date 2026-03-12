@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = body
+    console.log('CART BODY', { userId, productId, variantId, designId, quantity, width, height })
 
     if (!userId || typeof userId !== 'string') {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
