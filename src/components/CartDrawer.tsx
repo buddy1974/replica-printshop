@@ -78,7 +78,8 @@ export default function CartDrawer() {
           ) : (
             <ul className="divide-y divide-gray-100">
               {items.map((item) => {
-                const imgSrc = item.design?.id
+                // Use design preview only if the preview file was actually saved
+                const imgSrc = item.design?.preview
                   ? `/api/design/${item.design.id}/preview`
                   : item.product.imageUrl ?? null
                 const lineTotal = (item.priceSnapshot * item.quantity).toFixed(2)

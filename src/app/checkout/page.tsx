@@ -14,8 +14,9 @@ export default async function CheckoutPage() {
     include: {
       items: {
         include: {
-          product: { select: { name: true } },
+          product: { select: { name: true, imageUrl: true } },
           variant: { select: { name: true } },
+          design: { select: { id: true, preview: true } },
         },
       },
     },
@@ -43,6 +44,10 @@ export default async function CheckoutPage() {
     height: Number(i.height),
     quantity: i.quantity,
     lineTotal: Number(i.priceSnapshot) * i.quantity,
+    // Priority: design preview → product image
+    previewUrl: i.design?.preview
+      ? `/api/design/${i.design.id}/preview`
+      : (i.product.imageUrl ?? null),
   }))
 
   return (

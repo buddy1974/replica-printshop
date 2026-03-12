@@ -12,6 +12,7 @@ interface CartItem {
   height: number
   quantity: number
   lineTotal: number
+  previewUrl: string | null
 }
 
 interface Props {
@@ -489,6 +490,20 @@ function CartSummary({
       <div className="space-y-3 mb-4">
         {items.map(item => (
           <div key={item.id} className="flex items-start gap-2 text-sm">
+            {/* Thumbnail — design preview or product image */}
+            <div className="w-10 h-10 rounded overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
+              {item.previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.previewUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-100" />
+              )}
+            </div>
+
             <div className="flex-1 min-w-0">
               <p className="text-gray-900 truncate">{item.name}</p>
               {item.variant && <p className="text-xs text-gray-400 truncate">{item.variant}</p>}
