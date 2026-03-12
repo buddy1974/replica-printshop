@@ -121,7 +121,7 @@ export default function CartDrawer() {
                     {/* Remove */}
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="p-1.5 text-gray-300 hover:text-red-500 transition-colors self-start shrink-0"
+                      className="p-1.5 text-red-600 hover:text-red-700 transition-colors self-start shrink-0"
                       aria-label="Remove item"
                     >
                       <TrashIcon />
