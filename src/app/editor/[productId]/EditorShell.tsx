@@ -165,9 +165,9 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  function handleImageReady(url: string) {
-    canvasRef.current?.addImage(url)
-    if (activeZone) setTimeout(() => canvasRef.current?.fitSelected(activeZone), 80)
+  async function handleImageReady(url: string) {
+    await canvasRef.current?.addImage(url)
+    canvasRef.current?.fitSelected(activeZone)
   }
 
 function handleSelectionChange(

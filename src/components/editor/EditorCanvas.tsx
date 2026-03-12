@@ -306,6 +306,11 @@ const EditorCanvas = forwardRef<EditorCanvasHandle, Props>(
     useEffect(() => { onLayersChangeRef.current = onLayersChange }, [onLayersChange])
     useEffect(() => { onReadyRef.current = onReady }, [onReady])
 
+    // Keep sheet geometry refs in sync when props change
+    useEffect(() => { sheetXRef.current = sheetX; sheetYRef.current = sheetY }, [sheetX, sheetY])
+    useEffect(() => { sheetWRef.current = sheetW; sheetHRef.current = sheetH }, [sheetW, sheetH])
+    useEffect(() => { safePxRef.current = safePx }, [safePx])
+
     // Boot Fabric canvas once
     useEffect(() => {
       if (!canvasElRef.current || fabricRef.current) return
