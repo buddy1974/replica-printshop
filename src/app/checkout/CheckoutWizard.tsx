@@ -49,10 +49,10 @@ interface DeliveryAddress {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] = [
-  { value: 'STANDARD', label: 'Standard', desc: '3–5 business days' },
-  { value: 'EXPRESS', label: 'Express', desc: '1–2 business days' },
-  { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store' },
+const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string; price: number }[] = [
+  { value: 'STANDARD', label: 'Standard shipping', desc: '3–5 business days', price: 5 },
+  { value: 'EXPRESS', label: 'Express shipping', desc: '1–2 business days', price: 12 },
+  { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store', price: 0 },
 ]
 
 const STEPS: { key: Step; label: string }[] = [
@@ -67,6 +67,11 @@ const STEP_ORDER: Step[] = ['account', 'address', 'delivery', 'payment']
 const IC = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400'
 
 function stepIndex(s: Step) { return STEP_ORDER.indexOf(s) }
+
+function isAddressValid(b: Partial<BillingAddress>): boolean {
+  const req: (keyof BillingAddress)[] = ['firstName', 'lastName', 'email', 'country', 'street', 'city', 'postalCode']
+  return req.every(f => (b[f] ?? '').trim().length > 0)
+}
 
 // ── StepIndicator ─────────────────────────────────────────────────────────────
 
@@ -376,23 +381,35 @@ function DeliveryStep({
       <h2 className="text-base font-semibold text-gray-900">Delivery method</h2>
 
       <div className="flex flex-col gap-2">
-        {DELIVERY_OPTIONS.map(({ value, label, desc }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setDeliveryType(value)}
-            className={[
-              'flex items-center justify-between px-4 py-3 rounded-xl border text-sm transition-colors',
-              deliveryType === value
-                ? 'border-red-600 bg-red-50 text-gray-900'
-                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300',
-            ].join(' ')}
-          >
-            <span className="font-medium">{label}</span>
-            <span className={deliveryType === value ? 'text-red-600 text-xs' : 'text-gray-400 text-xs'}>{desc}</span>
-          </button>
-        ))}
+        {DELIVERY_OPTIONS.map(({ value, label, desc, price }) => {
+          const selected = deliveryType === value
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setDeliveryType(value)}
+              className={[
+                'flex items-center justify-between px-4 py-3.5 rounded-xl border text-sm transition-colors text-left',
+                selected ? 'border-red-600 bg-red-50' : 'border-gray-200 bg-white hover:border-gray-300',
+              ].join(' ')}
+            >
+              <div>
+                <p className={`font-medium ${selected ? 'text-gray-900' : 'text-gray-700'}`}>{label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+              </div>
+              <span className={`font-semibold shrink-0 ml-4 ${selected ? 'text-red-600' : 'text-gray-500'}`}>
+                {price === 0 ? 'Free' : `€${price.toFixed(2)}`}
+              </span>
+            </button>
+          )
+        })}
       </div>
+
+      {deliveryType === 'PICKUP' && (
+        <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+          No shipping address required — you will collect your order in store.
+        </p>
+      )}
 
       <div className="flex items-center justify-between pt-1">
         <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← Back</button>
@@ -414,14 +431,16 @@ function PaymentStep({
   itemCount,
   subtotal,
   deliveryType,
+  deliveryPrice,
   onBack,
 }: {
   itemCount: number
   subtotal: number
   deliveryType: DeliveryType
+  deliveryPrice: number
   onBack: () => void
 }) {
-  const deliveryLabel = DELIVERY_OPTIONS.find(o => o.value === deliveryType)?.label ?? deliveryType
+  const deliveryOption = DELIVERY_OPTIONS.find(o => o.value === deliveryType) ?? DELIVERY_OPTIONS[0]
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
@@ -442,8 +461,12 @@ function PaymentStep({
           <span>€{subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-gray-500">
-          <span>Delivery</span>
-          <span>{deliveryLabel}</span>
+          <span>{deliveryOption.label}</span>
+          <span>{deliveryPrice === 0 ? 'Free' : `€${deliveryPrice.toFixed(2)}`}</span>
+        </div>
+        <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-gray-200">
+          <span>Total</span>
+          <span>€{(subtotal + deliveryPrice).toFixed(2)}</span>
         </div>
       </div>
 
@@ -469,10 +492,12 @@ function PaymentStep({
 function CartSummary({
   items,
   subtotal,
+  deliveryPrice,
   onDeleted,
 }: {
   items: CartItem[]
   subtotal: number
+  deliveryPrice: number
   onDeleted: (id: string) => void
 }) {
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -540,9 +565,13 @@ function CartSummary({
           <span>Subtotal</span>
           <span>€{subtotal.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between text-gray-400 text-xs">
-          <span>Shipping</span>
-          <span>Calculated at order</span>
+        <div className="flex justify-between text-gray-500">
+          <span>Delivery</span>
+          <span>{deliveryPrice === 0 ? 'Free' : `€${deliveryPrice.toFixed(2)}`}</span>
+        </div>
+        <div className="flex justify-between font-semibold text-gray-900 pt-1.5 border-t border-gray-100">
+          <span>Total</span>
+          <span>€{(subtotal + deliveryPrice).toFixed(2)}</span>
         </div>
       </div>
     </div>
@@ -583,8 +612,15 @@ export default function CheckoutWizard(props: Props) {
       if (d.deliveryAddr) setDeliveryAddr(d.deliveryAddr)
       if (typeof d.sameAsBilling === 'boolean') setSameAsBilling(d.sameAsBilling)
       if (d.deliveryType) setDeliveryType(d.deliveryType)
-      // Guard: if user is now registered, don't restore account step
-      if (d.step) setStep(d.step === 'account' && !isGuest ? 'address' : d.step)
+      if (d.step) {
+        // Guard: delivery/payment require a valid address — fall back if missing
+        const needsAddress = d.step === 'delivery' || d.step === 'payment'
+        if (needsAddress && !isAddressValid(d.billing ?? {})) {
+          setStep('address')
+        } else {
+          setStep(d.step === 'account' && !isGuest ? 'address' : d.step)
+        }
+      }
     } catch {}
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -600,6 +636,7 @@ export default function CheckoutWizard(props: Props) {
   // Items in local state so cart edits (delete) update the summary live
   const [items, setItems] = useState<CartItem[]>(props.cartItems)
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0)
+  const deliveryPrice = DELIVERY_OPTIONS.find(o => o.value === deliveryType)?.price ?? 0
 
   const handleItemDeleted = (id: string) => {
     const next = items.filter(i => i.id !== id)
@@ -655,6 +692,7 @@ export default function CheckoutWizard(props: Props) {
                 itemCount={items.length}
                 subtotal={subtotal}
                 deliveryType={deliveryType}
+                deliveryPrice={deliveryPrice}
                 onBack={() => setStep('delivery')}
               />
             )}
@@ -664,6 +702,7 @@ export default function CheckoutWizard(props: Props) {
           <CartSummary
             items={items}
             subtotal={subtotal}
+            deliveryPrice={deliveryPrice}
             onDeleted={handleItemDeleted}
           />
 
