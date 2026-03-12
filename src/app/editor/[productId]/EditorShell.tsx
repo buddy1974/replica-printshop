@@ -24,6 +24,7 @@ import ImageToolPanel from '@/components/editor/ImageToolPanel'
 import LayersPanel from '@/components/editor/LayersPanel'
 import LogoLibraryPanel from '@/components/editor/LogoLibraryPanel'
 import TemplateLibraryPanel from '@/components/editor/TemplateLibraryPanel'
+import { useCart } from '@/context/CartContext'
 
 interface Product {
   id: string
@@ -54,6 +55,7 @@ const RIGHT_TABS: RightTab[] = ['text', 'image', 'shape', 'layers']
 
 export default function EditorShell({ product, initialWidth, initialHeight }: Props) {
   const canvasRef = useRef<EditorCanvasHandle | null>(null)
+  const { refresh: refreshCart, openDrawer } = useCart()
 
   // Resolve final print dimensions: URL params take priority over config defaults
   const widthCm = initialWidth ?? product.config?.printAreaWidthCm ?? null
@@ -77,18 +79,11 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
   const [canvasBg, setCanvasBg] = useState('#f3f4f6')
 
   // Cart state
-  const [userId, setUserId] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [width, setWidth] = useState<number>(widthCm ?? 0)
   const [height, setHeight] = useState<number>(heightCm ?? 0)
   const [cartStatus, setCartStatus] = useState<CartStatus>('idle')
   const [cartError, setCartError] = useState<string | null>(null)
-
-  // Auto-read userId from cookie
-  useEffect(() => {
-    const match = document.cookie.match(/(?:^|;\s*)replica_uid=([^;]+)/)
-    if (match) setUserId(decodeURIComponent(match[1]))
-  }, [])
 
   // Step 421 — mobile detection
   useEffect(() => {
@@ -204,7 +199,6 @@ function handleSelectionChange(
   const showCustomSize = product.config?.hasCustomSize && !product.config.printAreaWidthCm
 
   async function handleAddToCart() {
-    if (!userId.trim()) { setCartError('Enter a user ID.'); return }
     if (quantity < 1) { setCartError('Quantity must be at least 1.'); return }
     setCartStatus('saving')
     setCartError(null)
@@ -226,7 +220,7 @@ function handleSelectionChange(
         throw new Error(b.error ?? 'Failed to save design')
       }
       const { id: designId } = await saveRes.json()
-      const cartBody: Record<string, unknown> = { userId, productId: product.id, quantity, designId }
+      const cartBody: Record<string, unknown> = { productId: product.id, quantity, designId }
       if (showCustomSize && width > 0) cartBody.width = width
       if (showCustomSize && height > 0) cartBody.height = height
       const cartRes = await fetch('/api/cart', {
@@ -239,6 +233,8 @@ function handleSelectionChange(
         throw new Error(b.error ?? 'Failed to add to cart')
       }
       setCartStatus('added')
+      refreshCart()
+      openDrawer()
       setTimeout(() => setCartStatus('idle'), 3000)
     } catch (e) {
       setCartError(e instanceof Error ? e.message : 'Something went wrong.')
@@ -504,15 +500,6 @@ function handleSelectionChange(
               {/* Cart section — fixed at bottom of right panel */}
               <div className="border-t border-gray-100 px-3 py-3 space-y-2 shrink-0">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Order</p>
-                {!userId && (
-                  <input
-                    type="text"
-                    placeholder="User ID"
-                    value={userId}
-                    onChange={(e) => setUserId(e.target.value)}
-                    className="w-full rounded border border-gray-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                  />
-                )}
                 <label className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 flex-1">Qty</span>
                   <input
@@ -555,14 +542,6 @@ function handleSelectionChange(
                 >
                   {cartStatus === 'saving' ? 'Saving…' : cartStatus === 'added' ? 'Added!' : 'Add to Cart'}
                 </button>
-                {cartStatus === 'added' && (
-                  <p className="text-xs text-green-600">
-                    Saved.{' '}
-                    <a href="/cart" className="underline">
-                      View cart
-                    </a>
-                  </p>
-                )}
                 {cartError && <p className="text-xs text-red-600">{cartError}</p>}
               </div>
             </>

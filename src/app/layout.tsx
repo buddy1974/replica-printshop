@@ -4,6 +4,8 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import FloatingChat from '@/components/FloatingChat'
 import { BRANDING } from '@/config/branding'
+import { CartProvider } from '@/context/CartContext'
+import CartDrawer from '@/components/CartDrawer'
 
 const SITE_DESCRIPTION = 'Professional print, textile, banners and advertising technology. Fast turnaround, in-house production.'
 
@@ -42,10 +44,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50">
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <FloatingChat />
+        <CartProvider>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          <FloatingChat />
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   )
