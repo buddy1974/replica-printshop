@@ -20,10 +20,31 @@ const transporter = configured
     })
   : null
 
-export async function sendMail(to: string, subject: string, html: string): Promise<void> {
+export interface MailAttachment {
+  filename: string
+  content: Buffer
+  contentType: string
+}
+
+export async function sendMail(
+  to: string,
+  subject: string,
+  html: string,
+  attachments?: MailAttachment[],
+): Promise<void> {
   if (!transporter) {
-    console.log(`[mail] ${subject} → ${to}\n(SMTP not configured — log only)`)
+    console.log(`[mail] ${subject} → ${to}${attachments?.length ? ` (+${attachments.length} attachment)` : ''}\n(SMTP not configured — log only)`)
     return
   }
-  await transporter.sendMail({ from: SMTP_FROM, to, subject, html })
+  await transporter.sendMail({
+    from: SMTP_FROM,
+    to,
+    subject,
+    html,
+    attachments: attachments?.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      contentType: a.contentType,
+    })),
+  })
 }

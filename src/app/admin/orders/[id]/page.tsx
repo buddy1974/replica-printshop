@@ -254,6 +254,22 @@ export default function AdminOrderDetailPage() {
         </div>
       </div>
 
+      {/* Invoice download */}
+      <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Invoice</p>
+          <p className="text-xs text-gray-400">Generated on demand · includes all order details</p>
+        </div>
+        <a
+          href={`/api/admin/orders/${order.id}/invoice`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium shrink-0"
+        >
+          Download PDF
+        </a>
+      </div>
+
       {/* Actions */}
       <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Actions</p>

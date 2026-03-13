@@ -1,5 +1,6 @@
 import { sendMail } from '@/lib/mail'
 import { db } from '@/lib/db'
+import { generateInvoice } from '@/lib/documents/invoice'
 import { orderCreated, type OrderCreatedData } from '@/mailTemplates/orderCreated'
 import { paymentSuccess } from '@/mailTemplates/paymentSuccess'
 import { uploadNeeded } from '@/mailTemplates/uploadNeeded'
@@ -51,32 +52,53 @@ async function fetchOrderData(orderId: string): Promise<OrderCreatedData | null>
 
 // ── Customer emails ──────────────────────────────────────────────────────────
 
-/** Order received (sent after order creation, with or without full data) */
+/** Order received (sent after order creation — attaches invoice PDF) */
 export async function sendOrderConfirmed(orderId: string, userEmail: string, data?: OrderCreatedData) {
   const d = data ?? await fetchOrderData(orderId)
+  const short = orderId.slice(0, 8).toUpperCase()
+
+  // Generate invoice PDF for attachment (non-fatal if it fails)
+  let invoiceBuffer: Buffer | null = null
+  try { invoiceBuffer = await generateInvoice(orderId) } catch { /* continue without attachment */ }
+
+  const attachment = invoiceBuffer
+    ? [{ filename: `invoice-${short}.pdf`, content: invoiceBuffer, contentType: 'application/pdf' }]
+    : undefined
+
   if (d) {
     const { subject, html } = orderCreated(d)
-    await sendMail(userEmail, subject, html)
+    await sendMail(userEmail, subject, html, attachment)
   } else {
     await sendMail(
       userEmail,
-      `Order received — #${orderId.slice(0, 8).toUpperCase()}`,
-      `<p>Your order <strong>#${orderId.slice(0, 8).toUpperCase()}</strong> has been received.</p>`,
+      `Order received — #${short}`,
+      `<p>Your order <strong>#${short}</strong> has been received.</p>`,
+      attachment,
     )
   }
 }
 
-/** Payment confirmed (sent from Stripe webhook) */
+/** Payment confirmed (sent from Stripe webhook — attaches invoice PDF) */
 export async function sendPaymentSuccess(orderId: string, userEmail: string) {
   const d = await fetchOrderData(orderId)
+  const short = orderId.slice(0, 8).toUpperCase()
+
+  let invoiceBuffer: Buffer | null = null
+  try { invoiceBuffer = await generateInvoice(orderId) } catch { /* continue without attachment */ }
+
+  const attachment = invoiceBuffer
+    ? [{ filename: `invoice-${short}.pdf`, content: invoiceBuffer, contentType: 'application/pdf' }]
+    : undefined
+
   if (d) {
     const { subject, html } = paymentSuccess(d)
-    await sendMail(userEmail, subject, html)
+    await sendMail(userEmail, subject, html, attachment)
   } else {
     await sendMail(
       userEmail,
-      `Payment confirmed — #${orderId.slice(0, 8).toUpperCase()}`,
-      `<p>Your payment for order <strong>#${orderId.slice(0, 8).toUpperCase()}</strong> has been confirmed.</p>`,
+      `Payment confirmed — #${short}`,
+      `<p>Your payment for order <strong>#${short}</strong> has been confirmed.</p>`,
+      attachment,
     )
   }
 }

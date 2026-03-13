@@ -139,6 +139,14 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
             Upload files →
           </Link>
         )}
+        {order.paymentStatus === 'PAID' && (
+          <a
+            href={`/api/orders/${order.id}/invoice`}
+            className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+          >
+            Download invoice
+          </a>
+        )}
         <Link href="/orders" className="btn-ghost">
           ← Back to orders
         </Link>
