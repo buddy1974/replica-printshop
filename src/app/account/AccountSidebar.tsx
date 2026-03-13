@@ -11,6 +11,8 @@ interface Props {
 const NAV = [
   { href: '/account', label: 'Overview' },
   { href: '/account/orders', label: 'Orders' },
+  { href: '/account/designs', label: 'Designs' },
+  { href: '/account/uploads', label: 'Uploads' },
   { href: '/account/addresses', label: 'Addresses' },
 ]
 

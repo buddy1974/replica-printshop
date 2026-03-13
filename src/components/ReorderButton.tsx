@@ -3,53 +3,48 @@
 import { useState } from 'react'
 import Button from '@/components/Button'
 
-interface OrderItem {
-  productId: string | null
-  variantId: string | null
-  width: number
-  height: number
-  quantity: number
-}
-
 interface Props {
   orderId: string
-  items: OrderItem[]
-  userId: string
+  // legacy props kept for compatibility, no longer used
+  items?: unknown[]
+  userId?: string
 }
 
-export default function ReorderButton({ items, userId }: Props) {
-  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+export default function ReorderButton({ orderId }: Props) {
+  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const handleReorder = async () => {
     setState('loading')
-    const reorderable = items.filter((i) => i.productId)
-    if (reorderable.length === 0) { setState('error'); return }
-
-    const results = await Promise.all(
-      reorderable.map((item) =>
-        fetch('/api/cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            productId: item.productId,
-            variantId: item.variantId || undefined,
-            width: item.width,
-            height: item.height,
-            quantity: item.quantity,
-          }),
-        })
-      )
-    )
-
-    const allOk = results.every((r) => r.ok)
-    setState(allOk ? 'done' : 'error')
-    if (allOk) setTimeout(() => setState('idle'), 3000)
+    setErrorMsg(null)
+    try {
+      const res = await fetch('/api/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErrorMsg(data.error ?? 'Could not reorder')
+        setState('error')
+        return
+      }
+      // Redirect to cart after successful reorder
+      window.location.href = '/cart'
+    } catch {
+      setState('error')
+      setErrorMsg('Network error')
+    }
   }
 
   return (
-    <Button variant="secondary" onClick={handleReorder} disabled={state === 'loading'}>
-      {state === 'loading' ? 'Adding…' : state === 'done' ? 'Added to cart!' : state === 'error' ? 'Some items unavailable' : 'Reorder'}
-    </Button>
+    <div className="flex flex-col gap-1">
+      <Button variant="secondary" onClick={handleReorder} disabled={state === 'loading'}>
+        {state === 'loading' ? 'Adding to cart…' : 'Reorder'}
+      </Button>
+      {state === 'error' && errorMsg && (
+        <p className="text-xs text-red-600">{errorMsg}</p>
+      )}
+    </div>
   )
 }
