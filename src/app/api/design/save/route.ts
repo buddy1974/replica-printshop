@@ -6,6 +6,7 @@ import { AppError, ValidationError } from '@/lib/errors'
 import { saveDesignPreview } from '@/lib/designStorage'
 import { logAction, logError } from '@/lib/log'
 import { isValidId, MAX_DESIGN_JSON_BYTES, MAX_PREVIEW_BYTES } from '@/lib/inputValidation'
+import { analyzeDesign, type PrintCheckResult } from '@/lib/ai/printAssist'
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,7 +51,42 @@ export async function POST(req: NextRequest) {
 
     logAction('DESIGN_SAVE', 'design', { userId, entityId: design.id, data: { productId } })
 
-    return NextResponse.json({ id: design.id, preview: previewPath }, { status: 201 })
+    // ── AI print check ────────────────────────────────────────────────────
+    let aiCheck: PrintCheckResult | null = null
+    try {
+      const product = await db.product.findUnique({
+        where: { id: productId },
+        select: {
+          bleedMm: true, safeMarginMm: true, minDpi: true, recommendedDpi: true,
+          config: {
+            select: { printWidth: true, printHeight: true, maxWidthCm: true, maxHeightCm: true },
+          },
+        },
+      })
+      if (product?.config?.printWidth && product.config.printHeight) {
+        const widthCm  = product.config.maxWidthCm  ? Number(product.config.maxWidthCm)  : 0
+        const heightCm = product.config.maxHeightCm ? Number(product.config.maxHeightCm) : 0
+        aiCheck = analyzeDesign({
+          canvasData:      data as Record<string, unknown>,
+          canvasWidthPx:   product.config.printWidth,
+          canvasHeightPx:  product.config.printHeight,
+          productWidthCm:  widthCm,
+          productHeightCm: heightCm,
+          bleedMm:         product.bleedMm ?? null,
+          safeMarginMm:    product.safeMarginMm ?? null,
+          minDpi:          product.minDpi ?? null,
+          recommendedDpi:  product.recommendedDpi ?? null,
+        })
+        await db.design.update({
+          where: { id: design.id },
+          data: { aiCheck: aiCheck as object },
+        })
+      }
+    } catch {
+      // Non-fatal — check failure must not break cart flow
+    }
+
+    return NextResponse.json({ id: design.id, preview: previewPath, aiCheck }, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
     const err = e instanceof Error ? e : new Error(String(e))

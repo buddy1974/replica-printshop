@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import PrintCheckPanel from '@/components/PrintCheckPanel'
+import type { PrintCheckResult } from '@/lib/ai/printAssist'
 
 interface ProductInfo {
   id: string
@@ -35,6 +37,7 @@ interface UploadResult {
   heightPx: number | null
   validStatus: string
   validMessages: string[]
+  aiCheck?: PrintCheckResult
 }
 
 interface Props {
@@ -268,6 +271,11 @@ export default function UploadClient({ product, config }: Props) {
                 </p>
               ))}
             </div>
+          )}
+
+          {/* AI Print Check panel */}
+          {result.aiCheck && (
+            <PrintCheckPanel result={result.aiCheck} />
           )}
 
           {/* WARNING: explicit confirmation required */}

@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
 import { savePendingFile, readImageDimensions } from '@/lib/storage'
+import { analyzeUpload } from '@/lib/ai/printAssist'
 
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg'])
 const ALLOWED_MIMES = new Set(['image/png', 'image/jpeg', 'application/pdf', 'image/svg+xml'])
@@ -54,14 +55,36 @@ export async function POST(req: NextRequest) {
       dpi = Math.round(Math.min(dpiW, dpiH))
     }
 
-    // Fetch product minDpi if productId provided
+    // Fetch product config (minDpi + dimensions for AI check)
     let minDpi: number | null = null
+    let recommendedDpi: number | null = null
+    let bleedMm: number | null = null
+    let safeMarginMm: number | null = null
     if (productId) {
-      const product = await db.product.findUnique({ where: { id: productId }, select: { minDpi: true } })
-      minDpi = product?.minDpi ?? null
+      const product = await db.product.findUnique({
+        where: { id: productId },
+        select: { minDpi: true, recommendedDpi: true, bleedMm: true, safeMarginMm: true },
+      })
+      minDpi       = product?.minDpi       ?? null
+      recommendedDpi = product?.recommendedDpi ?? null
+      bleedMm      = product?.bleedMm      ?? null
+      safeMarginMm = product?.safeMarginMm ?? null
     }
 
     const { validStatus, validMessages } = getValidationResult(dpi, dims, widthCm, heightCm, minDpi)
+
+    // AI print check
+    const aiCheck = analyzeUpload({
+      widthPx,
+      heightPx,
+      dpi,
+      productWidthCm:  widthCm  ?? 0,
+      productHeightCm: heightCm ?? 0,
+      bleedMm,
+      safeMarginMm,
+      minDpi,
+      recommendedDpi,
+    })
 
     const userId = req.cookies.get('replica_uid')?.value ?? null
 
@@ -77,6 +100,7 @@ export async function POST(req: NextRequest) {
         widthPx,
         heightPx,
         validStatus,
+        aiCheck: aiCheck as object,
       },
     })
 
@@ -90,6 +114,7 @@ export async function POST(req: NextRequest) {
       heightPx: pending.heightPx,
       validStatus: pending.validStatus,
       validMessages,
+      aiCheck,
     }, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })

@@ -25,6 +25,8 @@ import LayersPanel from '@/components/editor/LayersPanel'
 import LogoLibraryPanel from '@/components/editor/LogoLibraryPanel'
 import TemplateLibraryPanel from '@/components/editor/TemplateLibraryPanel'
 import { useCart } from '@/context/CartContext'
+import PrintCheckPanel from '@/components/PrintCheckPanel'
+import type { PrintCheckResult } from '@/lib/ai/printAssist'
 
 interface Product {
   id: string
@@ -84,6 +86,9 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
   const [height, setHeight] = useState<number>(heightCm ?? 0)
   const [cartStatus, setCartStatus] = useState<CartStatus>('idle')
   const [cartError, setCartError] = useState<string | null>(null)
+
+  // AI print check — populated when design is saved
+  const [printCheck, setPrintCheck] = useState<PrintCheckResult | null>(null)
 
   // Step 421 — mobile detection
   useEffect(() => {
@@ -219,7 +224,9 @@ function handleSelectionChange(
         const b = await saveRes.json().catch(() => ({}))
         throw new Error(b.error ?? 'Failed to save design')
       }
-      const { id: designId } = await saveRes.json()
+      const saveData = await saveRes.json()
+      const { id: designId } = saveData
+      if (saveData.aiCheck) setPrintCheck(saveData.aiCheck as PrintCheckResult)
       const cartBody: Record<string, unknown> = { productId: product.id, quantity, designId }
       if (showCustomSize && width > 0) cartBody.width = width
       if (showCustomSize && height > 0) cartBody.height = height
@@ -496,6 +503,13 @@ function handleSelectionChange(
                   />
                 )}
               </div>
+
+              {/* AI Print Check — shown after first save */}
+              {printCheck && (
+                <div className="px-3 pb-2 shrink-0">
+                  <PrintCheckPanel result={printCheck} compact={false} />
+                </div>
+              )}
 
               {/* Cart section — fixed at bottom of right panel */}
               <div className="border-t border-gray-100 px-3 py-3 space-y-2 shrink-0">

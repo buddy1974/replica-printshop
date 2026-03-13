@@ -367,6 +367,7 @@ model PendingUpload {
   widthPx     Int?
   heightPx    Int?
   validStatus String   @default("PENDING")
+  aiCheck     Json?
   createdAt   DateTime @default(now())
 
   cartItem CartItem?
@@ -385,6 +386,7 @@ model Design {
   productId String
   data      Json
   preview   String?
+  aiCheck   Json?
   createdAt DateTime @default(now())
 
   cartItems CartItem[]
