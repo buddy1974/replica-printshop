@@ -1,13 +1,13 @@
 import { emailWrap, sectionHeading, orderRef, divider } from './base'
 
-export interface OrderCreatedData {
+export interface PaymentSuccessData {
   orderId: string
   items: { productName: string; quantity: number; width: number; height: number; priceSnapshot: number }[]
   total: number
   deliveryType?: string
 }
 
-export function orderCreated({ orderId, items, total, deliveryType }: OrderCreatedData): { subject: string; html: string } {
+export function paymentSuccess({ orderId, items, total, deliveryType }: PaymentSuccessData): { subject: string; html: string } {
   const rows = items
     .map(
       (i) =>
@@ -20,14 +20,18 @@ export function orderCreated({ orderId, items, total, deliveryType }: OrderCreat
     )
     .join('')
 
-  const deliveryLabel = deliveryType === 'EXPRESS' ? 'Express (1–2 days)'
+  const deliveryLabel = deliveryType === 'EXPRESS' ? 'Express (1–2 business days)'
     : deliveryType === 'PICKUP' ? 'Pickup in store'
-    : 'Standard (3–5 days)'
+    : 'Standard (3–5 business days)'
 
   const body = `
-    ${sectionHeading('Order received')}
-    <p style="margin:0 0 8px;color:#555;font-size:14px">Thank you for your order! We have received it and will start processing shortly.</p>
-    <p style="margin:0 0 24px;font-size:14px">Order ${orderRef(orderId)}</p>
+    ${sectionHeading('Payment confirmed')}
+    <p style="margin:0 0 8px;color:#555;font-size:14px">
+      Your payment has been confirmed and order ${orderRef(orderId)} is now being processed.
+    </p>
+    <p style="margin:0 0 24px;font-size:13px;color:#888">
+      You will receive a separate email with upload instructions if artwork is required.
+    </p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #eee;border-radius:6px;overflow:hidden;font-size:14px;margin-bottom:8px">
       <thead>
@@ -41,20 +45,21 @@ export function orderCreated({ orderId, items, total, deliveryType }: OrderCreat
       <tbody>${rows}</tbody>
       <tfoot>
         <tr style="background:#f7f7f7">
-          <td colspan="3" style="padding:10px 12px;font-weight:700;font-size:15px">Total</td>
+          <td colspan="3" style="padding:10px 12px;font-weight:700;font-size:15px">Total paid</td>
           <td style="padding:10px 12px;font-weight:800;font-size:15px;text-align:right">€${total.toFixed(2)}</td>
         </tr>
       </tfoot>
     </table>
-
     <p style="font-size:13px;color:#888;margin:4px 0 0">Delivery: ${deliveryLabel}</p>
 
     ${divider}
-    <p style="font-size:14px;color:#555;margin:0">We will send you updates as your order progresses through production.</p>
+    <p style="font-size:14px;color:#555;margin:0">
+      We will keep you updated at every step. Thank you for your order!
+    </p>
   `
 
   return {
-    subject: `Order received — #${orderId.slice(0, 8).toUpperCase()}`,
+    subject: `Payment confirmed — order #${orderId.slice(0, 8).toUpperCase()}`,
     html: emailWrap(body),
   }
 }

@@ -1,12 +1,19 @@
+import { emailWrap, sectionHeading, orderRef, divider } from './base'
+
 export function approved(orderId: string): { subject: string; html: string } {
+  const body = `
+    ${sectionHeading('Files approved')}
+    <p style="margin:0 0 16px;color:#555;font-size:14px">
+      Great news! Your files for order ${orderRef(orderId)} have been reviewed and approved.
+    </p>
+    <p style="margin:0 0 16px;font-size:14px">
+      Your order is now queued for production. We will notify you when it is ready for pickup or shipping.
+    </p>
+    ${divider}
+    <p style="font-size:14px;color:#555;margin:0">Thank you for your patience.</p>
+  `
   return {
-    subject: `Order approved and queued for production — #${orderId.slice(0, 8)}`,
-    html: `
-<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#111">
-  <h2>Order approved</h2>
-  <p>Great news! Your order <code>#${orderId.slice(0, 8)}</code> has been reviewed and approved.</p>
-  <p>It is now queued for production. We will notify you when it is ready.</p>
-  <p style="font-size:13px;color:#555">Thank you for your order.</p>
-</div>`,
+    subject: `Files approved — order #${orderId.slice(0, 8).toUpperCase()} is in the queue`,
+    html: emailWrap(body),
   }
 }

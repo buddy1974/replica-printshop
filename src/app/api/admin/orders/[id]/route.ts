@@ -5,6 +5,7 @@ import { assertExists } from '@/lib/assert'
 import { requireAdmin } from '@/lib/adminAuth'
 import { assertValidOrderTransition } from '@/lib/orderStatus'
 import { logAction } from '@/lib/log'
+import { sendOrderReady } from '@/lib/email'
 
 interface Params {
   params: { id: string }
@@ -70,7 +71,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       })
     }
 
-    const updated = await db.order.update({ where: { id: params.id }, data })
+    const updated = await db.order.update({
+      where: { id: params.id },
+      data,
+      include: { user: { select: { email: true } } },
+    })
+
+    // Notify customer when order is marked ready
+    if (body.status === 'READY' && updated.user?.email) {
+      sendOrderReady(params.id, updated.user.email).catch(() => {})
+    }
+
     return NextResponse.json(updated)
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
