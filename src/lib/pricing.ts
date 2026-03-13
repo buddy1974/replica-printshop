@@ -183,6 +183,9 @@ export async function calculatePrice(input: PricingInput): Promise<PricingResult
     const minPrice = toNum(pricingRule.minPrice)
     if (areaPrice < minPrice) areaPrice = minPrice
     unitPrice += areaPrice
+  } else if (tablePrice === null && pricingRule === null && toNum(variant?.basePrice) === 0) {
+    // No pricing source found — throw rather than silently return €0
+    throw new ValidationError('Pricing is not yet configured for this product.')
   }
 
   // Option additive modifiers + multipliers

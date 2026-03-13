@@ -226,9 +226,10 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
               <input type="number" min={minH} max={maxH} value={height} onChange={(e) => setHeight(Number(e.target.value))} className={inputCls} />
             </label>
           </div>
-          {sizeError && <p className="text-red-600 text-sm">{sizeError}</p>}
         </div>
       )}
+
+      {sizeError && <p className="text-red-600 text-sm">{sizeError}</p>}
 
       {showOptions && product.options.map((option) => {
         // Banner: replace Print selector with static info text
