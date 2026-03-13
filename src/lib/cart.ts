@@ -13,6 +13,9 @@ const cartInclude = {
       design: {
         select: { id: true, preview: true },
       },
+      pendingUpload: {
+        select: { id: true, filename: true, validStatus: true, filePath: true, mime: true, size: true, dpi: true, widthPx: true, heightPx: true },
+      },
     },
   },
 } as const
@@ -40,6 +43,7 @@ export interface AddToCartInput {
   productId: string
   variantId?: string
   designId?: string
+  pendingUploadId?: string
   width?: number
   height?: number
   quantity: number
@@ -49,7 +53,7 @@ export interface AddToCartInput {
 }
 
 export async function addToCart(input: AddToCartInput) {
-  const { userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = input
+  const { userId, productId, variantId, designId, pendingUploadId, width, height, quantity, express, optionValueIds, placement } = input
 
   assert(quantity > 0, 'quantity must be greater than 0')
   assert(quantity <= 1000, 'quantity must not exceed 1000')
@@ -114,6 +118,7 @@ export async function addToCart(input: AddToCartInput) {
       productId,
       variantId: variantId ?? null,
       designId: designId ?? null,
+      pendingUploadId: pendingUploadId ?? null,
       width: width ?? 0,
       height: height ?? 0,
       quantity,

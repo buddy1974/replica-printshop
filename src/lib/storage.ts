@@ -6,6 +6,8 @@ const STORAGE_DIR = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.resolve(process.cwd(), 'storage', 'uploads')
 
+const PENDING_DIR = path.resolve(process.cwd(), 'storage', 'pending')
+
 // Step 323 — max 50 MB (configurable via MAX_UPLOAD_SIZE env)
 const MAX_SIZE_BYTES = process.env.MAX_UPLOAD_SIZE
   ? parseInt(process.env.MAX_UPLOAD_SIZE, 10)
@@ -78,6 +80,73 @@ export function getAbsPath(storagePath: string): string {
     throw new ValidationError('Invalid storage path')
   }
   return abs
+}
+
+/** Save a pre-checkout pending file. Returns storagePath + buffer (for dimension reading). */
+export async function savePendingFile(
+  file: File,
+  uploadId: string,
+): Promise<{ storagePath: string; size: number; mime: string; buffer: Buffer }> {
+  validateFileInput(file)
+
+  const sanitizedId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '')
+  const rawName = path.basename(file.name)
+  const safeName = rawName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^\.+/, '_')
+  if (!safeName || safeName === '.' || safeName === '..') {
+    throw new ValidationError('Invalid filename')
+  }
+
+  const dir = path.resolve(PENDING_DIR, sanitizedId)
+  const diskPath = path.resolve(dir, safeName)
+
+  if (!diskPath.startsWith(PENDING_DIR + path.sep)) {
+    throw new ValidationError('Invalid file path')
+  }
+
+  fs.mkdirSync(dir, { recursive: true })
+
+  const buffer = Buffer.from(await file.arrayBuffer())
+  try {
+    fs.writeFileSync(diskPath, buffer)
+  } catch (err) {
+    if (fs.existsSync(diskPath)) fs.unlinkSync(diskPath)
+    throw err
+  }
+
+  const storagePath = `storage/pending/${sanitizedId}/${safeName}`
+  return { storagePath, size: buffer.length, mime: file.type || 'application/octet-stream', buffer }
+}
+
+/** Read pixel dimensions from a PNG or JPEG buffer. Returns null for PDF/SVG. */
+export function readImageDimensions(buf: Buffer, mime: string): { widthPx: number; heightPx: number } | null {
+  if (mime === 'image/png') return readPngDims(buf)
+  if (mime === 'image/jpeg') return readJpegDims(buf)
+  return null
+}
+
+function readPngDims(buf: Buffer): { widthPx: number; heightPx: number } | null {
+  if (buf.length < 24) return null
+  const PNG_SIG = [137, 80, 78, 71, 13, 10, 26, 10]
+  for (let i = 0; i < 8; i++) { if (buf[i] !== PNG_SIG[i]) return null }
+  return { widthPx: buf.readUInt32BE(16), heightPx: buf.readUInt32BE(20) }
+}
+
+function readJpegDims(buf: Buffer): { widthPx: number; heightPx: number } | null {
+  if (buf.length < 4 || buf[0] !== 0xFF || buf[1] !== 0xD8) return null
+  let i = 2
+  while (i + 3 < buf.length) {
+    if (buf[i] !== 0xFF) break
+    const marker = buf[i + 1]
+    if (marker === 0xD9 || marker === 0xDA) break
+    const segLen = buf.readUInt16BE(i + 2)
+    const isSOF = (marker >= 0xC0 && marker <= 0xC3) || (marker >= 0xC5 && marker <= 0xC7) ||
+                  (marker >= 0xC9 && marker <= 0xCB) || (marker >= 0xCD && marker <= 0xCF)
+    if (isSOF && i + 9 < buf.length) {
+      return { widthPx: buf.readUInt16BE(i + 7), heightPx: buf.readUInt16BE(i + 5) }
+    }
+    i += 2 + segLen
+  }
+  return null
 }
 
 export function deleteFile(storagePath: string): void {

@@ -317,7 +317,14 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
         <div className="mt-6 grid grid-cols-2 gap-4">
           <button
             className="bg-red-600 text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2"
-            onClick={() => { router.push(`/upload/${product.id}?w=${width}&h=${height}`) }}
+            onClick={() => {
+              const p = new URLSearchParams({ w: String(width), h: String(height), qty: String(quantity) })
+              if (variantId) p.set('variant', variantId)
+              if (optionValueIds.length) p.set('opts', optionValueIds.join(','))
+              if (showPlacement && placement) p.set('placement', placement)
+              if (deliveryType === 'EXPRESS') p.set('express', '1')
+              router.push(`/upload/${product.id}?${p}`)
+            }}
           >
             📤 Upload print file
           </button>

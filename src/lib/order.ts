@@ -40,6 +40,9 @@ export async function createOrderFromCart(
           },
           variant: true,
           design: { select: { id: true, preview: true } },
+          pendingUpload: {
+            select: { id: true, filename: true, filePath: true, mime: true, size: true, dpi: true, widthPx: true, heightPx: true },
+          },
         },
       },
     },
@@ -98,28 +101,50 @@ export async function createOrderFromCart(
         shippingCity:    shippingAddress?.city    ?? null,
         shippingZip:     shippingAddress?.zip     ?? null,
         shippingCountry: shippingAddress?.country ?? null,
-        items: {
-          create: cart.items.map((item) => ({
-            productName: item.product.name,
-            variantName: item.variant?.name ?? null,
-            categoryName: item.product.productCategory?.name ?? item.product.category ?? null,
-            productionTypeSnapshot: item.product.config?.productionType ?? null,
-            productId: item.productId,
-            variantId: item.variantId ?? null,
-            width: item.width,
-            height: item.height,
-            quantity: item.quantity,
-            priceSnapshot: item.priceSnapshot,
-            designId: item.designId ?? null,
-            previewUrl: item.design?.preview ?? null,
-          })),
-        },
       },
-      include: { items: true },
     })
 
+    for (const item of cart.items) {
+      const orderItem = await tx.orderItem.create({
+        data: {
+          orderId: newOrder.id,
+          productName: item.product.name,
+          variantName: item.variant?.name ?? null,
+          categoryName: item.product.productCategory?.name ?? item.product.category ?? null,
+          productionTypeSnapshot: item.product.config?.productionType ?? null,
+          productId: item.productId,
+          variantId: item.variantId ?? null,
+          width: item.width,
+          height: item.height,
+          quantity: item.quantity,
+          priceSnapshot: item.priceSnapshot,
+          designId: item.designId ?? null,
+          previewUrl: item.design?.preview ?? null,
+        },
+      })
+
+      // Migrate pre-checkout pending upload → UploadFile linked to this order item
+      if (item.pendingUpload) {
+        await tx.uploadFile.create({
+          data: {
+            orderItemId: orderItem.id,
+            filename: item.pendingUpload.filename,
+            filePath: item.pendingUpload.filePath ?? null,
+            mime: item.pendingUpload.mime ?? null,
+            size: item.pendingUpload.size ?? null,
+            dpi: item.pendingUpload.dpi ?? null,
+            widthPx: item.pendingUpload.widthPx ?? null,
+            heightPx: item.pendingUpload.heightPx ?? null,
+            uploadType: 'ARTWORK',
+            status: 'PENDING',
+          },
+        })
+      }
+    }
+
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
-    return newOrder
+
+    return tx.order.findUniqueOrThrow({ where: { id: newOrder.id }, include: { items: true } })
   })
 
   return order

@@ -322,25 +322,50 @@ model Cart {
 }
 
 model CartItem {
-  id            String  @id @default(cuid())
-  cartId        String
-  productId     String
-  variantId     String?
-  designId      String?
-  width         Decimal @db.Decimal(8, 2)
-  height        Decimal @db.Decimal(8, 2)
-  quantity      Int
-  priceSnapshot Decimal @db.Decimal(10, 2)
-  express       Boolean @default(false)
-  placement     String?
+  id              String  @id @default(cuid())
+  cartId          String
+  productId       String
+  variantId       String?
+  designId        String?
+  pendingUploadId String? @unique
+  width           Decimal @db.Decimal(8, 2)
+  height          Decimal @db.Decimal(8, 2)
+  quantity        Int
+  priceSnapshot   Decimal @db.Decimal(10, 2)
+  express         Boolean @default(false)
+  placement       String?
 
-  cart    Cart            @relation(fields: [cartId], references: [id])
-  product Product         @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
-  design  Design?         @relation(fields: [designId], references: [id])
+  cart          Cart            @relation(fields: [cartId], references: [id])
+  product       Product         @relation(fields: [productId], references: [id])
+  variant       ProductVariant? @relation(fields: [variantId], references: [id])
+  design        Design?         @relation(fields: [designId], references: [id])
+  pendingUpload PendingUpload?  @relation(fields: [pendingUploadId], references: [id])
 
   @@index([cartId])
   @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// Pending upload (pre-checkout, linked to cart item)
+// ---------------------------------------------------------------------------
+
+model PendingUpload {
+  id          String   @id @default(cuid())
+  userId      String?
+  filename    String
+  filePath    String?
+  size        Int?
+  mime        String?
+  dpi         Int?
+  widthPx     Int?
+  heightPx    Int?
+  validStatus String   @default("PENDING")
+  createdAt   DateTime @default(now())
+
+  cartItem CartItem?
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ---------------------------------------------------------------------------

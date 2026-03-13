@@ -17,6 +17,7 @@ export default async function CartPage() {
               product: { select: { name: true, imageUrl: true } },
               variant: { select: { name: true } },
               design: { select: { id: true, preview: true } },
+              pendingUpload: { select: { id: true, filename: true, validStatus: true } },
             },
           },
         },
@@ -90,6 +91,17 @@ export default async function CartPage() {
                           Custom design
                         </span>
                       )}
+                      {item.pendingUpload && (
+                        <span className={[
+                          'inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-md',
+                          item.pendingUpload.validStatus === 'OK' ? 'bg-green-100 text-green-700' :
+                          item.pendingUpload.validStatus === 'WARNING' ? 'bg-yellow-100 text-yellow-700' :
+                          item.pendingUpload.validStatus === 'INVALID' ? 'bg-red-100 text-red-700' :
+                          'bg-blue-100 text-blue-700',
+                        ].join(' ')}>
+                          File uploaded
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm font-semibold text-gray-900 shrink-0">
                       €{lineTotal.toFixed(2)}
@@ -143,6 +155,17 @@ export default async function CartPage() {
                           {item.design && (
                             <span className="inline-block mt-0.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md">
                               Custom design
+                            </span>
+                          )}
+                          {item.pendingUpload && (
+                            <span className={[
+                              'inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-md',
+                              item.pendingUpload.validStatus === 'OK' ? 'bg-green-100 text-green-700' :
+                              item.pendingUpload.validStatus === 'WARNING' ? 'bg-yellow-100 text-yellow-700' :
+                              item.pendingUpload.validStatus === 'INVALID' ? 'bg-red-100 text-red-700' :
+                              'bg-blue-100 text-blue-700',
+                            ].join(' ')}>
+                              File: {item.pendingUpload.filename.slice(0, 20)}{item.pendingUpload.filename.length > 20 ? '…' : ''}
                             </span>
                           )}
                         </td>

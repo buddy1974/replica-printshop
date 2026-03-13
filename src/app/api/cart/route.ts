@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { productId, variantId, designId, width, height, quantity, express, optionValueIds, placement } = body
+    const { productId, variantId, designId, pendingUploadId, width, height, quantity, express, optionValueIds, placement } = body
     console.log('CART BODY', { productId, variantId, designId, quantity, width, height })
 
     if (!isValidId(productId)) {
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       guestCreated = true
     }
 
-    const cart = await addToCart({ userId, productId, variantId, designId, width, height, quantity, express, optionValueIds, placement })
+    const cart = await addToCart({ userId, productId, variantId, designId, pendingUploadId, width, height, quantity, express, optionValueIds, placement })
     logAction('CART_ADD', 'cart', { userId, data: { productId, variantId, quantity, width, height } })
 
     const response = NextResponse.json(cart, { status: 201 })
