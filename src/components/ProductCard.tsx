@@ -24,8 +24,8 @@ export default function ProductCard({ slug, name, category, shortDescription, im
   return (
     <>
       <div className="group rounded-xl border border-gray-200 bg-white overflow-hidden flex flex-col hover:border-red-300 hover:shadow-sm transition-all">
-        {/* Step 401 — image uses contain, not cover */}
-        <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
+        {/* Image — clicking navigates to product page */}
+        <Link href={`/product/${slug}`} className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
           {imageUrl ? (
             <>
               <Image
@@ -35,10 +35,10 @@ export default function ProductCard({ slug, name, category, shortDescription, im
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-contain p-2"
               />
-              {/* Step 402 — zoom button opens modal */}
+              {/* Zoom button opens modal — stops link navigation */}
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalOpen(true) }}
                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white rounded-full w-7 h-7 flex items-center justify-center shadow text-gray-500 hover:text-gray-900 text-sm"
                 aria-label="View full image"
               >
@@ -56,7 +56,7 @@ export default function ProductCard({ slug, name, category, shortDescription, im
               </svg>
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="p-4 flex flex-col gap-3 flex-1">
           <div className="flex-1">
@@ -70,7 +70,7 @@ export default function ProductCard({ slug, name, category, shortDescription, im
             href={`/product/${slug}`}
             className="btn-primary w-fit"
           >
-            Configure →
+            Select →
           </Link>
         </div>
       </div>

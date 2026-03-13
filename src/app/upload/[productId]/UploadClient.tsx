@@ -7,6 +7,7 @@ import type { PrintCheckResult } from '@/lib/ai/printAssist'
 
 interface ProductInfo {
   id: string
+  slug: string
   name: string
   minDpi: number | null
   recommendedDpi: number | null
@@ -68,9 +69,12 @@ export default function UploadClient({ product, config }: Props) {
       if (config.heightCm) form.append('heightCm', String(config.heightCm))
 
       const res = await fetch('/api/upload/pending', { method: 'POST', body: form })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data.error ?? 'Upload failed')
+        const msg = data.error === 'Internal error'
+          ? 'Upload failed. Please try again or use a different file.'
+          : (data.error ?? 'Upload failed. Please try again.')
+        setError(msg)
       } else {
         setResult(data as UploadResult)
       }
@@ -127,10 +131,29 @@ export default function UploadClient({ product, config }: Props) {
   }
 
   const hasGuide = product.minDpi || product.bleedMm || product.allowedFormats || product.notes
+  const hasSize = config.widthCm > 0 && config.heightCm > 0
+  const backHref = `/product/${product.slug}${hasSize ? `?w=${config.widthCm}&h=${config.heightCm}` : ''}`
 
   // Whether the Add to cart button is gated by a confirmation
   const needsWarningConfirm = result?.validStatus === 'WARNING' && !warningConfirmed
   const canAddToCart = !!result && !addingToCart && !needsWarningConfirm
+
+  // Guard — must have size selected before uploading
+  if (!hasSize) {
+    return (
+      <div className="max-w-xl mx-auto">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+          <p className="font-semibold text-red-800 mb-2">No size selected</p>
+          <p className="text-sm text-red-700 mb-4">
+            Please select a width and height before uploading your file.
+          </p>
+          <a href={`/product/${product.slug}`} className="btn-primary inline-block">
+            ← Back to selection
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-xl mx-auto">
@@ -351,10 +374,10 @@ export default function UploadClient({ product, config }: Props) {
           </button>
         )}
         <a
-          href={`/configurator/${product.id}`}
+          href={backHref}
           className="text-center text-sm text-gray-500 hover:text-gray-700 underline"
         >
-          ← Back to configurator
+          ← Back to selection
         </a>
       </div>
     </div>

@@ -24,6 +24,7 @@ export default async function UploadPage({
     where: { id: params.productId, active: true },
     select: {
       id: true,
+      slug: true,
       name: true,
       minDpi: true,
       recommendedDpi: true,
@@ -51,6 +52,7 @@ export default async function UploadPage({
       <UploadClient
         product={{
           id: product.id,
+          slug: product.slug,
           name: product.name,
           minDpi: product.minDpi,
           recommendedDpi: product.recommendedDpi,

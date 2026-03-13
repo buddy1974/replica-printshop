@@ -300,15 +300,24 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 // Page
 // ---------------------------------------------------------------------------
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string }
+  searchParams?: { w?: string; h?: string }
+}) {
   const product = await getProduct(params.slug)
   if (!product) notFound()
+
+  const initialWidth  = searchParams?.w ? (Number(searchParams.w)  || undefined) : undefined
+  const initialHeight = searchParams?.h ? (Number(searchParams.h) || undefined) : undefined
 
   return (
     <Container>
 
-      {/* Step 433 — 2-column layout: image left, details right */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+      {/* 2-column layout: image left, configurator right */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 items-start">
 
         {/* Left — image + gallery */}
         <div>
@@ -329,9 +338,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
           )}
         </div>
 
-        {/* Right — details */}
+        {/* Right — title + description + size + options + buttons */}
         <div className="flex flex-col gap-4">
-          {/* Category + title */}
+          {/* Category + title + description */}
           <div>
             <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">
               {product.category}
@@ -351,24 +360,26 @@ export default async function ProductPage({ params }: { params: { slug: string }
             </div>
           )}
 
-          {/* Step 434 — Specs */}
-          <SpecsSection product={product} />
-
-          {/* Step 436 — Price block */}
+          {/* Price info — starting price before configuration */}
           <PriceInfo product={product} />
 
-          {/* File guide */}
-          <FileGuide product={product} />
+          {/* Configurator — size input directly above options + buttons */}
+          <div className="border-t border-gray-100 pt-4">
+            <ConfiguratorForm
+              product={product}
+              initialWidth={initialWidth}
+              initialHeight={initialHeight}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Configurator */}
-      <div id="configurator" className="rounded-xl border border-gray-200 bg-white p-6 mb-6">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-5">Configure & Order</p>
-        <ConfiguratorForm product={product} />
+      {/* Below grid — specs and file guide */}
+      <div className="flex flex-col gap-4 mb-6">
+        <SpecsSection product={product} />
+        <FileGuide product={product} />
       </div>
 
-      {/* Step 438 — Footer info block */}
       <CategoryFooter />
     </Container>
   )

@@ -58,6 +58,12 @@ interface Product {
   config: ProductConfig | null
 }
 
+interface ConfiguratorFormProps {
+  product: Product
+  initialWidth?: number | null
+  initialHeight?: number | null
+}
+
 interface PriceResult {
   unitPrice: number
   totalPrice: number
@@ -85,7 +91,7 @@ function PillButton({ active, onClick, children }: { active: boolean; onClick: (
   )
 }
 
-export default function ConfiguratorForm({ product }: { product: Product }) {
+export default function ConfiguratorForm({ product, initialWidth, initialHeight }: ConfiguratorFormProps) {
   const router = useRouter()
   const cfg = product.config
 
@@ -105,8 +111,8 @@ export default function ConfiguratorForm({ product }: { product: Product }) {
 
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
   const [optionValueIds, setOptionValueIds] = useState<string[]>(print40Id ? [print40Id] : [])
-  const [width, setWidth] = useState(fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
-  const [height, setHeight] = useState(fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
+  const [width, setWidth] = useState(initialWidth ?? fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
+  const [height, setHeight] = useState(initialHeight ?? fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
   const [quantity, setQuantity] = useState(1)
   const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS' | 'PICKUP'>('STANDARD')
   const [price, setPrice] = useState<PriceResult | null>(null)
