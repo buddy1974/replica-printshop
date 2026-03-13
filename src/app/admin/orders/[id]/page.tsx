@@ -10,6 +10,7 @@ import { orderStatusLabel } from '@/lib/statusLabel'
 interface Upload {
   id: string
   filename: string
+  mime: string | null
   status: string
   uploadType: string | null
   dpi: number | null
@@ -17,6 +18,27 @@ interface Upload {
   heightPx: number | null
   size: number | null
   filePath: string | null
+}
+
+function DpiQualityBadge({ dpi }: { dpi: number | null }) {
+  if (dpi === null) return <span className="text-xs text-gray-400">—</span>
+  const cls = dpi >= 150 ? 'bg-green-100 text-green-700'
+            : dpi >= 72  ? 'bg-yellow-100 text-yellow-700'
+            : 'bg-red-100 text-red-700'
+  const label = dpi >= 150 ? 'Good' : dpi >= 72 ? 'Low' : 'Poor'
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded ${cls}`}>
+      {dpi} DPI · {label}
+    </span>
+  )
+}
+
+function FileIcon() {
+  return (
+    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+    </svg>
+  )
 }
 
 interface Item {
@@ -377,7 +399,7 @@ export default function AdminOrderDetailPage() {
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Preview</p>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`/api/admin/files/${f.id}`}
+                      src={`/api/admin/files/${f.id}?preview`}
                       alt="Preview"
                       loading="lazy"
                       className="max-w-[200px] rounded-lg border border-gray-200"
@@ -390,64 +412,87 @@ export default function AdminOrderDetailPage() {
                 ) : artFiles.length === 0 ? null : (
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Uploaded files</p>
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
-                      <table className="w-full">
-                        <thead className="border-b border-gray-200 bg-gray-50">
-                          <tr>
-                            {['File', 'Type', 'DPI', 'W px', 'H px', 'Size', 'Status', ''].map((h) => (
-                              <th key={h} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {artFiles.map((f) => {
-                            const currentStatus = fileStatuses[f.id] ?? f.status
-                            return (
-                              <tr key={f.id} className="hover:bg-gray-50">
-                                <td className="px-3 py-2.5 font-mono text-xs">
+                    <div className="flex flex-col gap-3">
+                      {artFiles.map((f) => {
+                        const currentStatus = fileStatuses[f.id] ?? f.status
+                        const isImage = f.mime === 'image/png' || f.mime === 'image/jpeg'
+                        const isPdf = f.mime === 'application/pdf'
+                        const previewUrl = (isImage && f.filePath) ? `/api/admin/files/${f.id}?preview` : null
+                        return (
+                          <div key={f.id} className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex gap-3 items-start">
+                            {/* Preview thumbnail or icon */}
+                            <div className="shrink-0 w-16 h-16 rounded-md border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
+                              {previewUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={previewUrl}
+                                  alt="Preview"
+                                  loading="lazy"
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : isPdf ? (
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">PDF</span>
+                              ) : (
+                                <FileIcon />
+                              )}
+                            </div>
+
+                            {/* File details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <p className="font-mono text-xs font-medium text-gray-800 truncate">
                                   {f.filePath ? (
-                                    <a href={`/api/admin/files/${f.id}`} className="text-blue-600 hover:underline">{f.filename}</a>
+                                    <a href={`/api/admin/files/${f.id}`} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                                      {f.filename}
+                                    </a>
                                   ) : f.filename}
-                                </td>
-                                <td className="px-3 py-2.5 text-xs text-gray-500">{f.uploadType ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-xs">{f.dpi ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-xs">{f.widthPx ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-xs">{f.heightPx ?? '—'}</td>
-                                <td className="px-3 py-2.5 text-xs">{f.size ? `${(f.size / 1024).toFixed(0)} KB` : '—'}</td>
-                                <td className="px-3 py-2.5"><Badge label={currentStatus} /></td>
-                                <td className="px-3 py-2.5">
-                                  <div className="flex gap-1.5">
-                                    <button
-                                      onClick={() => setFileStatus(f.id, 'APPROVED')}
-                                      disabled={currentStatus === 'APPROVED'}
-                                      className={[
-                                        'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
-                                        currentStatus === 'APPROVED'
-                                          ? 'border-green-600 bg-green-600 text-white cursor-default'
-                                          : 'border-green-600 text-green-700 hover:bg-green-50',
-                                      ].join(' ')}
-                                    >
-                                      Approve
-                                    </button>
-                                    <button
-                                      onClick={() => setFileStatus(f.id, 'REJECTED')}
-                                      disabled={currentStatus === 'REJECTED'}
-                                      className={[
-                                        'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
-                                        currentStatus === 'REJECTED'
-                                          ? 'border-red-600 bg-red-600 text-white cursor-default'
-                                          : 'border-red-600 text-red-700 hover:bg-red-50',
-                                      ].join(' ')}
-                                    >
-                                      Reject
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
+                                </p>
+                                <Badge label={currentStatus} />
+                              </div>
+
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
+                                {f.uploadType && (
+                                  <span className="text-xs text-gray-500">{f.uploadType}</span>
+                                )}
+                                {f.size != null && (
+                                  <span className="text-xs text-gray-400">{(f.size / 1024).toFixed(0)} KB</span>
+                                )}
+                                {f.widthPx != null && f.heightPx != null && (
+                                  <span className="text-xs text-gray-400">{f.widthPx} × {f.heightPx} px</span>
+                                )}
+                                <DpiQualityBadge dpi={f.dpi} />
+                              </div>
+
+                              <div className="flex gap-1.5">
+                                <button
+                                  onClick={() => setFileStatus(f.id, 'APPROVED')}
+                                  disabled={currentStatus === 'APPROVED'}
+                                  className={[
+                                    'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
+                                    currentStatus === 'APPROVED'
+                                      ? 'border-green-600 bg-green-600 text-white cursor-default'
+                                      : 'border-green-600 text-green-700 hover:bg-green-50',
+                                  ].join(' ')}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => setFileStatus(f.id, 'REJECTED')}
+                                  disabled={currentStatus === 'REJECTED'}
+                                  className={[
+                                    'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
+                                    currentStatus === 'REJECTED'
+                                      ? 'border-red-600 bg-red-600 text-white cursor-default'
+                                      : 'border-red-600 text-red-700 hover:bg-red-50',
+                                  ].join(' ')}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

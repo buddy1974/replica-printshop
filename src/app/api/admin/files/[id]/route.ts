@@ -28,11 +28,13 @@ export async function GET(req: NextRequest, { params }: Params) {
     const mime = upload.mime ?? 'application/octet-stream'
     const filename = path.basename(upload.filename)
 
+    const preview = req.nextUrl.searchParams.has('preview')
     return new NextResponse(buffer, {
       headers: {
         'Content-Type': mime,
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': preview ? `inline; filename="${filename}"` : `attachment; filename="${filename}"`,
         'Content-Length': String(buffer.length),
+        ...(preview ? { 'Cache-Control': 'private, max-age=3600' } : {}),
       },
     })
   } catch (e) {
