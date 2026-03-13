@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Badge from '@/components/Badge'
@@ -94,9 +94,12 @@ export default function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [order, setOrder] = useState<Order | null>(null)
   const [fileStatuses, setFileStatuses] = useState<Record<string, string>>({})
+  const [fileDetails, setFileDetails] = useState<Record<string, Partial<Upload>>>({})
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState(false)
+  const [replacingFileId, setReplacingFileId] = useState<string | null>(null)
+  const replaceInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -152,6 +155,22 @@ export default function AdminOrderDetailPage() {
       body: JSON.stringify({ status }),
     })
     if (res.ok) setFileStatuses((prev) => ({ ...prev, [fileId]: status }))
+  }
+
+  const replaceFile = async (fileId: string, file: File) => {
+    setReplacingFileId(fileId)
+    const form = new FormData()
+    form.append('file', file)
+    const res = await fetch(`/api/admin/files/${fileId}/replace`, { method: 'POST', body: form })
+    if (res.ok) {
+      const updated = await res.json()
+      setFileStatuses((prev) => ({ ...prev, [fileId]: updated.status }))
+      setFileDetails((prev) => ({ ...prev, [fileId]: updated }))
+    } else {
+      const d = await res.json()
+      alert(d.error ?? 'Replace failed')
+    }
+    setReplacingFileId(null)
   }
 
   if (fetchError) {
@@ -412,14 +431,46 @@ export default function AdminOrderDetailPage() {
                 ) : artFiles.length === 0 ? null : (
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Uploaded files</p>
+                    {/* Hidden file input for replace */}
+                    <input
+                      ref={replaceInputRef}
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.svg"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file && replacingFileId) replaceFile(replacingFileId, file)
+                        e.target.value = ''
+                      }}
+                    />
+
                     <div className="flex flex-col gap-3">
                       {artFiles.map((f) => {
                         const currentStatus = fileStatuses[f.id] ?? f.status
-                        const isImage = f.mime === 'image/png' || f.mime === 'image/jpeg'
-                        const isPdf = f.mime === 'application/pdf'
-                        const previewUrl = (isImage && f.filePath) ? `/api/admin/files/${f.id}?preview` : null
+                        const merged = { ...f, ...(fileDetails[f.id] ?? {}) }
+                        const isImage = merged.mime === 'image/png' || merged.mime === 'image/jpeg'
+                        const isPdf = merged.mime === 'application/pdf'
+                        const previewUrl = (isImage && merged.filePath) ? `/api/admin/files/${f.id}?preview` : null
+                        const isReplacing = replacingFileId === f.id
+
+                        const statusPill: Record<string, string> = {
+                          APPROVED:  'bg-green-100 text-green-700',
+                          REJECTED:  'bg-red-100 text-red-700',
+                          NEEDS_FIX: 'bg-orange-100 text-orange-700',
+                          PENDING:   'bg-yellow-100 text-yellow-700',
+                        }
+
                         return (
-                          <div key={f.id} className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex gap-3 items-start">
+                          <div
+                            key={f.id}
+                            className={[
+                              'rounded-lg border p-3 flex gap-3 items-start',
+                              currentStatus === 'APPROVED'  ? 'border-green-200 bg-green-50' :
+                              currentStatus === 'REJECTED'  ? 'border-red-200 bg-red-50' :
+                              currentStatus === 'NEEDS_FIX' ? 'border-orange-200 bg-orange-50' :
+                              'border-gray-200 bg-gray-50',
+                            ].join(' ')}
+                          >
                             {/* Preview thumbnail or icon */}
                             <div className="shrink-0 w-16 h-16 rounded-md border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
                               {previewUrl ? (
@@ -441,29 +492,31 @@ export default function AdminOrderDetailPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2 mb-1">
                                 <p className="font-mono text-xs font-medium text-gray-800 truncate">
-                                  {f.filePath ? (
+                                  {merged.filePath ? (
                                     <a href={`/api/admin/files/${f.id}`} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                                      {f.filename}
+                                      {merged.filename}
                                     </a>
-                                  ) : f.filename}
+                                  ) : merged.filename}
                                 </p>
-                                <Badge label={currentStatus} />
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${statusPill[currentStatus] ?? 'bg-gray-100 text-gray-500'}`}>
+                                  {currentStatus}
+                                </span>
                               </div>
 
                               <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2">
                                 {f.uploadType && (
                                   <span className="text-xs text-gray-500">{f.uploadType}</span>
                                 )}
-                                {f.size != null && (
-                                  <span className="text-xs text-gray-400">{(f.size / 1024).toFixed(0)} KB</span>
+                                {merged.size != null && (
+                                  <span className="text-xs text-gray-400">{((merged.size as number) / 1024).toFixed(0)} KB</span>
                                 )}
-                                {f.widthPx != null && f.heightPx != null && (
-                                  <span className="text-xs text-gray-400">{f.widthPx} × {f.heightPx} px</span>
+                                {merged.widthPx != null && merged.heightPx != null && (
+                                  <span className="text-xs text-gray-400">{merged.widthPx} × {merged.heightPx} px</span>
                                 )}
-                                <DpiQualityBadge dpi={f.dpi} />
+                                <DpiQualityBadge dpi={merged.dpi as number | null} />
                               </div>
 
-                              <div className="flex gap-1.5">
+                              <div className="flex flex-wrap gap-1.5">
                                 <button
                                   onClick={() => setFileStatus(f.id, 'APPROVED')}
                                   disabled={currentStatus === 'APPROVED'}
@@ -487,6 +540,25 @@ export default function AdminOrderDetailPage() {
                                   ].join(' ')}
                                 >
                                   Reject
+                                </button>
+                                <button
+                                  onClick={() => setFileStatus(f.id, 'NEEDS_FIX')}
+                                  disabled={currentStatus === 'NEEDS_FIX'}
+                                  className={[
+                                    'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
+                                    currentStatus === 'NEEDS_FIX'
+                                      ? 'border-orange-500 bg-orange-500 text-white cursor-default'
+                                      : 'border-orange-500 text-orange-600 hover:bg-orange-50',
+                                  ].join(' ')}
+                                >
+                                  Needs fix
+                                </button>
+                                <button
+                                  onClick={() => { setReplacingFileId(f.id); replaceInputRef.current?.click() }}
+                                  disabled={isReplacing}
+                                  className="text-[11px] px-2 py-1 rounded border border-gray-400 text-gray-600 font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+                                >
+                                  {isReplacing ? 'Uploading…' : 'Replace'}
                                 </button>
                               </div>
                             </div>

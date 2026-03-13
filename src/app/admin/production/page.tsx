@@ -12,8 +12,28 @@ interface UploadFile {
   filename: string
   mime: string | null
   dpi: number | null
-  status: string
+  status: string   // PENDING | APPROVED | REJECTED | NEEDS_FIX
   filePath: string | null
+}
+
+// File status → pill styles
+const FILE_STATUS_PILL: Record<string, string> = {
+  APPROVED:  'bg-green-100 text-green-700',
+  REJECTED:  'bg-red-100 text-red-700',
+  NEEDS_FIX: 'bg-orange-100 text-orange-700',
+  PENDING:   'bg-yellow-100 text-yellow-700',
+}
+
+function fileStatusLabel(s: string) {
+  if (s === 'NEEDS_FIX') return 'needs fix'
+  return s.toLowerCase()
+}
+
+/** Returns true if order has upload files that are not all approved */
+function hasUnapprovedFiles(order: Order): boolean {
+  return order.items.some(
+    (item) => item.uploadFiles.length > 0 && item.uploadFiles.some((f) => f.status !== 'APPROVED')
+  )
 }
 
 interface OrderItem {
@@ -231,6 +251,8 @@ export default function ProductionPage() {
             const isActioning = actioning === order.id
             const customer = order.user?.name ?? order.user?.email ?? 'Guest'
 
+            const unapproved = hasUnapprovedFiles(order)
+
             return (
               <div
                 key={order.id}
@@ -298,16 +320,11 @@ export default function ProductionPage() {
                             {Number(item.width)} × {Number(item.height)} cm · Qty {item.quantity}
                           </p>
                           {upload && (
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-xs text-gray-400 truncate flex items-center gap-1.5 flex-wrap">
                               {upload.filename}
                               {upload.dpi ? ` · ${upload.dpi} DPI` : ''}
-                              {' · '}
-                              <span className={
-                                upload.status === 'APPROVED' ? 'text-green-600' :
-                                upload.status === 'REJECTED' ? 'text-red-600' :
-                                'text-gray-400'
-                              }>
-                                {upload.status.toLowerCase()}
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${FILE_STATUS_PILL[upload.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                                {fileStatusLabel(upload.status)}
                               </span>
                             </p>
                           )}
@@ -319,29 +336,41 @@ export default function ProductionPage() {
 
                 {/* Action buttons */}
                 {actions.length > 0 && (
-                  <div className="flex gap-2 flex-wrap pt-3 border-t border-gray-100">
-                    {actions.map(({ label, next }) => (
-                      <button
-                        key={next}
-                        onClick={() => advance(order.id, next)}
-                        disabled={isActioning}
-                        className={[
-                          'text-sm px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
-                          next === 'IN_PRODUCTION' ? 'bg-orange-500 text-white hover:bg-orange-600' :
-                          next === 'READY'          ? 'bg-green-600 text-white hover:bg-green-700' :
-                          next === 'DONE'           ? 'bg-gray-700 text-white hover:bg-gray-800' :
-                          'bg-red-600 text-white hover:bg-red-700',
-                        ].join(' ')}
+                  <div className="pt-3 border-t border-gray-100">
+                    {/* Unapproved files warning */}
+                    {unapproved && actions.some((a) => a.next === 'READY') && (
+                      <p className="text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-2">
+                        Files not all approved — review files before marking ready.
+                      </p>
+                    )}
+                    <div className="flex gap-2 flex-wrap">
+                      {actions.map(({ label, next }) => {
+                        const blockedByFiles = next === 'READY' && unapproved
+                        return (
+                          <button
+                            key={next}
+                            onClick={() => !blockedByFiles && advance(order.id, next)}
+                            disabled={isActioning || blockedByFiles}
+                            title={blockedByFiles ? 'Approve all files first' : undefined}
+                            className={[
+                              'text-sm px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50',
+                              next === 'IN_PRODUCTION' ? 'bg-orange-500 text-white hover:bg-orange-600' :
+                              next === 'READY'          ? 'bg-green-600 text-white hover:bg-green-700' :
+                              next === 'DONE'           ? 'bg-gray-700 text-white hover:bg-gray-800' :
+                              'bg-red-600 text-white hover:bg-red-700',
+                            ].join(' ')}
+                          >
+                            {isActioning ? '…' : label}
+                          </button>
+                        )
+                      })}
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
                       >
-                        {isActioning ? '…' : label}
-                      </button>
-                    ))}
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      View order
-                    </Link>
+                        View order
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>

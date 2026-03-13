@@ -43,6 +43,7 @@ enum FileStatus {
   PENDING
   APPROVED
   REJECTED
+  NEEDS_FIX
 }
 
 enum JobStatus {

@@ -28,6 +28,27 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     if (body.status) {
       assertValidOrderTransition(order.status, body.status)
+
+      // Block advancing to READY if any upload files are not approved
+      if (body.status === 'READY') {
+        const items = await db.orderItem.findMany({
+          where: { orderId: params.id },
+          select: {
+            uploadFiles: {
+              where: { NOT: { uploadType: 'PREVIEW' } },
+              select: { id: true, status: true },
+            },
+          },
+        })
+        const hasUnapproved = items.some((item) =>
+          item.uploadFiles.length > 0 &&
+          item.uploadFiles.some((f) => f.status !== 'APPROVED')
+        )
+        if (hasUnapproved) {
+          throw new ValidationError('All uploaded files must be approved before marking order as ready')
+        }
+      }
+
       data.status = body.status
       logAction('ORDER_STATUS', 'order', {
         userId: adminId,

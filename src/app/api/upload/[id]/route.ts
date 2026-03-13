@@ -9,7 +9,7 @@ interface Params {
   params: { id: string }
 }
 
-const VALID_STATUSES: FileStatus[] = ['PENDING', 'APPROVED', 'REJECTED']
+const VALID_STATUSES: FileStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'NEEDS_FIX']
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
