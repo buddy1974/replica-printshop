@@ -487,9 +487,10 @@ model UploadFile {
   dpi          Int?
   widthPx      Int?
   heightPx     Int?
-  status       FileStatus @default(PENDING)
-  uploadType   String?
-  uploadIndex  Int?
+  status        FileStatus @default(PENDING)
+  adminMessage  String?
+  uploadType    String?
+  uploadIndex   Int?
 
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
 

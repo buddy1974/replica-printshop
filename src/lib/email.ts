@@ -2,6 +2,7 @@ import { sendMail } from '@/lib/mail'
 import { orderCreated, type OrderCreatedData } from '@/mailTemplates/orderCreated'
 import { uploadNeeded } from '@/mailTemplates/uploadNeeded'
 import { uploadRejected } from '@/mailTemplates/uploadRejected'
+import { fileFixRequest } from '@/mailTemplates/fileFixRequest'
 import { approved } from '@/mailTemplates/approved'
 import { done } from '@/mailTemplates/done'
 
@@ -26,6 +27,18 @@ export async function sendUploadNeeded(orderId: string, userEmail: string) {
 
 export async function sendRejected(orderId: string, userEmail: string, filename: string) {
   const { subject, html } = uploadRejected(orderId, filename, APP_URL)
+  await sendMail(userEmail, subject, html)
+}
+
+export async function sendFileFixRequest(
+  orderId: string,
+  itemId: string,
+  userEmail: string,
+  filename: string,
+  reason: 'REJECTED' | 'NEEDS_FIX',
+  adminMessage?: string | null,
+) {
+  const { subject, html } = fileFixRequest(orderId, filename, reason, itemId, APP_URL, adminMessage)
   await sendMail(userEmail, subject, html)
 }
 

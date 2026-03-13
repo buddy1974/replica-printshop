@@ -100,6 +100,10 @@ export default function AdminOrderDetailPage() {
   const [fetchError, setFetchError] = useState(false)
   const [replacingFileId, setReplacingFileId] = useState<string | null>(null)
   const replaceInputRef = useRef<HTMLInputElement>(null)
+  // Inline notify panel: { fileId, status } waiting for message input
+  const [notifyPrompt, setNotifyPrompt] = useState<{ fileId: string; status: string } | null>(null)
+  const [notifyMessage, setNotifyMessage] = useState('')
+  const [notifyLoading, setNotifyLoading] = useState(false)
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -148,13 +152,22 @@ export default function AdminOrderDetailPage() {
     }
   }
 
-  const setFileStatus = async (fileId: string, status: string) => {
+  const setFileStatus = async (fileId: string, status: string, adminMessage?: string) => {
     const res = await fetch(`/api/upload/${fileId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, adminMessage: adminMessage ?? undefined }),
     })
     if (res.ok) setFileStatuses((prev) => ({ ...prev, [fileId]: status }))
+  }
+
+  const confirmNotify = async () => {
+    if (!notifyPrompt) return
+    setNotifyLoading(true)
+    await setFileStatus(notifyPrompt.fileId, notifyPrompt.status, notifyMessage || undefined)
+    setNotifyLoading(false)
+    setNotifyPrompt(null)
+    setNotifyMessage('')
   }
 
   const replaceFile = async (fileId: string, file: File) => {
@@ -530,7 +543,7 @@ export default function AdminOrderDetailPage() {
                                   Approve
                                 </button>
                                 <button
-                                  onClick={() => setFileStatus(f.id, 'REJECTED')}
+                                  onClick={() => { setNotifyPrompt({ fileId: f.id, status: 'REJECTED' }); setNotifyMessage('') }}
                                   disabled={currentStatus === 'REJECTED'}
                                   className={[
                                     'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
@@ -542,7 +555,7 @@ export default function AdminOrderDetailPage() {
                                   Reject
                                 </button>
                                 <button
-                                  onClick={() => setFileStatus(f.id, 'NEEDS_FIX')}
+                                  onClick={() => { setNotifyPrompt({ fileId: f.id, status: 'NEEDS_FIX' }); setNotifyMessage('') }}
                                   disabled={currentStatus === 'NEEDS_FIX'}
                                   className={[
                                     'text-[11px] px-2 py-1 rounded border font-medium transition-colors',
@@ -561,6 +574,37 @@ export default function AdminOrderDetailPage() {
                                   {isReplacing ? 'Uploading…' : 'Replace'}
                                 </button>
                               </div>
+
+                              {/* Inline notify panel — only shown for this file */}
+                              {notifyPrompt?.fileId === f.id && (
+                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                  <p className="text-[11px] font-semibold text-gray-600 mb-1.5">
+                                    {notifyPrompt.status === 'REJECTED' ? 'Reject file' : 'Request fix'} — notify customer
+                                  </p>
+                                  <textarea
+                                    value={notifyMessage}
+                                    onChange={(e) => setNotifyMessage(e.target.value)}
+                                    placeholder="Optional message (e.g. 'File too small — please upload at 150 DPI or higher')"
+                                    rows={2}
+                                    className="w-full text-xs rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none mb-2"
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={confirmNotify}
+                                      disabled={notifyLoading}
+                                      className="text-[11px] px-3 py-1.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+                                    >
+                                      {notifyLoading ? 'Sending…' : 'Confirm & notify customer'}
+                                    </button>
+                                    <button
+                                      onClick={() => setNotifyPrompt(null)}
+                                      className="text-[11px] px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )
