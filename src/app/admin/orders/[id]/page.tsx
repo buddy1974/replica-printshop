@@ -56,10 +56,24 @@ interface Order {
   items: Item[]
 }
 
+// Contextual action buttons per status
+const STATUS_ACTIONS: Record<string, { label: string; toStatus: string; variant: 'primary' | 'danger' | 'neutral' }[]> = {
+  PENDING:       [{ label: 'Confirm Order', toStatus: 'CONFIRMED', variant: 'primary' }, { label: 'Cancel', toStatus: 'CANCELLED', variant: 'danger' }],
+  CONFIRMED:     [{ label: 'Cancel', toStatus: 'CANCELLED', variant: 'danger' }],
+  UPLOADED:      [{ label: 'Cancel', toStatus: 'CANCELLED', variant: 'danger' }],
+  APPROVED:      [{ label: 'Cancel', toStatus: 'CANCELLED', variant: 'danger' }],
+  READY:         [{ label: 'Start Production', toStatus: 'IN_PRODUCTION', variant: 'primary' }, { label: 'Cancel', toStatus: 'CANCELLED', variant: 'danger' }],
+  IN_PRODUCTION: [{ label: 'Mark Done', toStatus: 'DONE', variant: 'primary' }, { label: 'Cancel', toStatus: 'CANCELLED', variant: 'danger' }],
+  DONE:          [],
+  CANCELLED:     [],
+}
+
 export default function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [order, setOrder] = useState<Order | null>(null)
   const [fileStatuses, setFileStatuses] = useState<Record<string, string>>({})
+  const [actionLoading, setActionLoading] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState(false)
 
   useEffect(() => {
@@ -78,6 +92,36 @@ export default function AdminOrderDetailPage() {
       })
       .catch(() => setFetchError(true))
   }, [id])
+
+  const patchOrder = async (body: { status?: string; paymentStatus?: string }) => {
+    setActionLoading(true)
+    setActionError(null)
+    const res = await fetch(`/api/admin/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    setActionLoading(false)
+    if (!res.ok) {
+      setActionError(data.error ?? 'Failed to update order')
+    } else {
+      setOrder((prev) => prev ? { ...prev, status: data.status, paymentStatus: data.paymentStatus } : prev)
+    }
+  }
+
+  const approveOrder = async () => {
+    setActionLoading(true)
+    setActionError(null)
+    const res = await fetch(`/api/admin/orders/${id}/approve`, { method: 'POST' })
+    const data = await res.json()
+    setActionLoading(false)
+    if (!res.ok) {
+      setActionError(data.error ?? 'Approval failed')
+    } else {
+      setOrder((prev) => prev ? { ...prev, status: data.status ?? prev.status } : prev)
+    }
+  }
 
   const setFileStatus = async (fileId: string, status: string) => {
     const res = await fetch(`/api/upload/${fileId}`, {
@@ -153,6 +197,76 @@ export default function AdminOrderDetailPage() {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Date</p>
           <p className="text-sm text-gray-700">{new Date(order.createdAt).toLocaleDateString()}</p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Actions</p>
+
+        {actionError && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{actionError}</p>
+        )}
+
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Approve files button — only for UPLOADED status */}
+          {order.status === 'UPLOADED' && (
+            <button
+              onClick={approveOrder}
+              disabled={actionLoading}
+              className="text-sm px-3 py-1.5 rounded-lg border border-green-600 bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              Approve Files
+            </button>
+          )}
+
+          {/* Contextual status transitions */}
+          {(STATUS_ACTIONS[order.status] ?? []).map(({ label, toStatus, variant }) => (
+            <button
+              key={toStatus}
+              onClick={() => patchOrder({ status: toStatus })}
+              disabled={actionLoading}
+              className={[
+                'text-sm px-3 py-1.5 rounded-lg border font-medium disabled:opacity-50 transition-colors',
+                variant === 'primary' ? 'border-red-600 bg-red-600 text-white hover:bg-red-700' :
+                variant === 'danger'  ? 'border-red-300 text-red-700 hover:bg-red-50' :
+                'border-gray-300 text-gray-700 hover:bg-gray-50',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+
+          {/* Payment status toggle */}
+          <div className="ml-auto flex gap-2">
+            {order.paymentStatus !== 'PAID' && (
+              <button
+                onClick={() => patchOrder({ paymentStatus: 'PAID' })}
+                disabled={actionLoading}
+                className="text-sm px-3 py-1.5 rounded-lg border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors font-medium"
+              >
+                Mark Paid
+              </button>
+            )}
+            {order.paymentStatus !== 'UNPAID' && (
+              <button
+                onClick={() => patchOrder({ paymentStatus: 'UNPAID' })}
+                disabled={actionLoading}
+                className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors font-medium"
+              >
+                Mark Unpaid
+              </button>
+            )}
+            {order.paymentStatus !== 'REFUNDED' && (
+              <button
+                onClick={() => patchOrder({ paymentStatus: 'REFUNDED' })}
+                disabled={actionLoading}
+                className="text-sm px-3 py-1.5 rounded-lg border border-yellow-500 text-yellow-700 hover:bg-yellow-50 disabled:opacity-50 transition-colors font-medium"
+              >
+                Mark Refunded
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
