@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { calculateShipping } from '@/lib/shipping'
+import { getVatRateAsync } from '@/lib/tax'
 
 /**
  * GET /api/shipping/estimate?country=AT
@@ -19,9 +20,11 @@ export async function GET(req: NextRequest) {
     include: { items: true },
   })
 
+  const vatRate = await getVatRateAsync(country)
+
   if (!cart || cart.items.length === 0) {
     // No cart — return sensible defaults
-    return NextResponse.json({ STANDARD: 5, EXPRESS: 7.5, PICKUP: 0 })
+    return NextResponse.json({ STANDARD: 5, EXPRESS: 7.5, PICKUP: 0, vatRate })
   }
 
   const subtotal = cart.items.reduce((s, i) => s + Number(i.priceSnapshot) * i.quantity, 0)
@@ -34,5 +37,5 @@ export async function GET(req: NextRequest) {
     calculateShipping(subtotal, 'EXPRESS', context),
   ])
 
-  return NextResponse.json({ STANDARD: standard, EXPRESS: express, PICKUP: 0 })
+  return NextResponse.json({ STANDARD: standard, EXPRESS: express, PICKUP: 0, vatRate })
 }

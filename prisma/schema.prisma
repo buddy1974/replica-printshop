@@ -509,6 +509,18 @@ model UploadFile {
 }
 
 // ---------------------------------------------------------------------------
+// Tax rates (DB-configurable, falls back to hardcoded VAT_RATES in tax.ts)
+// ---------------------------------------------------------------------------
+
+model TaxRate {
+  id      String  @id @default(cuid())
+  /// ISO 3166-1 alpha-2 country code, or "DEFAULT" for the fallback rate
+  country String  @unique
+  rate    Decimal @db.Decimal(5, 2)
+  label   String?
+}
+
+// ---------------------------------------------------------------------------
 // Audit + error log  (steps 331, 337)
 // ---------------------------------------------------------------------------
 

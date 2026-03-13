@@ -658,11 +658,13 @@ function CartSummary({
   items,
   subtotal,
   deliveryPrice,
+  vatRate,
   onDeleted,
 }: {
   items: CartItem[]
   subtotal: number
   deliveryPrice: number
+  vatRate: number
   onDeleted: (id: string) => void
 }) {
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -739,8 +741,8 @@ function CartSummary({
           <span>€{(subtotal + deliveryPrice).toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-xs text-gray-400">
-          <span>incl. VAT (19%)</span>
-          <span>€{((subtotal + deliveryPrice) * 19 / 119).toFixed(2)}</span>
+          <span>incl. {vatRate}% VAT</span>
+          <span>€{((subtotal + deliveryPrice) * vatRate / (100 + vatRate)).toFixed(2)}</span>
         </div>
       </div>
     </div>
@@ -802,11 +804,12 @@ export default function CheckoutWizard(props: Props) {
     } catch {}
   }, [step, billing, deliveryAddr, sameAsBilling, deliveryType])
 
-  // Dynamic delivery prices fetched from /api/shipping/estimate
+  // Dynamic delivery prices + VAT rate fetched from /api/shipping/estimate
   const [deliveryPrices, setDeliveryPrices] = useState<Record<DeliveryType, number>>({
     STANDARD: 5, EXPRESS: 12, PICKUP: 0,
   })
   const [pricesLoading, setPricesLoading] = useState(false)
+  const [vatRate, setVatRate] = useState(19)
 
   useEffect(() => {
     if (step !== 'delivery') return
@@ -814,10 +817,11 @@ export default function CheckoutWizard(props: Props) {
     const country = billing.country || 'AT'
     fetch(`/api/shipping/estimate?country=${encodeURIComponent(country)}`)
       .then((r) => r.json())
-      .then((d: Partial<Record<DeliveryType, number>>) => {
+      .then((d: Partial<Record<DeliveryType, number>> & { vatRate?: number }) => {
         if (d.STANDARD !== undefined) {
           setDeliveryPrices({ STANDARD: d.STANDARD, EXPRESS: d.EXPRESS ?? 12, PICKUP: 0 })
         }
+        if (d.vatRate !== undefined) setVatRate(d.vatRate)
       })
       .catch(() => {})
       .finally(() => setPricesLoading(false))
@@ -898,6 +902,7 @@ export default function CheckoutWizard(props: Props) {
             items={items}
             subtotal={subtotal}
             deliveryPrice={deliveryPrice}
+            vatRate={vatRate}
             onDeleted={handleItemDeleted}
           />
 

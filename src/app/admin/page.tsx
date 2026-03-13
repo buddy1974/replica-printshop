@@ -31,6 +31,7 @@ const navLinks = [
   { href: '/admin/orders', label: 'Orders', desc: 'View all orders' },
   { href: '/admin/production', label: 'Production', desc: 'Production queue' },
   { href: '/admin/shipping', label: 'Shipping rules', desc: 'Configure shipping prices' },
+  { href: '/admin/tax', label: 'Tax / VAT', desc: 'Configure VAT rates per country' },
   { href: '/admin/categories', label: 'Categories', desc: 'Edit category names and descriptions' },
 ]
 

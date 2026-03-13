@@ -6,10 +6,17 @@
  * the total amount charged.
  *
  * EU-ready: rates are keyed by ISO 3166-1 alpha-2 country code.
- * Add new countries here — no other code changes required.
+ *
+ * Resolution order for getVatRateAsync():
+ *   1. TaxRate DB table (admin-configurable)
+ *   2. TaxRate DB entry with country = "DEFAULT"
+ *   3. Hardcoded VAT_RATES map below
+ *   4. DEFAULT_VAT_RATE (19%)
  */
 
-/** VAT rates per country code (percent). 0 = no VAT (e.g. non-EU). */
+import { db } from '@/lib/db'
+
+/** Hardcoded fallback rates per country code (percent). 0 = no VAT. */
 export const VAT_RATES: Record<string, number> = {
   AT: 20,    // Austria
   DE: 19,    // Germany
@@ -23,21 +30,48 @@ export const VAT_RATES: Record<string, number> = {
   SE: 25,    // Sweden
   DK: 25,    // Denmark
   FI: 24,    // Finland
-  NO: 25,    // Norway (non-EU but treated similarly)
-  CH: 8.1,   // Switzerland (non-EU, standard rate)
-  GB: 20,    // United Kingdom (post-Brexit)
+  NO: 25,    // Norway
+  CH: 8.1,   // Switzerland
+  GB: 20,    // United Kingdom
 }
 
-/** Default rate applied when country is unknown or not in the table. */
+/** Hardcoded default rate when country is unknown. */
 export const DEFAULT_VAT_RATE = 19
 
 /**
- * Return the VAT rate for a billing country.
- * Falls back to DEFAULT_VAT_RATE if the country is unknown.
+ * Synchronous rate lookup using the hardcoded map.
+ * Use getVatRateAsync() for production code — this is a fallback.
  */
 export function getVatRate(country?: string | null): number {
   if (!country) return DEFAULT_VAT_RATE
   return VAT_RATES[country.toUpperCase()] ?? DEFAULT_VAT_RATE
+}
+
+/**
+ * Async rate lookup: reads from the TaxRate DB table first.
+ * Falls back to getVatRate() if no DB entry exists.
+ */
+export async function getVatRateAsync(country?: string | null): Promise<number> {
+  try {
+    const upper = country?.toUpperCase() ?? null
+    const rows = await db.taxRate.findMany({
+      where: upper
+        ? { country: { in: [upper, 'DEFAULT'] } }
+        : { country: 'DEFAULT' },
+    })
+
+    // Prefer exact country match, then DEFAULT
+    if (upper) {
+      const exact = rows.find((r) => r.country === upper)
+      if (exact) return parseFloat(exact.rate.toString())
+    }
+    const fallback = rows.find((r) => r.country === 'DEFAULT')
+    if (fallback) return parseFloat(fallback.rate.toString())
+  } catch {
+    // DB unavailable — fall through to hardcoded
+  }
+
+  return getVatRate(country)
 }
 
 /**

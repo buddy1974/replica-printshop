@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { DeliveryType } from '@/generated/prisma/client'
 import { calculateShipping, validateShippingRestrictions, resolveShippingMethod, hasLargeFormatItem } from '@/lib/shipping'
 import { ValidationError } from '@/lib/errors'
-import { getVatRate, extractVat } from '@/lib/tax'
+import { getVatRateAsync, extractVat } from '@/lib/tax'
 
 export interface GuestAddress {
   name: string
@@ -72,7 +72,7 @@ export async function createOrderFromCart(
 
   // VAT calculation (extracted from VAT-inclusive gross total — does not change total)
   const billingCountry = billingAddress?.country ?? null
-  const taxPercent = getVatRate(billingCountry)
+  const taxPercent = await getVatRateAsync(billingCountry)
   const taxAmount = extractVat(total, taxPercent)
 
   // Save addresses for registered users if requested
