@@ -9,7 +9,7 @@ const links: { href: string; label: string; mobileHide?: boolean }[] = [
   { href: '/shop', label: 'Shop' },
   { href: '/shop/graphic-installation', label: 'Graphic Installation', mobileHide: true },
   { href: '/contact', label: 'Contact', mobileHide: true },
-  { href: '/orders', label: 'Orders' },
+  { href: '/account', label: 'Account' },
   { href: '/admin', label: 'Admin' },
 ]
 

@@ -1,10 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Container from '@/components/Container'
 import Badge from '@/components/Badge'
 import { db } from '@/lib/db'
 import { orderStatusLabel } from '@/lib/statusLabel'
-
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
@@ -20,10 +18,13 @@ export default async function AccountOrdersPage() {
   })
 
   return (
-    <Container>
-      <h1 className="mb-6">My orders</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
+
       {orders.length === 0 ? (
-        <p className="text-sm text-gray-500">No orders yet.</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
+          No orders yet.
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {orders.map((o) => (
@@ -48,6 +49,6 @@ export default async function AccountOrdersPage() {
           ))}
         </div>
       )}
-    </Container>
+    </div>
   )
 }

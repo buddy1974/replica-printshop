@@ -62,6 +62,7 @@ interface Order {
   total: number
   shippingPrice: number
   stripePaymentIntentId: string | null
+  trackingNumber: string | null
   billingName: string | null
   billingStreet: string | null
   billingCity: string | null
@@ -104,6 +105,9 @@ export default function AdminOrderDetailPage() {
   const [notifyPrompt, setNotifyPrompt] = useState<{ fileId: string; status: string } | null>(null)
   const [notifyMessage, setNotifyMessage] = useState('')
   const [notifyLoading, setNotifyLoading] = useState(false)
+  const [trackingInput, setTrackingInput] = useState('')
+  const [trackingSaved, setTrackingSaved] = useState(false)
+  const [trackingLoading, setTrackingLoading] = useState(false)
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -113,6 +117,7 @@ export default function AdminOrderDetailPage() {
       })
       .then((o: Order) => {
         setOrder(o)
+        setTrackingInput(o.trackingNumber ?? '')
         const statuses: Record<string, string> = {}
         for (const item of o.items) {
           for (const f of item.uploadFiles) statuses[f.id] = f.status
@@ -168,6 +173,21 @@ export default function AdminOrderDetailPage() {
     setNotifyLoading(false)
     setNotifyPrompt(null)
     setNotifyMessage('')
+  }
+
+  const saveTracking = async () => {
+    setTrackingLoading(true)
+    setTrackingSaved(false)
+    const res = await fetch(`/api/admin/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trackingNumber: trackingInput }),
+    })
+    setTrackingLoading(false)
+    if (res.ok) {
+      setOrder((prev) => prev ? { ...prev, trackingNumber: trackingInput || null } : prev)
+      setTrackingSaved(true)
+    }
   }
 
   const replaceFile = async (fileId: string, file: File) => {
@@ -268,6 +288,27 @@ export default function AdminOrderDetailPage() {
         >
           Download PDF
         </a>
+      </div>
+
+      {/* Tracking number */}
+      <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Tracking number</p>
+        <div className="flex gap-2 items-center">
+          <input
+            value={trackingInput}
+            onChange={(e) => { setTrackingInput(e.target.value); setTrackingSaved(false) }}
+            placeholder="e.g. 1Z999AA10123456784"
+            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+          />
+          <button
+            onClick={saveTracking}
+            disabled={trackingLoading}
+            className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors font-medium"
+          >
+            {trackingLoading ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+        {trackingSaved && <p className="text-xs text-green-700 mt-2">Tracking number saved.</p>}
       </div>
 
       {/* Actions */}

@@ -9,7 +9,9 @@
       "Bash(npx tailwindcss:*)",
       "Bash(npx:*)",
       "Bash(node:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)"
     ]
   }
 }

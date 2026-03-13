@@ -1,0 +1,44 @@
+import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { db } from '@/lib/db'
+import DeleteAddressButton from './DeleteAddressButton'
+
+export const dynamic = 'force-dynamic'
+
+export default async function AddressesPage() {
+  const userId = cookies().get('replica_uid')?.value
+  if (!userId) notFound()
+
+  const addresses = await db.address.findMany({
+    where: { userId },
+    orderBy: { id: 'asc' },
+  })
+
+  return (
+    <div className="flex flex-col gap-4">
+      <h1 className="text-lg font-semibold text-gray-900">Saved addresses</h1>
+
+      {addresses.length === 0 ? (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
+          No saved addresses yet. Addresses are saved automatically when you complete an order.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {addresses.map((a) => (
+            <div key={a.id} className="bg-white border border-gray-200 rounded-xl p-4 flex justify-between items-start gap-4">
+              <div className="text-sm text-gray-700 leading-relaxed">
+                {a.company && <p className="font-medium">{a.company}</p>}
+                <p>{a.name}</p>
+                <p>{a.street}</p>
+                <p>{a.zip} {a.city}</p>
+                <p className="text-gray-500">{a.country}</p>
+                {a.phone && <p className="text-gray-400 text-xs mt-0.5">{a.phone}</p>}
+              </div>
+              <DeleteAddressButton id={a.id} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

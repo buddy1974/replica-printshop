@@ -15,16 +15,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     await requireAdmin(req)
 
-    const body = await req.json() as { status?: string; paymentStatus?: string }
+    const body = await req.json() as { status?: string; paymentStatus?: string; trackingNumber?: string }
 
-    if (!body.status && !body.paymentStatus) {
-      throw new ValidationError('Provide status or paymentStatus to update')
+    if (!body.status && !body.paymentStatus && body.trackingNumber === undefined) {
+      throw new ValidationError('Provide status, paymentStatus, or trackingNumber to update')
     }
 
     const order = await db.order.findUnique({ where: { id: params.id } })
     assertExists(order, 'Order not found')
 
-    const data: Record<string, string> = {}
+    const data: Record<string, string | null> = {}
     const adminId = req.cookies.get('replica_uid')?.value ?? 'unknown'
 
     if (body.status) {
@@ -69,6 +69,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         entityId: params.id,
         data: { from: order.paymentStatus, to: body.paymentStatus },
       })
+    }
+
+    if (body.trackingNumber !== undefined) {
+      data.trackingNumber = body.trackingNumber || null
     }
 
     const updated = await db.order.update({
