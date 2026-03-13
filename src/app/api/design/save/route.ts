@@ -6,7 +6,7 @@ import { AppError, ValidationError } from '@/lib/errors'
 import { saveDesignPreview } from '@/lib/designStorage'
 import { logAction, logError } from '@/lib/log'
 import { isValidId, MAX_DESIGN_JSON_BYTES, MAX_PREVIEW_BYTES } from '@/lib/inputValidation'
-import { analyzeDesign, type PrintCheckResult } from '@/lib/ai/printAssist'
+import { analyzeDesign, calculateScore, type PrintCheckResult } from '@/lib/ai/printAssist'
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,16 +77,18 @@ export async function POST(req: NextRequest) {
           minDpi:          product.minDpi ?? null,
           recommendedDpi:  product.recommendedDpi ?? null,
         })
+        const preflightScore = calculateScore(aiCheck).score
         await db.design.update({
           where: { id: design.id },
-          data: { aiCheck: aiCheck as object },
+          data: { aiCheck: aiCheck as object, preflightScore },
         })
       }
     } catch {
       // Non-fatal — check failure must not break cart flow
     }
 
-    return NextResponse.json({ id: design.id, preview: previewPath, aiCheck }, { status: 201 })
+    const preflightScore = aiCheck ? calculateScore(aiCheck).score : null
+    return NextResponse.json({ id: design.id, preview: previewPath, aiCheck, preflightScore }, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
     const err = e instanceof Error ? e : new Error(String(e))

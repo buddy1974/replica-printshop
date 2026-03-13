@@ -27,6 +27,7 @@ import TemplateLibraryPanel from '@/components/editor/TemplateLibraryPanel'
 import { useCart } from '@/context/CartContext'
 import PrintCheckPanel from '@/components/PrintCheckPanel'
 import type { PrintCheckResult } from '@/lib/ai/printAssist'
+import { calculateScore, type PreflightScore } from '@/lib/ai/printAssist'
 
 interface Product {
   id: string
@@ -89,6 +90,7 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
 
   // AI print check — populated when design is saved
   const [printCheck, setPrintCheck] = useState<PrintCheckResult | null>(null)
+  const [preflightScore, setPreflightScore] = useState<PreflightScore | null>(null)
 
   // Step 421 — mobile detection
   useEffect(() => {
@@ -136,6 +138,11 @@ export default function EditorShell({ product, initialWidth, initialHeight }: Pr
     else if (selectedType === 'image') setActiveTab('image')
     else if (selectedType === 'shape') setActiveTab('shape')
   }, [selectedType])
+
+  // Recompute preflight score when print check updates
+  useEffect(() => {
+    if (printCheck) setPreflightScore(calculateScore(printCheck))
+  }, [printCheck])
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -503,6 +510,67 @@ function handleSelectionChange(
                   />
                 )}
               </div>
+
+              {/* Smart Assist — always shown when canvas is ready */}
+              {canvasReady && (
+                <div className="px-3 py-2 border-t border-gray-100 shrink-0">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Smart Assist</p>
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      onClick={() => canvasRef.current?.centerInZone()}
+                      className="text-xs px-2 py-1 rounded border border-gray-200 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                      title="Center selected object in print zone"
+                    >
+                      Center
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => canvasRef.current?.fitSelected()}
+                      className="text-xs px-2 py-1 rounded border border-gray-200 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                      title="Scale selected object to fill safe area"
+                    >
+                      Fit area
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { canvasRef.current?.fitSelected(); canvasRef.current?.centerInZone() }}
+                      className="text-xs px-2 py-1 rounded bg-indigo-50 border border-indigo-200 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                      title="Fit to print zone then center"
+                    >
+                      Fix all
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Preflight score — shown after first save */}
+              {preflightScore && (
+                <div className="px-3 pt-2 pb-1 shrink-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-500">Preflight score</span>
+                    <span className={[
+                      'text-xs font-semibold px-1.5 py-0.5 rounded',
+                      preflightScore.label === 'Good'    ? 'bg-green-100 text-green-700' :
+                      preflightScore.label === 'Warning' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700',
+                    ].join(' ')}>
+                      {preflightScore.score}/100 · {preflightScore.label}
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-gray-200 overflow-hidden">
+                    <div
+                      className={[
+                        'h-full rounded-full transition-all',
+                        preflightScore.score >= 80 ? 'bg-green-500' :
+                        preflightScore.score >= 50 ? 'bg-yellow-400' :
+                        'bg-red-500',
+                      ].join(' ')}
+                      style={{ width: `${preflightScore.score}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* AI Print Check — shown after first save */}
               {printCheck && (

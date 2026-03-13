@@ -42,7 +42,7 @@ export async function createOrderFromCart(
           variant: true,
           design: { select: { id: true, preview: true } },
           pendingUpload: {
-            select: { id: true, filename: true, filePath: true, mime: true, size: true, dpi: true, widthPx: true, heightPx: true },
+            select: { id: true, filename: true, filePath: true, mime: true, size: true, dpi: true, widthPx: true, heightPx: true, preflightScore: true },
           },
         },
       },
@@ -134,6 +134,7 @@ export async function createOrderFromCart(
           priceSnapshot: item.priceSnapshot,
           designId: item.designId ?? null,
           previewUrl: item.design?.preview ?? null,
+          preflightScore: item.preflightScore ?? item.pendingUpload?.preflightScore ?? null,
         },
       })
 

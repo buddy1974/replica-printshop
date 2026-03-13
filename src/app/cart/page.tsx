@@ -3,6 +3,16 @@ import Link from 'next/link'
 import Container from '@/components/Container'
 import { db } from '@/lib/db'
 
+function scoreBadge(score: number | null | undefined) {
+  if (score == null) return null
+  const label = score >= 80 ? 'Good' : score >= 50 ? 'Warn' : 'Risky'
+  const cls = score >= 80
+    ? 'bg-green-100 text-green-700'
+    : score >= 50 ? 'bg-yellow-100 text-yellow-700'
+    : 'bg-red-100 text-red-700'
+  return <span className={`inline-block text-xs px-1.5 py-0.5 rounded-md ${cls}`}>{score} {label}</span>
+}
+
 export const dynamic = 'force-dynamic'
 
 export default async function CartPage() {
@@ -16,7 +26,7 @@ export default async function CartPage() {
             include: {
               product: { select: { name: true, imageUrl: true } },
               variant: { select: { name: true } },
-              design: { select: { id: true, preview: true } },
+              design: { select: { id: true, preview: true, preflightScore: true } },
               pendingUpload: { select: { id: true, filename: true, validStatus: true } },
             },
           },
@@ -91,6 +101,7 @@ export default async function CartPage() {
                           Custom design
                         </span>
                       )}
+                      {item.design && scoreBadge(item.design.preflightScore)}
                       {item.pendingUpload && (
                         <span className={[
                           'inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-md',
@@ -157,6 +168,7 @@ export default async function CartPage() {
                               Custom design
                             </span>
                           )}
+                          {item.design && scoreBadge(item.design.preflightScore)}
                           {item.pendingUpload && (
                             <span className={[
                               'inline-block mt-0.5 text-xs px-1.5 py-0.5 rounded-md',

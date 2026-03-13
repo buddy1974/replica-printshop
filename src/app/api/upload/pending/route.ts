@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
 import { savePendingFile, readImageDimensions } from '@/lib/storage'
-import { analyzeUpload } from '@/lib/ai/printAssist'
+import { analyzeUpload, calculateScore } from '@/lib/ai/printAssist'
 
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf', 'svg'])
 const ALLOWED_MIMES = new Set(['image/png', 'image/jpeg', 'application/pdf', 'image/svg+xml'])
@@ -87,6 +87,7 @@ export async function POST(req: NextRequest) {
     })
 
     const userId = req.cookies.get('replica_uid')?.value ?? null
+    const preflightScore = calculateScore(aiCheck).score
 
     const pending = await db.pendingUpload.create({
       data: {
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
         heightPx,
         validStatus,
         aiCheck: aiCheck as object,
+        preflightScore,
       },
     })
 
@@ -115,6 +117,7 @@ export async function POST(req: NextRequest) {
       validStatus: pending.validStatus,
       validMessages,
       aiCheck,
+      preflightScore,
     }, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })

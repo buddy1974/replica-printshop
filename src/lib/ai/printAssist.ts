@@ -297,3 +297,25 @@ export function getPrintWarnings(result: PrintCheckResult): PrintCheck[] {
   return [result.resolution, result.safeArea, result.bleed, result.sizeMatch]
     .filter((c) => c.status !== 'ok')
 }
+
+// ── Preflight score ─────────────────────────────────────────────────────────
+
+export interface PreflightScore {
+  score: number   // 0–100
+  label: 'Good' | 'Warning' | 'Risky'
+}
+
+/**
+ * Converts a PrintCheckResult to a 0–100 score.
+ * Weights: Resolution 35%, Safe area 25%, Bleed 25%, Size 15%.
+ * ≥80 = Good, 50–79 = Warning, <50 = Risky.
+ */
+export function calculateScore(result: PrintCheckResult): PreflightScore {
+  const score =
+    (result.resolution.status === 'ok' ? 35 : result.resolution.status === 'warning' ? 17 : 0) +
+    (result.safeArea.status   === 'ok' ? 25 : result.safeArea.status   === 'warning' ? 12 : 0) +
+    (result.bleed.status      === 'ok' ? 25 : result.bleed.status      === 'warning' ? 12 : 0) +
+    (result.sizeMatch.status  === 'ok' ? 15 : result.sizeMatch.status  === 'warning' ?  7 : 0)
+  const label = score >= 80 ? 'Good' : score >= 50 ? 'Warning' : 'Risky'
+  return { score, label }
+}

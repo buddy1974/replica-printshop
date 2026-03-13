@@ -51,6 +51,7 @@ interface Item {
   height: number
   quantity: number
   priceSnapshot: number
+  preflightScore: number | null
   uploadFiles: Upload[]
 }
 
@@ -472,8 +473,18 @@ export default function AdminOrderDetailPage() {
             const artFiles = item.uploadFiles.filter((f) => f.uploadType !== 'PREVIEW')
             return (
               <div key={item.id} className="rounded-xl border border-gray-200 bg-white p-5">
-                <p className="font-semibold text-gray-900 mb-0.5">
+                <p className="font-semibold text-gray-900 mb-0.5 flex items-center gap-2 flex-wrap">
                   {item.productName}{item.variantName ? ` — ${item.variantName}` : ''}
+                  {item.preflightScore != null && (
+                    <span className={[
+                      'text-xs px-1.5 py-0.5 rounded font-medium',
+                      item.preflightScore >= 80 ? 'bg-green-100 text-green-700' :
+                      item.preflightScore >= 50 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700',
+                    ].join(' ')}>
+                      Preflight {item.preflightScore}/100
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
                   {Number(item.width)} × {Number(item.height)} cm &middot; Qty {item.quantity} &middot; €{Number(item.priceSnapshot).toFixed(2)}

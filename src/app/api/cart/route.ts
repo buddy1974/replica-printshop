@@ -57,6 +57,24 @@ export async function POST(req: NextRequest) {
     const cart = await addToCart({ userId, productId, variantId, designId, pendingUploadId, width, height, quantity, express, optionValueIds, placement })
     logAction('CART_ADD', 'cart', { userId, data: { productId, variantId, quantity, width, height } })
 
+    // Carry preflightScore from design or pendingUpload to the CartItem
+    if (designId || pendingUploadId) {
+      let ps: number | null = null
+      if (designId) {
+        const d = await db.design.findUnique({ where: { id: designId }, select: { preflightScore: true } })
+        ps = d?.preflightScore ?? null
+      } else if (pendingUploadId) {
+        const p = await db.pendingUpload.findUnique({ where: { id: pendingUploadId }, select: { preflightScore: true } })
+        ps = p?.preflightScore ?? null
+      }
+      if (ps !== null) {
+        await db.cartItem.updateMany({
+          where: { cart: { userId }, ...(designId ? { designId } : { pendingUploadId }) },
+          data: { preflightScore: ps },
+        })
+      }
+    }
+
     const response = NextResponse.json(cart, { status: 201 })
     if (guestCreated) {
       // Set the cookie so all subsequent requests (cart, checkout, orders) use this session
