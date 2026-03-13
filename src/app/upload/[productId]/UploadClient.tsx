@@ -34,25 +34,12 @@ interface UploadResult {
   widthPx: number | null
   heightPx: number | null
   validStatus: string
+  validMessages: string[]
 }
 
 interface Props {
   product: ProductInfo
   config: Config
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  OK:      'text-green-700 bg-green-50 border-green-200',
-  WARNING: 'text-yellow-700 bg-yellow-50 border-yellow-200',
-  INVALID: 'text-red-700 bg-red-50 border-red-200',
-  PENDING: 'text-blue-700 bg-blue-50 border-blue-200',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  OK:      'File looks good',
-  WARNING: 'Low resolution — may print blurry',
-  INVALID: 'Resolution too low for print',
-  PENDING: 'File accepted (resolution not checked)',
 }
 
 export default function UploadClient({ product, config }: Props) {
@@ -62,11 +49,13 @@ export default function UploadClient({ product, config }: Props) {
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<UploadResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [warningConfirmed, setWarningConfirmed] = useState(false)
   const [addingToCart, setAddingToCart] = useState(false)
 
+  const resetFile = () => { setResult(null); setError(null); setWarningConfirmed(false) }
+
   const handleFile = useCallback(async (file: File) => {
-    setError(null)
-    setResult(null)
+    resetFile()
     setUploading(true)
     try {
       const form = new FormData()
@@ -87,7 +76,7 @@ export default function UploadClient({ product, config }: Props) {
     } finally {
       setUploading(false)
     }
-  }, [product.id, config.widthCm, config.heightCm])
+  }, [product.id, config.widthCm, config.heightCm]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -136,6 +125,10 @@ export default function UploadClient({ product, config }: Props) {
 
   const hasGuide = product.minDpi || product.bleedMm || product.allowedFormats || product.notes
 
+  // Whether the Add to cart button is gated by a confirmation
+  const needsWarningConfirm = result?.validStatus === 'WARNING' && !warningConfirmed
+  const canAddToCart = !!result && !addingToCart && !needsWarningConfirm
+
   return (
     <div className="max-w-xl mx-auto">
       {/* Product + config summary */}
@@ -174,7 +167,7 @@ export default function UploadClient({ product, config }: Props) {
         </div>
       )}
 
-      {/* Drop zone */}
+      {/* Drop zone — only shown while no result */}
       {!result && (
         <div
           className={[
@@ -196,7 +189,7 @@ export default function UploadClient({ product, config }: Props) {
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-gray-200 border-t-red-600 rounded-full animate-spin" />
-              <p className="text-sm text-gray-500">Uploading…</p>
+              <p className="text-sm text-gray-500">Uploading and checking file…</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
@@ -213,60 +206,142 @@ export default function UploadClient({ product, config }: Props) {
         </div>
       )}
 
-      {/* Upload result */}
+      {/* Result panel */}
       {result && (
         <div className="mb-5 space-y-3">
-          {/* File row */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-              </svg>
+          {/* File details row */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center shrink-0 text-gray-400">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800 truncate">{result.filename}</p>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                  {result.size != null && (
+                    <span className="text-xs text-gray-400">{(result.size / 1024).toFixed(0)} KB</span>
+                  )}
+                  {result.widthPx != null && result.heightPx != null && (
+                    <span className="text-xs text-gray-400">{result.widthPx} × {result.heightPx} px</span>
+                  )}
+                  {result.dpi != null && (
+                    <span className={[
+                      'text-xs font-semibold',
+                      result.dpi >= 150 ? 'text-green-600' :
+                      result.dpi >= 72  ? 'text-yellow-600' :
+                      'text-red-600',
+                    ].join(' ')}>
+                      {result.dpi} DPI
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={resetFile}
+                className="text-xs text-gray-400 hover:text-gray-700 shrink-0 mt-0.5"
+              >
+                Change
+              </button>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">{result.filename}</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {result.size ? `${(result.size / 1024).toFixed(0)} KB` : ''}
-                {result.widthPx && result.heightPx ? ` · ${result.widthPx} × ${result.heightPx} px` : ''}
-                {result.dpi ? ` · ${result.dpi} DPI` : ''}
-              </p>
-            </div>
-            <button
-              onClick={() => { setResult(null); setError(null) }}
-              className="text-xs text-gray-400 hover:text-gray-700 shrink-0"
-            >
-              Change
-            </button>
           </div>
 
-          {/* Validation status */}
-          <div className={`rounded-xl border px-4 py-3 text-sm font-medium ${STATUS_COLORS[result.validStatus] ?? STATUS_COLORS.PENDING}`}>
-            {STATUS_LABELS[result.validStatus] ?? 'Checked'}
-            {result.dpi && result.validStatus !== 'OK' && result.validStatus !== 'PENDING' && (
-              <span className="font-normal ml-1 opacity-80">
-                ({result.dpi} DPI{product.minDpi ? `, min ${product.minDpi}` : ''})
-              </span>
-            )}
-          </div>
+          {/* Validation messages */}
+          {result.validMessages.length > 0 && (
+            <div className={[
+              'rounded-xl border px-4 py-3 space-y-1',
+              result.validStatus === 'OK'      ? 'border-green-200 bg-green-50' :
+              result.validStatus === 'WARNING'  ? 'border-yellow-200 bg-yellow-50' :
+              result.validStatus === 'INVALID'  ? 'border-red-200 bg-red-50' :
+              'border-blue-200 bg-blue-50',
+            ].join(' ')}>
+              {result.validMessages.map((msg, i) => (
+                <p key={i} className={[
+                  'text-xs',
+                  result.validStatus === 'OK'     ? 'text-green-700' :
+                  result.validStatus === 'WARNING' ? 'text-yellow-700' :
+                  result.validStatus === 'INVALID' ? 'text-red-700' :
+                  'text-blue-700',
+                ].join(' ')}>
+                  {msg}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* WARNING: explicit confirmation required */}
+          {result.validStatus === 'WARNING' && !warningConfirmed && (
+            <div className="rounded-xl border border-yellow-300 bg-yellow-50 p-4">
+              <p className="text-sm font-semibold text-yellow-800 mb-1">File may print blurry</p>
+              <p className="text-xs text-yellow-700 mb-3">
+                The resolution is lower than recommended for this print size. The final print may not look sharp.
+                You can still proceed, or upload a higher-resolution file.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setWarningConfirmed(true)}
+                  className="text-sm px-4 py-2 bg-yellow-600 text-white rounded-lg font-medium hover:bg-yellow-700 transition-colors"
+                >
+                  Continue anyway
+                </button>
+                <button
+                  onClick={resetFile}
+                  className="text-sm px-4 py-2 border border-yellow-400 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+                >
+                  Upload a different file
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* INVALID: acknowledged proceed */}
+          {result.validStatus === 'INVALID' && (
+            <div className="rounded-xl border border-red-300 bg-red-50 p-4">
+              <p className="text-sm font-semibold text-red-800 mb-1">Resolution too low</p>
+              <p className="text-xs text-red-700 mb-3">
+                This file does not meet the minimum resolution for quality printing. We strongly recommend
+                uploading a higher-resolution file. You can still add this file to your cart, but the print
+                result may be unsatisfactory.
+              </p>
+              <button
+                onClick={resetFile}
+                className="text-sm px-4 py-2 border border-red-400 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                Upload a different file
+              </button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Error */}
+      {/* Upload error */}
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">
           {error}
         </div>
       )}
 
-      {/* Add to cart */}
+      {/* Add to cart — always visible, label changes by state */}
       <div className="flex flex-col gap-3">
-        <button
-          onClick={addToCart}
-          disabled={!result || addingToCart}
-          className="bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          {addingToCart ? 'Adding to cart…' : 'Add to cart →'}
-        </button>
+        {result && (
+          <button
+            onClick={addToCart}
+            disabled={!canAddToCart}
+            className={[
+              'py-3 rounded-lg font-semibold transition-colors',
+              result.validStatus === 'INVALID'
+                ? 'bg-gray-700 text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed'
+                : 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed',
+            ].join(' ')}
+          >
+            {addingToCart
+              ? 'Adding to cart…'
+              : result.validStatus === 'INVALID'
+              ? 'Add to cart (low quality)'
+              : 'Add to cart →'}
+          </button>
+        )}
         <a
           href={`/configurator/${product.id}`}
           className="text-center text-sm text-gray-500 hover:text-gray-700 underline"

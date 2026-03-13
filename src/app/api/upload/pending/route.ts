@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       minDpi = product?.minDpi ?? null
     }
 
-    const validStatus = getValidStatus(dpi, minDpi, dims !== null)
+    const { validStatus, validMessages } = getValidationResult(dpi, dims, widthCm, heightCm, minDpi)
 
     const userId = req.cookies.get('replica_uid')?.value ?? null
 
@@ -89,6 +89,7 @@ export async function POST(req: NextRequest) {
       widthPx: pending.widthPx,
       heightPx: pending.heightPx,
       validStatus: pending.validStatus,
+      validMessages,
     }, { status: 201 })
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
@@ -97,13 +98,60 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function getValidStatus(dpi: number | null, minDpi: number | null, isDimensioned: boolean): string {
-  // PDF / SVG — can't check DPI
-  if (!isDimensioned) return 'PENDING'
-  if (dpi === null) return 'PENDING'
-  const required = minDpi ?? 100
-  if (dpi >= required) return 'OK'
-  if (dpi >= 72) return 'WARNING'
-  return 'INVALID'
+function getValidationResult(
+  dpi: number | null,
+  dims: { widthPx: number; heightPx: number } | null,
+  widthCm: number | null,
+  heightCm: number | null,
+  minDpi: number | null,
+): { validStatus: string; validMessages: string[] } {
+  const messages: string[] = []
+
+  // PDF / SVG — format accepted, dimensions not available
+  if (!dims) {
+    messages.push('PDF/SVG — resolution not checked automatically.')
+    return { validStatus: 'PENDING', validMessages: messages }
+  }
+
+  // DPI check — spec: ≥150 OK, 72–149 WARNING, <72 INVALID
+  const required = minDpi ?? 150
+  let validStatus = 'OK'
+
+  if (dpi === null) {
+    messages.push('Could not determine resolution.')
+    validStatus = 'PENDING'
+  } else if (dpi >= required) {
+    messages.push(`Resolution: ${dpi} DPI ✓`)
+  } else if (dpi >= 72) {
+    messages.push(`Resolution: ${dpi} DPI — recommended ${required}+ DPI. Print may appear blurry.`)
+    validStatus = 'WARNING'
+  } else {
+    messages.push(`Resolution: ${dpi} DPI — too low (minimum ${required} DPI). Print quality will be poor.`)
+    validStatus = 'INVALID'
+  }
+
+  // Size / aspect ratio check — warn if orientation or proportions differ by >20%
+  if (widthCm && heightCm && widthCm > 0 && heightCm > 0) {
+    const fileRatio  = dims.widthPx  / dims.heightPx
+    const printRatio = widthCm / heightCm
+    const diff = Math.abs(fileRatio - printRatio) / printRatio
+
+    if (diff > 0.20) {
+      const filePort  = dims.widthPx < dims.heightPx
+      const printPort = widthCm < heightCm
+      if (filePort !== printPort) {
+        messages.push(
+          `Orientation mismatch: file is ${filePort ? 'portrait' : 'landscape'}, print size is ${printPort ? 'portrait' : 'landscape'}.`
+        )
+      } else {
+        const fileRatioStr  = `${dims.widthPx}×${dims.heightPx}px`
+        const printRatioStr = `${widthCm}×${heightCm}cm`
+        messages.push(`Proportions differ (${fileRatioStr} vs ${printRatioStr}) — image may be stretched or cropped.`)
+      }
+      if (validStatus === 'OK') validStatus = 'WARNING'
+    }
+  }
+
+  return { validStatus, validMessages: messages }
 }
 
