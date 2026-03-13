@@ -420,6 +420,8 @@ model Order {
   stripePaymentIntentId String? @unique
   invoicePath           String?
   trackingNumber        String?
+  taxPercent            Decimal  @default(19) @db.Decimal(5, 2)
+  taxAmount             Decimal  @default(0)  @db.Decimal(10, 2)
   createdAt             DateTime @default(now())
 
   user            User?           @relation(fields: [userId], references: [id])

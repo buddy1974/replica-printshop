@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit'
 import fs from 'fs'
 import path from 'path'
 import { db } from '@/lib/db'
+import { extractVat } from '@/lib/tax'
 
 const INVOICE_DIR = path.resolve(process.cwd(), 'storage', 'invoices')
 const BRAND_NAME = 'Printshop'
@@ -13,6 +14,8 @@ interface InvoiceOrder {
   createdAt: Date
   total: number
   shippingPrice: number
+  taxPercent: number
+  taxAmount: number
   deliveryType: string
   billingName: string | null
   billingStreet: string | null
@@ -148,9 +151,14 @@ function buildPdf(order: InvoiceOrder): Promise<Buffer> {
     doc.moveTo(leftX, doc.y + 4).lineTo(545, doc.y + 4).strokeColor(lineGray).lineWidth(1).stroke()
     doc.y += 16
 
-    const subtotal = order.total - order.shippingPrice
+    const grossItems = order.total - order.shippingPrice
+    // VAT: use stored taxAmount if > 0, otherwise derive from stored rate
+    const vatRate = order.taxPercent
+    const vatAmount = order.taxAmount > 0 ? order.taxAmount : extractVat(order.total, vatRate)
+    const netTotal = order.total - vatAmount
+
     const rows: [string, string][] = [
-      ['Subtotal', `€${subtotal.toFixed(2)}`],
+      ['Subtotal (net)', `€${(grossItems - extractVat(grossItems, vatRate)).toFixed(2)}`],
       ['Delivery', order.shippingPrice > 0 ? `€${order.shippingPrice.toFixed(2)}` : 'Free'],
     ]
     rows.forEach(([label, value]) => {
@@ -160,12 +168,22 @@ function buildPdf(order: InvoiceOrder): Promise<Buffer> {
       doc.y += 14
     })
 
+    // VAT line
+    if (vatRate > 0) {
+      doc.font('Helvetica').fontSize(9).fillColor(mid)
+        .text(`VAT (${vatRate}%)`, 380, doc.y, { width: 100, align: 'right' })
+        .text(`€${vatAmount.toFixed(2)}`, 490, doc.y, { width: 55, align: 'right' })
+      doc.y += 14
+    }
+
     doc.y += 4
     doc.rect(360, doc.y, 185, 22).fill('#111111')
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(10)
-      .text('TOTAL', 370, doc.y + 6, { width: 100, align: 'right' })
+      .text('TOTAL (incl. VAT)', 370, doc.y + 6, { width: 100, align: 'right' })
       .text(`€${order.total.toFixed(2)}`, 490, doc.y + 6, { width: 55, align: 'right' })
     doc.y += 32
+
+    void netTotal // suppress unused variable warning
 
     // ── Delivery address ─────────────────────────────────────────────────────
     if (order.shippingName && order.deliveryType !== 'PICKUP') {
@@ -206,6 +224,8 @@ export async function generateInvoice(orderId: string): Promise<Buffer> {
       createdAt: true,
       total: true,
       shippingPrice: true,
+      taxPercent: true,
+      taxAmount: true,
       deliveryType: true,
       billingName: true,
       billingStreet: true,
@@ -237,6 +257,8 @@ export async function generateInvoice(orderId: string): Promise<Buffer> {
     ...order,
     total: Number(order.total),
     shippingPrice: Number(order.shippingPrice),
+    taxPercent: Number(order.taxPercent),
+    taxAmount: Number(order.taxAmount),
     items: order.items.map((i) => ({
       productName: i.productName,
       variantName: i.variantName,
@@ -249,7 +271,7 @@ export async function generateInvoice(orderId: string): Promise<Buffer> {
 
   const buffer = await buildPdf(mapped)
 
-  // Save to disk
+  // Save to disk (overwrites any cached version — ensures updated format)
   fs.mkdirSync(INVOICE_DIR, { recursive: true })
   const filename = `invoice-${orderId.slice(0, 8).toUpperCase()}.pdf`
   const diskPath = path.join(INVOICE_DIR, filename)

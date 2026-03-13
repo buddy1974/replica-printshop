@@ -731,6 +731,10 @@ function CartSummary({
           <span>Total</span>
           <span>€{(subtotal + deliveryPrice).toFixed(2)}</span>
         </div>
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>incl. VAT (19%)</span>
+          <span>€{((subtotal + deliveryPrice) * 19 / 119).toFixed(2)}</span>
+        </div>
       </div>
     </div>
   )

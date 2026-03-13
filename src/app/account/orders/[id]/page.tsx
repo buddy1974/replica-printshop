@@ -63,6 +63,7 @@ export default async function AccountOrderDetailPage({ params }: { params: { id:
         },
       },
     },
+    // taxPercent and taxAmount are plain scalar fields, included by default
   })
 
   if (!order || order.userId !== userId) notFound()
@@ -135,6 +136,11 @@ export default async function AccountOrderDetailPage({ params }: { params: { id:
         <div>
           <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">Total</p>
           <p className="font-bold">€{Number(order.total).toFixed(2)}</p>
+          {Number(order.taxAmount) > 0 && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              incl. {Number(order.taxPercent)}% VAT (€{Number(order.taxAmount).toFixed(2)})
+            </p>
+          )}
         </div>
       </div>
 

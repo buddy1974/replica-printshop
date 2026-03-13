@@ -63,6 +63,8 @@ interface Order {
   shippingPrice: number
   stripePaymentIntentId: string | null
   trackingNumber: string | null
+  taxPercent: number
+  taxAmount: number
   billingName: string | null
   billingStreet: string | null
   billingCity: string | null
@@ -267,6 +269,17 @@ export default function AdminOrderDetailPage() {
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Total</p>
           <p className="text-sm font-bold text-gray-900">€{Number(order.total).toFixed(2)}</p>
+          {order.taxAmount > 0 && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              incl. {order.taxPercent}% VAT
+            </p>
+          )}
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">VAT</p>
+          <p className="text-sm text-gray-700">
+            {order.taxAmount > 0 ? `€${Number(order.taxAmount).toFixed(2)}` : '—'}
+          </p>
         </div>
         <div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Date</p>
