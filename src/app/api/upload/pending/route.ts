@@ -141,21 +141,23 @@ function getValidationResult(
     return { validStatus: 'PENDING', validMessages: messages }
   }
 
-  // DPI check — spec: ≥150 OK, 72–149 WARNING, <72 INVALID
-  const required = minDpi ?? 150
+  // DPI check — INVALID is never used for DPI; only WARNING or OK
+  // Default required to 72 when product has no minDpi configured
+  const required = minDpi ?? 72
   let validStatus = 'OK'
 
   if (dpi === null) {
-    messages.push('Could not determine resolution.')
-    validStatus = 'PENDING'
+    // Cannot determine effective DPI (no print size or unreadable file) — do not block
+    messages.push('Resolution could not be determined — please verify your file meets the size requirements.')
   } else if (dpi >= required) {
     messages.push(`Resolution: ${dpi} DPI ✓`)
-  } else if (dpi >= 72) {
-    messages.push(`Resolution: ${dpi} DPI — recommended ${required}+ DPI. Print may appear blurry.`)
+  } else if (dpi >= 50) {
+    messages.push(`Resolution: ${dpi} DPI — low for this print size (min ${required} DPI). Print may appear soft.`)
     validStatus = 'WARNING'
   } else {
-    messages.push(`Resolution: ${dpi} DPI — too low (minimum ${required} DPI). Print quality will be poor.`)
-    validStatus = 'INVALID'
+    // Very low DPI — still only a warning, never block the upload
+    messages.push(`Resolution: ${dpi} DPI — very low. We recommend at least ${required} DPI for quality results.`)
+    validStatus = 'WARNING'
   }
 
   // Size / aspect ratio check — warn if orientation or proportions differ by >20%

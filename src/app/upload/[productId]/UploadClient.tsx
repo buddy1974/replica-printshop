@@ -326,23 +326,6 @@ export default function UploadClient({ product, config }: Props) {
             </div>
           )}
 
-          {/* INVALID: acknowledged proceed */}
-          {result.validStatus === 'INVALID' && (
-            <div className="rounded-xl border border-red-300 bg-red-50 p-4">
-              <p className="text-sm font-semibold text-red-800 mb-1">Resolution too low</p>
-              <p className="text-xs text-red-700 mb-3">
-                This file does not meet the minimum resolution for quality printing. We strongly recommend
-                uploading a higher-resolution file. You can still add this file to your cart, but the print
-                result may be unsatisfactory.
-              </p>
-              <button
-                onClick={resetFile}
-                className="text-sm px-4 py-2 border border-red-400 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
-              >
-                Upload a different file
-              </button>
-            </div>
-          )}
         </div>
       )}
 
@@ -359,18 +342,9 @@ export default function UploadClient({ product, config }: Props) {
           <button
             onClick={addToCart}
             disabled={!canAddToCart}
-            className={[
-              'py-3 rounded-lg font-semibold transition-colors',
-              result.validStatus === 'INVALID'
-                ? 'bg-gray-700 text-white hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed'
-                : 'bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed',
-            ].join(' ')}
+            className="py-3 rounded-lg font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {addingToCart
-              ? 'Adding to cart…'
-              : result.validStatus === 'INVALID'
-              ? 'Add to cart (low quality)'
-              : 'Add to cart →'}
+            {addingToCart ? 'Adding to cart…' : 'Add to cart →'}
           </button>
         )}
         <a
