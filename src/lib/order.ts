@@ -60,7 +60,13 @@ export async function createOrderFromCart(
   }, 0)
 
   const isLargeFormat = hasLargeFormatItem(cart.items)
-  const shippingPrice = await calculateShipping(itemsSubtotal, deliveryType)
+  const maxSide = Math.max(...cart.items.map((i) => Math.max(Number(i.width), Number(i.height))))
+  const totalQty = cart.items.reduce((s, i) => s + i.quantity, 0)
+  const shippingPrice = await calculateShipping(itemsSubtotal, deliveryType, {
+    maxSide,
+    country: billingAddress?.country ?? undefined,
+    quantity: totalQty,
+  })
   const total = itemsSubtotal + shippingPrice
   const shippingMethod = await resolveShippingMethod(deliveryType, isLargeFormat)
 

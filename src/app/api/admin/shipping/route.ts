@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   try {
     await requireAdmin(req)
     const body = await req.json()
-    const { type, minTotal, price, multiplier } = body
+    const { type, method, country, minTotal, price, multiplier, minSize, maxSize, minQty, maxQty } = body
 
     if (!type) {
       return NextResponse.json({ error: 'type is required' }, { status: 400 })
@@ -29,9 +29,15 @@ export async function POST(req: NextRequest) {
     const rule = await db.shippingRule.create({
       data: {
         type,
-        minTotal: minTotal ?? null,
-        price: price ?? null,
+        method:     method     ?? null,
+        country:    country    ?? null,
+        minTotal:   minTotal   ?? null,
+        price:      price      ?? null,
         multiplier: multiplier ?? null,
+        minSize:    minSize    ?? null,
+        maxSize:    maxSize    ?? null,
+        minQty:     minQty     ?? null,
+        maxQty:     maxQty     ?? null,
       },
     })
     return NextResponse.json(rule, { status: 201 })

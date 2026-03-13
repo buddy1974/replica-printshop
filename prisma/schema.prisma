@@ -294,8 +294,14 @@ model PricingRule {
 
 model ShippingRule {
   id         String   @id @default(cuid())
-  type       String
+  type       String   // FLAT | FREE_OVER | EXPRESS_MULTIPLIER | SIZE_TIER | COUNTRY_SURCHARGE
+  method     String?  // STANDARD | EXPRESS | null = all methods
+  country    String?  // ISO alpha-2 code | null = all countries
   minTotal   Decimal? @db.Decimal(10, 2)
+  minSize    Float?   // min max(width, height) in cm, null = 0
+  maxSize    Float?   // max max(width, height) in cm, null = no limit
+  minQty     Int?
+  maxQty     Int?
   price      Decimal? @db.Decimal(10, 2)
   multiplier Decimal? @db.Decimal(4, 2)
 }

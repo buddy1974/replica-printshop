@@ -54,10 +54,10 @@ interface DeliveryAddress {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string; price: number }[] = [
-  { value: 'STANDARD', label: 'Standard shipping', desc: '3–5 business days', price: 5 },
-  { value: 'EXPRESS', label: 'Express shipping', desc: '1–2 business days', price: 12 },
-  { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store', price: 0 },
+const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] = [
+  { value: 'STANDARD', label: 'Standard shipping', desc: '3–5 business days' },
+  { value: 'EXPRESS', label: 'Express shipping', desc: '1–2 business days' },
+  { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store' },
 ]
 
 const STEPS: { key: Step; label: string }[] = [
@@ -373,11 +373,15 @@ function AddressStep({
 function DeliveryStep({
   deliveryType,
   setDeliveryType,
+  deliveryPrices,
+  pricesLoading,
   onBack,
   onNext,
 }: {
   deliveryType: DeliveryType
   setDeliveryType: (d: DeliveryType) => void
+  deliveryPrices: Record<DeliveryType, number>
+  pricesLoading: boolean
   onBack: () => void
   onNext: () => void
 }) {
@@ -386,8 +390,9 @@ function DeliveryStep({
       <h2 className="text-base font-semibold text-gray-900">Delivery method</h2>
 
       <div className="flex flex-col gap-2">
-        {DELIVERY_OPTIONS.map(({ value, label, desc, price }) => {
+        {DELIVERY_OPTIONS.map(({ value, label, desc }) => {
           const selected = deliveryType === value
+          const price = deliveryPrices[value] ?? 0
           return (
             <button
               key={value}
@@ -403,7 +408,9 @@ function DeliveryStep({
                 <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
               </div>
               <span className={`font-semibold shrink-0 ml-4 ${selected ? 'text-red-600' : 'text-gray-500'}`}>
-                {price === 0 ? 'Free' : `€${price.toFixed(2)}`}
+                {pricesLoading ? (
+                  <span className="inline-block w-10 h-4 bg-gray-100 rounded animate-pulse" />
+                ) : value === 'PICKUP' || price === 0 ? 'Free' : `€${price.toFixed(2)}`}
               </span>
             </button>
           )
@@ -795,10 +802,31 @@ export default function CheckoutWizard(props: Props) {
     } catch {}
   }, [step, billing, deliveryAddr, sameAsBilling, deliveryType])
 
+  // Dynamic delivery prices fetched from /api/shipping/estimate
+  const [deliveryPrices, setDeliveryPrices] = useState<Record<DeliveryType, number>>({
+    STANDARD: 5, EXPRESS: 12, PICKUP: 0,
+  })
+  const [pricesLoading, setPricesLoading] = useState(false)
+
+  useEffect(() => {
+    if (step !== 'delivery') return
+    setPricesLoading(true)
+    const country = billing.country || 'AT'
+    fetch(`/api/shipping/estimate?country=${encodeURIComponent(country)}`)
+      .then((r) => r.json())
+      .then((d: Partial<Record<DeliveryType, number>>) => {
+        if (d.STANDARD !== undefined) {
+          setDeliveryPrices({ STANDARD: d.STANDARD, EXPRESS: d.EXPRESS ?? 12, PICKUP: 0 })
+        }
+      })
+      .catch(() => {})
+      .finally(() => setPricesLoading(false))
+  }, [step, billing.country]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Items in local state so cart edits (delete) update the summary live
   const [items, setItems] = useState<CartItem[]>(props.cartItems)
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0)
-  const deliveryPrice = DELIVERY_OPTIONS.find(o => o.value === deliveryType)?.price ?? 0
+  const deliveryPrice = deliveryPrices[deliveryType] ?? 0
 
   const handleItemDeleted = (id: string) => {
     const next = items.filter(i => i.id !== id)
@@ -844,6 +872,8 @@ export default function CheckoutWizard(props: Props) {
               <DeliveryStep
                 deliveryType={deliveryType}
                 setDeliveryType={setDeliveryType}
+                deliveryPrices={deliveryPrices}
+                pricesLoading={pricesLoading}
                 onBack={() => setStep('address')}
                 onNext={() => setStep('payment')}
               />

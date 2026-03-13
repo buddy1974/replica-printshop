@@ -8,7 +8,13 @@ import Link from 'next/link'
 interface ShippingRule {
   id: string
   type: string
+  method: string | null
+  country: string | null
   minTotal: number | null
+  minSize: number | null
+  maxSize: number | null
+  minQty: number | null
+  maxQty: number | null
   price: number | null
   multiplier: number | null
 }
@@ -21,17 +27,45 @@ interface ShippingMethod {
   active: boolean
 }
 
-const ruleTypeLabels: Record<string, string> = {
+const RULE_TYPE_LABELS: Record<string, string> = {
   FLAT:               'Flat rate',
-  FREE_OVER:          'Free over total',
+  FREE_OVER:          'Free over subtotal',
   EXPRESS_MULTIPLIER: 'Express multiplier',
+  SIZE_TIER:          'Size tier',
+  COUNTRY_SURCHARGE:  'Country surcharge',
 }
 
-const inputCls = 'rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full'
+// Fields shown per rule type
+const SHOW: Record<string, { method?: true; country?: true; minTotal?: true; price?: true; multiplier?: true; size?: true; qty?: true }> = {
+  FLAT:               { method: true, price: true },
+  FREE_OVER:          { method: true, country: true, minTotal: true },
+  EXPRESS_MULTIPLIER: { multiplier: true },
+  SIZE_TIER:          { method: true, country: true, size: true, qty: true, price: true },
+  COUNTRY_SURCHARGE:  { method: true, country: true, price: true },
+}
+
+const EMPTY_FORM = {
+  type: 'FLAT',
+  method: '',
+  country: '',
+  minTotal: '',
+  price: '',
+  multiplier: '',
+  minSize: '',
+  maxSize: '',
+  minQty: '',
+  maxQty: '',
+}
+
+const IC = 'rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full'
+
+function fmt(v: number | null, prefix = ''): string {
+  return v != null ? `${prefix}${Number(v).toFixed(2)}` : '—'
+}
 
 export default function ShippingPage() {
   const [rules, setRules] = useState<ShippingRule[]>([])
-  const [ruleForm, setRuleForm] = useState({ type: 'FLAT', minTotal: '', price: '', multiplier: '' })
+  const [ruleForm, setRuleForm] = useState(EMPTY_FORM)
   const [ruleSaved, setRuleSaved] = useState(false)
 
   const [methods, setMethods] = useState<ShippingMethod[]>([])
@@ -48,19 +82,29 @@ export default function ShippingPage() {
   }, [])
 
   const handleAddRule = async () => {
-    const body = {
-      type: ruleForm.type,
-      minTotal:   ruleForm.minTotal   ? Number(ruleForm.minTotal)   : undefined,
-      price:      ruleForm.price      ? Number(ruleForm.price)      : undefined,
-      multiplier: ruleForm.multiplier ? Number(ruleForm.multiplier) : undefined,
+    const show = SHOW[ruleForm.type] ?? {}
+    const body: Record<string, unknown> = { type: ruleForm.type }
+    if (show.method)      body.method     = ruleForm.method     || null
+    if (show.country)     body.country    = ruleForm.country    || null
+    if (show.minTotal)    body.minTotal   = ruleForm.minTotal   ? Number(ruleForm.minTotal)   : null
+    if (show.price)       body.price      = ruleForm.price      ? Number(ruleForm.price)      : null
+    if (show.multiplier)  body.multiplier = ruleForm.multiplier ? Number(ruleForm.multiplier) : null
+    if (show.size) {
+      body.minSize = ruleForm.minSize ? Number(ruleForm.minSize) : null
+      body.maxSize = ruleForm.maxSize ? Number(ruleForm.maxSize) : null
     }
+    if (show.qty) {
+      body.minQty = ruleForm.minQty ? Number(ruleForm.minQty) : null
+      body.maxQty = ruleForm.maxQty ? Number(ruleForm.maxQty) : null
+    }
+
     const res = await fetch('/api/admin/shipping', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     })
     if (res.ok) {
       const rule = await res.json()
       setRules((prev) => [...prev, rule])
-      setRuleForm({ type: 'FLAT', minTotal: '', price: '', multiplier: '' })
+      setRuleForm(EMPTY_FORM)
       setRuleSaved(true)
       setTimeout(() => setRuleSaved(false), 2000)
     }
@@ -86,6 +130,8 @@ export default function ShippingPage() {
       setMethods((prev) => prev.map((m) => (m.id === id ? updated : m)))
     }
   }
+
+  const show = SHOW[ruleForm.type] ?? {}
 
   return (
     <Container>
@@ -145,10 +191,12 @@ export default function ShippingPage() {
         </div>
       </section>
 
-      {/* ── Shipping rules ── */}
+      {/* ── Pricing rules ── */}
       <section className="mb-10">
         <h2 className="mb-4">Pricing rules</h2>
-        <p className="text-sm text-gray-500 mb-4">Rules used to calculate shipping cost (flat rate, free-over threshold, express multiplier).</p>
+        <p className="text-sm text-gray-500 mb-4">
+          Rules for calculating shipping cost. Priority: SIZE_TIER &gt; FLAT &gt; fallback €5. Country surcharges are additive.
+        </p>
 
         {rules.length === 0 ? (
           <p className="text-sm text-gray-500 mb-6">No pricing rules yet.</p>
@@ -157,19 +205,33 @@ export default function ShippingPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
-                  {['Type', 'Min total', 'Price', 'Multiplier', ''].map((h, i) => (
-                    <th key={i} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                  {['Type', 'Method', 'Country', 'Size (cm)', 'Qty', 'Min total', 'Price', 'Multiplier', ''].map((h, i) => (
+                    <th key={i} className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {rules.map((rule) => (
                   <tr key={rule.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{ruleTypeLabels[rule.type] ?? rule.type}</td>
-                    <td className="px-4 py-3 text-gray-600">{rule.minTotal != null ? `€${Number(rule.minTotal).toFixed(2)}` : '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{rule.price != null ? `€${Number(rule.price).toFixed(2)}` : '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{rule.multiplier != null ? `×${Number(rule.multiplier).toFixed(2)}` : '—'}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 font-medium whitespace-nowrap">{RULE_TYPE_LABELS[rule.type] ?? rule.type}</td>
+                    <td className="px-3 py-3 text-gray-500 text-xs">{rule.method ?? 'All'}</td>
+                    <td className="px-3 py-3 text-gray-500 text-xs">{rule.country ?? 'All'}</td>
+                    <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                      {rule.minSize != null || rule.maxSize != null
+                        ? `${rule.minSize ?? 0}–${rule.maxSize ?? '∞'}`
+                        : '—'}
+                    </td>
+                    <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                      {rule.minQty != null || rule.maxQty != null
+                        ? `${rule.minQty ?? 1}–${rule.maxQty ?? '∞'}`
+                        : '—'}
+                    </td>
+                    <td className="px-3 py-3 text-gray-500">{fmt(rule.minTotal, '€')}</td>
+                    <td className="px-3 py-3 text-gray-500">{fmt(rule.price, '€')}</td>
+                    <td className="px-3 py-3 text-gray-500">
+                      {rule.multiplier != null ? `×${Number(rule.multiplier).toFixed(2)}` : '—'}
+                    </td>
+                    <td className="px-3 py-3">
                       <Button variant="danger" onClick={() => handleDeleteRule(rule.id)}>Delete</Button>
                     </td>
                   </tr>
@@ -181,27 +243,108 @@ export default function ShippingPage() {
 
         <h3 className="mb-3">Add pricing rule</h3>
         <div className="flex flex-col gap-4 max-w-sm">
+          {/* Type */}
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-gray-700">Type</span>
-            <select value={ruleForm.type} onChange={(e) => setRuleForm((p) => ({ ...p, type: e.target.value }))} className={inputCls}>
-              <option value="FLAT">Flat — standard shipping rate</option>
-              <option value="FREE_OVER">Free over — free when order ≥ min total</option>
+            <select value={ruleForm.type} onChange={(e) => setRuleForm({ ...EMPTY_FORM, type: e.target.value })} className={IC}>
+              <option value="FLAT">Flat rate — standard base price</option>
+              <option value="FREE_OVER">Free over — free when subtotal ≥ threshold</option>
               <option value="EXPRESS_MULTIPLIER">Express multiplier</option>
+              <option value="SIZE_TIER">Size tier — price by largest item side</option>
+              <option value="COUNTRY_SURCHARGE">Country surcharge — additive per country</option>
             </select>
           </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">Min total (€)</span>
-            <input type="number" value={ruleForm.minTotal} onChange={(e) => setRuleForm((p) => ({ ...p, minTotal: e.target.value }))} className={inputCls} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">Price (€)</span>
-            <input type="number" value={ruleForm.price} onChange={(e) => setRuleForm((p) => ({ ...p, price: e.target.value }))} className={inputCls} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">Multiplier</span>
-            <input type="number" step="0.01" value={ruleForm.multiplier} onChange={(e) => setRuleForm((p) => ({ ...p, multiplier: e.target.value }))} className={inputCls} />
-          </label>
+
+          {/* Method */}
+          {show.method && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">Method <span className="text-gray-400 font-normal">(blank = all)</span></span>
+              <select value={ruleForm.method} onChange={(e) => setRuleForm((p) => ({ ...p, method: e.target.value }))} className={IC}>
+                <option value="">All methods</option>
+                <option value="STANDARD">Standard</option>
+                <option value="EXPRESS">Express</option>
+              </select>
+            </label>
+          )}
+
+          {/* Country */}
+          {show.country && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">
+                Country <span className="text-gray-400 font-normal">{ruleForm.type === 'COUNTRY_SURCHARGE' ? '(required)' : '(blank = all)'}</span>
+              </span>
+              <input
+                type="text"
+                placeholder="AT, DE, CH, …"
+                maxLength={2}
+                value={ruleForm.country}
+                onChange={(e) => setRuleForm((p) => ({ ...p, country: e.target.value.toUpperCase() }))}
+                className={IC}
+              />
+            </label>
+          )}
+
+          {/* Min total */}
+          {show.minTotal && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">Minimum order total (€)</span>
+              <input type="number" step="0.01" value={ruleForm.minTotal} onChange={(e) => setRuleForm((p) => ({ ...p, minTotal: e.target.value }))} className={IC} />
+            </label>
+          )}
+
+          {/* Size range */}
+          {show.size && (
+            <div className="flex gap-3">
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-medium text-gray-700">Min side (cm)</span>
+                <input type="number" step="1" value={ruleForm.minSize} onChange={(e) => setRuleForm((p) => ({ ...p, minSize: e.target.value }))} className={IC} />
+              </label>
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-medium text-gray-700">Max side (cm)</span>
+                <input type="number" step="1" value={ruleForm.maxSize} onChange={(e) => setRuleForm((p) => ({ ...p, maxSize: e.target.value }))} className={IC} />
+              </label>
+            </div>
+          )}
+
+          {/* Qty range */}
+          {show.qty && (
+            <div className="flex gap-3">
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-medium text-gray-700">Min qty</span>
+                <input type="number" step="1" value={ruleForm.minQty} onChange={(e) => setRuleForm((p) => ({ ...p, minQty: e.target.value }))} className={IC} />
+              </label>
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-medium text-gray-700">Max qty</span>
+                <input type="number" step="1" value={ruleForm.maxQty} onChange={(e) => setRuleForm((p) => ({ ...p, maxQty: e.target.value }))} className={IC} />
+              </label>
+            </div>
+          )}
+
+          {/* Price */}
+          {show.price && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">Price (€)</span>
+              <input type="number" step="0.01" value={ruleForm.price} onChange={(e) => setRuleForm((p) => ({ ...p, price: e.target.value }))} className={IC} />
+            </label>
+          )}
+
+          {/* Multiplier */}
+          {show.multiplier && (
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-gray-700">Multiplier (e.g. 1.5)</span>
+              <input type="number" step="0.01" value={ruleForm.multiplier} onChange={(e) => setRuleForm((p) => ({ ...p, multiplier: e.target.value }))} className={IC} />
+            </label>
+          )}
+
           <Button onClick={handleAddRule}>{ruleSaved ? 'Added!' : 'Add rule'}</Button>
+        </div>
+
+        <div className="mt-6 text-xs text-gray-400 space-y-1 max-w-md">
+          <p><strong>Flat rate</strong> — base price for all orders (or per method).</p>
+          <p><strong>Free over</strong> — when subtotal ≥ threshold, shipping is free.</p>
+          <p><strong>Express multiplier</strong> — multiply base price for express (e.g. 1.5).</p>
+          <p><strong>Size tier</strong> — base price by largest item side in cm (+ optional country/method/qty filter).</p>
+          <p><strong>Country surcharge</strong> — added on top of base price for specific countries.</p>
         </div>
       </section>
 
