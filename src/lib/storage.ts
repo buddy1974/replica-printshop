@@ -6,7 +6,6 @@ const STORAGE_DIR = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.resolve(process.cwd(), 'storage', 'uploads')
 
-const PENDING_DIR = path.resolve(process.cwd(), 'storage', 'pending')
 
 // Step 323 — max 50 MB (configurable via MAX_UPLOAD_SIZE env)
 const MAX_SIZE_BYTES = process.env.MAX_UPLOAD_SIZE
@@ -82,45 +81,14 @@ export function getAbsPath(storagePath: string): string {
   return abs
 }
 
-/** Save a pre-checkout pending file. Returns buffer always; storagePath is null when disk write
- *  fails (e.g. read-only filesystem on Vercel). Dimension reading works regardless. */
+/** Read a pending file into memory only — no disk writes (Vercel filesystem is read-only).
+ *  storagePath is always null; dimension reading works from the returned buffer. */
 export async function savePendingFile(
   file: File,
-  uploadId: string,
-): Promise<{ storagePath: string | null; size: number; mime: string; buffer: Buffer }> {
+): Promise<{ storagePath: null; size: number; mime: string; buffer: Buffer }> {
   validateFileInput(file)
-
-  // Read into memory first — always works, needed for dimension extraction
   const buffer = Buffer.from(await file.arrayBuffer())
-  const size   = buffer.length
-  const mime   = file.type || 'application/octet-stream'
-
-  const sanitizedId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '')
-  const rawName = path.basename(file.name)
-  const safeName = rawName.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^\.+/, '_')
-  if (!safeName || safeName === '.' || safeName === '..') {
-    throw new ValidationError('Invalid filename')
-  }
-
-  const dir = path.resolve(PENDING_DIR, sanitizedId)
-  const diskPath = path.resolve(dir, safeName)
-
-  if (!diskPath.startsWith(PENDING_DIR + path.sep)) {
-    throw new ValidationError('Invalid file path')
-  }
-
-  // Attempt disk write — non-fatal (read-only on serverless platforms)
-  let storagePath: string | null = null
-  try {
-    fs.mkdirSync(dir, { recursive: true })
-    fs.writeFileSync(diskPath, buffer)
-    storagePath = `storage/pending/${sanitizedId}/${safeName}`
-  } catch (diskErr) {
-    console.warn('[storage] savePendingFile: disk write failed (non-fatal):', diskErr instanceof Error ? diskErr.message : diskErr)
-    // storagePath stays null — dimensions still extracted from buffer
-  }
-
-  return { storagePath, size, mime, buffer }
+  return { storagePath: null, size: buffer.length, mime: file.type || 'application/octet-stream', buffer }
 }
 
 /** Read pixel dimensions from a PNG or JPEG buffer. Returns null for PDF/SVG. */
