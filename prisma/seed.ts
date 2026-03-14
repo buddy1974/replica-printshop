@@ -3388,6 +3388,9 @@ async function main() {
   // Self-Adhesive Film (Klebefolie) + Foils category cleanup
   await seedAdhesiveFoil()
 
+  // Foils / Adhesive — full product lineup fix
+  await seedFoilCategoryFix()
+
   console.log('\nAll seeds complete.')
 }
 
@@ -3655,6 +3658,136 @@ async function seedAdhesiveFoil() {
   console.log('  ✓ Deactivated superseded foil products')
 
   console.log('  Self-Adhesive Film complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Foils / Adhesive — correct full product lineup
+// ---------------------------------------------------------------------------
+
+async function seedFoilCategoryFix() {
+  console.log('Seeding Foil / Adhesive category fix...')
+
+  const foilCat = await db.productCategory.findUnique({ where: { slug: 'foil' }, select: { id: true } })
+  const catId = foilCat?.id ?? null
+
+  // ── Remove products that do not belong in Foils ──────────────────────────
+  await db.product.updateMany({
+    where: { slug: { in: ['custom-stickers', 'plexiglas-sign', 'milchglasfolie', 'lochfolie'] } },
+    data: { active: false },
+  })
+  console.log('  ✓ Removed non-foil products from Foils category')
+
+  // ── Helper: upsert a standard roll-print foil product ────────────────────
+  type FoilDef = {
+    slug: string; name: string; shortDesc: string; desc: string
+    pricePerM2: number; maxWidth: number; notes: string; helpText: string
+    options?: { optName: string; values: { name: string; priceModifier: number }[] }[]
+  }
+
+  const upsertFoil = async (def: FoilDef) => {
+    const p = await db.product.upsert({
+      where: { slug: def.slug },
+      update: { categoryId: catId, active: true, name: def.name, shortDescription: def.shortDesc, description: def.desc },
+      create: {
+        name: def.name, slug: def.slug, category: 'Foils', categoryId: catId, active: true,
+        imageUrl: '/products/window-graphics.png',
+        shortDescription: def.shortDesc, description: def.desc,
+        guideText: `PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width ${def.maxWidth} cm.`,
+        minDpi: 100, recommendedDpi: 150, bleedMm: 3, safeMarginMm: 5, allowedFormats: 'PDF,PNG,SVG',
+        notes: def.notes,
+      },
+    })
+    await db.productConfig.upsert({
+      where: { productId: p.id },
+      update: { needsUpload: true, priceMode: 'AREA', hasOptions: !!(def.options?.length), isRoll: true, isPrintCut: true, rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, productionType: 'PRINT_CUT', helpText: def.helpText, uploadInstructions: `Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed. Max width ${def.maxWidth} cm.` },
+      create: {
+        productId: p.id, type: 'FOIL', hasCustomSize: true, hasFixedSizes: false, hasVariants: false, hasOptions: !!(def.options?.length),
+        needsUpload: true, priceMode: 'AREA', isRoll: true, isPrintCut: true,
+        rollWidthCm: def.maxWidth, maxWidthCm: def.maxWidth, minWidth: 10, maxWidth: def.maxWidth, minHeight: 10, maxHeight: 500,
+        productionType: 'PRINT_CUT', helpText: def.helpText,
+        uploadInstructions: `Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed. Max width ${def.maxWidth} cm.`,
+      },
+    })
+    await upsertPricingTable(p.id, 'AREA', { pricePerM2: def.pricePerM2 })
+    if (def.options) {
+      for (const opt of def.options) await upsertOption(p.id, opt.optName, opt.values)
+    }
+    console.log(`  ✓ ${def.name}`)
+    return p
+  }
+
+  // ── 1. Frosted Glass Film ─────────────────────────────────────────────────
+  await upsertFoil({
+    slug: 'frosted-glass-film', name: 'Frosted Glass Film',
+    shortDesc: 'Frosted glass film — privacy and style for windows and glass doors.',
+    desc: 'Self-adhesive frosted glass film with printed design. Provides privacy while letting light through. Ideal for office partitions, shop windows, and glass doors. Max width 137 cm.',
+    pricePerM2: 22.00, maxWidth: 137,
+    notes: 'Max width 137 cm. Provides privacy, allows light through.',
+    helpText: 'One-sided print. Applies to glass and smooth surfaces. Provides privacy while letting light through.',
+  })
+
+  // ── 2. Transparent Adhesive Film ─────────────────────────────────────────
+  await upsertFoil({
+    slug: 'transparent-adhesive-film', name: 'Transparent Adhesive Film',
+    shortDesc: 'Clear self-adhesive film — printed, gloss or matt finish.',
+    desc: 'Transparent self-adhesive film for windows, glass, and smooth surfaces. One-sided print on clear substrate. Available in gloss or matt finish. UV-resistant. Max width 137 cm.',
+    pricePerM2: 14.00, maxWidth: 137,
+    notes: 'Clear substrate. One-sided print. Max width 137 cm.',
+    helpText: 'Clear film — design printed on one side. Available in gloss or matt finish.',
+    options: [{ optName: 'Finish', values: [{ name: 'Gloss', priceModifier: 0 }, { name: 'Matt', priceModifier: 2 }] }],
+  })
+
+  // ── 3. Backlit Film ───────────────────────────────────────────────────────
+  await upsertFoil({
+    slug: 'backlit-film', name: 'Backlit Film',
+    shortDesc: 'Backlit film for lightboxes and illuminated displays.',
+    desc: 'High-quality backlit film for use in lightboxes and illuminated signage. Vibrant colours with backlight transmission. Scratch-resistant surface. Ideal for retail, hospitality, and exhibition displays. Max width 137 cm.',
+    pricePerM2: 26.00, maxWidth: 137,
+    notes: 'For lightboxes and illuminated displays. Max width 137 cm.',
+    helpText: 'Designed for backlit use in lightboxes. Colours are optimised for illumination.',
+  })
+
+  // ── 4. Perforated Film ───────────────────────────────────────────────────
+  await upsertFoil({
+    slug: 'perforated-film', name: 'Perforated Film',
+    shortDesc: 'Perforated window film — one-way vision, full-colour print.',
+    desc: 'Printed perforated vinyl film (50/50). Full-colour print visible from outside; see-through from inside. Ideal for shop windows, vehicle rear windows, and glass partitions. Max width 137 cm.',
+    pricePerM2: 20.00, maxWidth: 137,
+    notes: '50/50 perforation. One-way vision. Max width 137 cm.',
+    helpText: 'Opaque print from outside, see-through from inside. 50/50 perforation.',
+  })
+
+  // ── 5. Static Cling Film ─────────────────────────────────────────────────
+  await upsertFoil({
+    slug: 'static-cling-film', name: 'Static Cling Film',
+    shortDesc: 'Static cling film — no adhesive, removable and repositionable.',
+    desc: 'Static cling film adheres to glass and smooth surfaces without adhesive. Fully removable and repositionable without residue. Ideal for temporary promotions, seasonal decoration, and rental spaces. Max width 137 cm.',
+    pricePerM2: 18.00, maxWidth: 137,
+    notes: 'No adhesive — static cling only. For glass and smooth surfaces. Max width 137 cm.',
+    helpText: 'No adhesive — adheres by static electricity. Fully removable and reusable.',
+  })
+
+  // ── 6. Floor Sticker Indoor ───────────────────────────────────────────────
+  await upsertFoil({
+    slug: 'floor-sticker-indoor', name: 'Floor Sticker Indoor',
+    shortDesc: 'Indoor floor graphics — anti-slip laminate, custom size.',
+    desc: 'Full-colour printed floor sticker for indoor use. Anti-slip laminate included. Strong adhesive for smooth and slightly textured floors. Ideal for retail promotions, wayfinding, and events. Max width 137 cm.',
+    pricePerM2: 22.00, maxWidth: 137,
+    notes: 'Anti-slip laminate included. For smooth indoor floors. Max width 137 cm.',
+    helpText: 'Anti-slip laminate included. Suitable for smooth indoor floors — tiles, wood, vinyl.',
+  })
+
+  // ── 7. Floor Sticker Outdoor ──────────────────────────────────────────────
+  await upsertFoil({
+    slug: 'floor-sticker-outdoor', name: 'Floor Sticker Outdoor',
+    shortDesc: 'Outdoor floor graphics — heavy-duty, UV and slip resistant.',
+    desc: 'Heavy-duty outdoor floor sticker with UV-resistant inks and heavy anti-slip laminate. Withstands foot traffic and weather exposure. Suitable for pavements, entrance areas, and outdoor events. Max width 137 cm.',
+    pricePerM2: 30.00, maxWidth: 137,
+    notes: 'Heavy-duty anti-slip laminate. UV-resistant. For outdoor use. Max width 137 cm.',
+    helpText: 'UV-resistant with heavy-duty anti-slip laminate. Suitable for outdoor pavements and entrance areas.',
+  })
+
+  console.log('  Foil / Adhesive category fix complete.')
 }
 
 // ---------------------------------------------------------------------------
