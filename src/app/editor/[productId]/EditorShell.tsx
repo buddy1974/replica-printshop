@@ -235,8 +235,8 @@ function handleSelectionChange(
       const { id: designId } = saveData
       if (saveData.aiCheck) setPrintCheck(saveData.aiCheck as PrintCheckResult)
       const cartBody: Record<string, unknown> = { productId: product.id, quantity, designId }
-      if (showCustomSize && width > 0) cartBody.width = width
-      if (showCustomSize && height > 0) cartBody.height = height
+      if (width > 0) cartBody.width = width
+      if (height > 0) cartBody.height = height
       const cartRes = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

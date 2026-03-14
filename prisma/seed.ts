@@ -3391,6 +3391,9 @@ async function main() {
   // Foils / Adhesive — full product lineup fix
   await seedFoilCategoryFix()
 
+  // DTF product dimensions — printAreaWidthCm/printAreaHeightCm for fixed-size sheets
+  await seedDTFDimensions()
+
   // Banner — new specialty banner products
   await seedBannerProducts()
 
@@ -3791,6 +3794,34 @@ async function seedFoilCategoryFix() {
   })
 
   console.log('  Foil / Adhesive category fix complete.')
+}
+
+// ---------------------------------------------------------------------------
+// DTF product dimensions — set printAreaWidthCm/printAreaHeightCm so the
+// editor canvas and upload flow use the correct fixed sheet size (step 700)
+// ---------------------------------------------------------------------------
+
+async function seedDTFDimensions() {
+  console.log('Seeding DTF product dimensions...')
+
+  const updates = [
+    { slug: 'dtf-55x100', w: 55,   h: 100  },
+    { slug: 'dtf-a3',     w: 29.7, h: 42   },
+    { slug: 'dtf-a4',     w: 21,   h: 29.7 },
+  ]
+
+  for (const { slug, w, h } of updates) {
+    const p = await db.product.findUnique({ where: { slug }, select: { id: true } })
+    if (p) {
+      await db.productConfig.update({
+        where: { productId: p.id },
+        data: { printAreaWidthCm: w, printAreaHeightCm: h },
+      })
+      console.log(`  ✓ ${slug}: printAreaWidthCm=${w}, printAreaHeightCm=${h}`)
+    }
+  }
+
+  console.log('  DTF dimensions complete.')
 }
 
 // ---------------------------------------------------------------------------

@@ -74,6 +74,15 @@ const inputCls = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outl
 const labelCls = 'flex flex-col gap-1'
 const labelTextCls = 'text-sm font-medium text-gray-700'
 
+// Parse "W × H cm" or "(W × H mm)" from variant names like "85 × 200 cm" / "A1 (594 × 841 mm)"
+function parseDimsFromVariantName(name: string): { w: number; h: number } | null {
+  const cm = name.match(/(\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)\s*cm/i)
+  if (cm) return { w: Number(cm[1]), h: Number(cm[2]) }
+  const mm = name.match(/\((\d+(?:\.\d+)?)\s*[×x]\s*(\d+(?:\.\d+)?)\s*mm\)/i)
+  if (mm) return { w: Number(mm[1]) / 10, h: Number(mm[2]) / 10 }
+  return null
+}
+
 function PillButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -109,10 +118,18 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
     })
   }, [cfg?.fixedSizes])
 
+  // For products where variant encodes size (e.g. "85 × 200 cm", "A1 (594 × 841 mm)")
+  const firstVariantDims = useMemo<{ w: number; h: number } | null>(() => {
+    const hasVariants = cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0
+    const hasCustom = cfg ? cfg.hasCustomSize : true
+    if (!hasVariants || hasCustom) return null
+    return parseDimsFromVariantName(product.variants[0]?.name ?? '')
+  }, [cfg, product.variants])
+
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? '')
   const [optionValueIds, setOptionValueIds] = useState<string[]>(print40Id ? [print40Id] : [])
-  const [width, setWidth] = useState(initialWidth ?? fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
-  const [height, setHeight] = useState(initialHeight ?? fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
+  const [width, setWidth] = useState(initialWidth ?? firstVariantDims?.w ?? fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
+  const [height, setHeight] = useState(initialHeight ?? firstVariantDims?.h ?? fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
   const [quantity, setQuantity] = useState(1)
   const deliveryType = 'STANDARD' as const
   const [placement, setPlacement] = useState<'front' | 'back'>('front')
@@ -209,7 +226,17 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
       {showVariants && (
         <label className={labelCls}>
           <span className={labelTextCls}>Variant</span>
-          <select value={variantId} onChange={(e) => { setVariantId(e.target.value); resetPrice() }} className={inputCls}>
+          <select value={variantId} onChange={(e) => {
+            setVariantId(e.target.value)
+            resetPrice()
+            if (!showCustomSize) {
+              const v = product.variants.find((v) => v.id === e.target.value)
+              if (v) {
+                const dims = parseDimsFromVariantName(v.name)
+                if (dims) { setWidth(dims.w); setHeight(dims.h) }
+              }
+            }
+          }} className={inputCls}>
             {product.variants.map((v) => (
               <option key={v.id} value={v.id}>{v.name} — {v.material}</option>
             ))}
