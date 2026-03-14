@@ -91,12 +91,14 @@ export default function UploadClient({ product, config }: Props) {
       // Step 2: upload directly to Vercel Blob — bypasses serverless payload limit
       setUploadStep('uploading')
       let blobUrl: string
+      let blobPathname: string | undefined
       try {
         const blob = await upload(file.name, file, {
           access: 'public',
           handleUploadUrl: '/api/upload/token',
         })
         blobUrl = blob.url
+        blobPathname = blob.pathname
       } catch (uploadErr) {
         const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
         setError(`Upload failed: ${msg}`)
@@ -107,6 +109,7 @@ export default function UploadClient({ product, config }: Props) {
       setUploadStep('saving')
       const payload: Record<string, unknown> = {
         blobUrl,
+        pathname: blobPathname ?? null,
         mime: file.type || 'application/octet-stream',
         size: file.size,
         filename: file.name,

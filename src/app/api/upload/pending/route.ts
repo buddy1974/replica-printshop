@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { blobUrl, mime, size, filename, productId, widthCm, heightCm, widthPx, heightPx } = body
+    const { blobUrl, pathname, mime, size, filename, productId, widthCm, heightCm, widthPx, heightPx } = body
 
     console.log('PENDING BODY', { filename, mime, size, widthPx, heightPx, productId, widthCm, heightCm })
 
@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
           filename,
           filePath: null,
           blobUrl,
+          pathname: typeof pathname === 'string' ? pathname : null,
           size: typeof size === 'number' ? size : null,
           mime: typeof mime === 'string' ? mime : null,
           dpi,

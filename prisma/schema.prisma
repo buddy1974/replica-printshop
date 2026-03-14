@@ -363,6 +363,7 @@ model PendingUpload {
   filename    String
   filePath    String?
   blobUrl     String?
+  pathname    String?
   size        Int?
   mime        String?
   dpi         Int?
