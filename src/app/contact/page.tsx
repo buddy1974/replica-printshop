@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
 import Container from '@/components/Container'
-import { BRANDING } from '@/config/branding'
+import { COMPANY } from '@/config/company'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -21,12 +21,11 @@ export default function ContactPage() {
         {/* Company info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
           <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Address</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Company</p>
             <div className="text-sm text-gray-700 leading-relaxed space-y-0.5">
-              <p className="font-semibold text-gray-900">{BRANDING.name}</p>
-              <p>Musterstraße 12</p>
-              <p>12345 Berlin</p>
-              <p>Germany</p>
+              <p className="font-semibold text-gray-900">{COMPANY.brand}</p>
+              <p className="text-gray-500">by {COMPANY.name}</p>
+              <p>{COMPANY.country}</p>
             </div>
           </div>
 
@@ -35,14 +34,14 @@ export default function ContactPage() {
             <div className="text-sm text-gray-700 space-y-1.5">
               <p>
                 <span className="text-gray-400">Phone:</span>{' '}
-                <a href="tel:+49123456789" className="text-gray-900 hover:text-red-600 transition-colors">
-                  +49 123 456 789
+                <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} className="text-gray-900 hover:text-red-600 transition-colors">
+                  {COMPANY.phone}
                 </a>
               </p>
               <p>
                 <span className="text-gray-400">Email:</span>{' '}
-                <a href="mailto:info@printshop.de" className="text-gray-900 hover:text-red-600 transition-colors">
-                  info@printshop.de
+                <a href={`mailto:${COMPANY.email}`} className="text-gray-900 hover:text-red-600 transition-colors">
+                  {COMPANY.email}
                 </a>
               </p>
             </div>
@@ -76,7 +75,7 @@ export default function ContactPage() {
             Send us an email or call — we respond within 1 business day.
           </p>
           <a
-            href="mailto:info@printshop.de"
+            href={`mailto:${COMPANY.email}`}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
           >
             Send email →

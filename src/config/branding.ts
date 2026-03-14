@@ -1,4 +1,6 @@
+import { COMPANY } from '@/config/company'
+
 export const BRANDING = {
-  name: 'printshop',
-  logoText: 'printshop',
+  name: COMPANY.brand,
+  logoText: COMPANY.brand,
 }

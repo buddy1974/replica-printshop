@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BRANDING } from '@/config/branding'
+import { COMPANY } from '@/config/company'
 import { SERVICES } from '@/config/services'
 
 const QUICK_LINKS = [
@@ -25,7 +25,10 @@ export default function Footer() {
               <span className="block w-3.5 h-0.5 bg-white rounded-full" />
               <span className="block w-3.5 h-0.5 bg-white rounded-full" />
             </div>
-            <span className="text-sm font-black tracking-tighter uppercase text-white">{BRANDING.name}</span>
+            <div className="flex flex-col leading-none">
+              <span className="text-sm font-black tracking-tighter uppercase text-white">{COMPANY.brand}</span>
+              <span className="text-[9px] font-semibold tracking-widest uppercase text-gray-500">by {COMPANY.name}</span>
+            </div>
           </div>
           <p className="text-xs leading-relaxed text-gray-500">
             In-house print production. Large format, textile, foil, banners, advertising technology and graphic installation.
@@ -86,10 +89,8 @@ export default function Footer() {
           <div>
             <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-4">Contact</p>
             <div className="space-y-1.5 text-sm text-gray-400">
-              <p>Musterstraße 12</p>
-              <p>12345 Berlin, Germany</p>
-              <a href="tel:+49123456789" className="block hover:text-white transition-colors">+49 123 456 789</a>
-              <a href="mailto:info@printshop.de" className="block hover:text-white transition-colors">info@printshop.de</a>
+              <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} className="block hover:text-white transition-colors">{COMPANY.phone}</a>
+              <a href={`mailto:${COMPANY.email}`} className="block hover:text-white transition-colors">{COMPANY.email}</a>
             </div>
           </div>
 
@@ -106,14 +107,14 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-gray-800">
         <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
-          <p>© 2026 {BRANDING.name}. All rights reserved. VAT prices subject to change.</p>
+          <p>© 2026 {COMPANY.brand} by {COMPANY.name}. All rights reserved.</p>
           <a
-            href="https://maxpromo.digital"
+            href={`https://${COMPANY.domain}`}
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-gray-400 transition-colors"
           >
-            Developed by maxpromo.digital
+            {COMPANY.domain}
           </a>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { type Metadata } from 'next'
 import Container from '@/components/Container'
-import { BRANDING } from '@/config/branding'
+import { COMPANY } from '@/config/company'
 
 export const metadata: Metadata = {
   title: 'Legal',
@@ -20,12 +20,17 @@ export default function LegalPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-3">
             <h2 className="text-lg font-semibold text-gray-900">Imprint</h2>
             <div className="text-sm text-gray-600 leading-relaxed space-y-1">
-              <p><span className="font-medium text-gray-800">Company:</span> {BRANDING.name}</p>
-              <p><span className="font-medium text-gray-800">Address:</span> Musterstraße 12, 12345 Berlin, Germany</p>
-              <p><span className="font-medium text-gray-800">Phone:</span> +49 123 456 789</p>
-              <p><span className="font-medium text-gray-800">Email:</span> info@printshop.de</p>
-              <p><span className="font-medium text-gray-800">VAT ID:</span> DE123456789 (placeholder)</p>
-              <p><span className="font-medium text-gray-800">Register:</span> HRB 123456 Amtsgericht Berlin (placeholder)</p>
+              <p><span className="font-medium text-gray-800">Company:</span> {COMPANY.name}</p>
+              <p><span className="font-medium text-gray-800">Brand:</span> {COMPANY.brand}</p>
+              <p><span className="font-medium text-gray-800">Country:</span> {COMPANY.country}</p>
+              <p><span className="font-medium text-gray-800">Phone:</span>{' '}
+                <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} className="hover:text-red-600 transition-colors">{COMPANY.phone}</a>
+              </p>
+              <p><span className="font-medium text-gray-800">Email:</span>{' '}
+                <a href={`mailto:${COMPANY.email}`} className="hover:text-red-600 transition-colors">{COMPANY.email}</a>
+              </p>
+              <p><span className="font-medium text-gray-800">VAT ID:</span> DE — (to be added)</p>
+              <p><span className="font-medium text-gray-800">Register:</span> — (to be added)</p>
             </div>
           </div>
         </section>
@@ -45,7 +50,7 @@ export default function LegalPage() {
               </p>
               <p>
                 You have the right to access, correct or delete your personal data at any time.
-                Contact us at info@printshop.de for any data requests.
+                Contact us at {COMPANY.email} for any data requests.
               </p>
               <p className="text-gray-400 italic text-xs">
                 This is a placeholder privacy policy. A full GDPR-compliant privacy policy will be added before launch.

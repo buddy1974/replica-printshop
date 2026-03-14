@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BRANDING } from '@/config/branding'
+import { COMPANY } from '@/config/company'
 
 export default function Logo() {
   return (
@@ -11,9 +11,14 @@ export default function Logo() {
         <div className="w-3 h-0.5 bg-white rounded-full" />
       </div>
       {/* Text */}
-      <span className="text-base font-black tracking-tighter uppercase text-gray-950 leading-none">
-        {BRANDING.logoText}
-      </span>
+      <div className="flex flex-col leading-none">
+        <span className="text-base font-black tracking-tighter uppercase text-gray-950">
+          {COMPANY.brand}
+        </span>
+        <span className="text-[8px] font-semibold tracking-widest uppercase text-gray-400">
+          by {COMPANY.name}
+        </span>
+      </div>
     </Link>
   )
 }
