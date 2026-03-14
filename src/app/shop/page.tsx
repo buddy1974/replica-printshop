@@ -2,6 +2,7 @@ import { type Metadata } from 'next'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import Container from '@/components/Container'
+import { CategoryName } from '@/components/TName'
 
 export const revalidate = 60
 
@@ -70,7 +71,7 @@ export default async function ShopPage() {
                 )}
               </div>
               <div className="p-3">
-                <p className="font-semibold text-sm leading-tight">{cat.name}</p>
+                <p className="font-semibold text-sm leading-tight"><CategoryName slug={cat.slug} fallback={cat.name} /></p>
                 {cat.description && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">{cat.description}</p>
                 )}

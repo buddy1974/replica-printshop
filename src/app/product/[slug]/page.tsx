@@ -6,6 +6,7 @@ import Container from '@/components/Container'
 import CategoryFooter from '@/components/CategoryFooter'
 import ProductImageGallery from '@/components/ProductImageGallery'
 import { db } from '@/lib/db'
+import { ProductName, CategoryName } from '@/components/TName'
 
 export const revalidate = 60
 
@@ -57,6 +58,7 @@ interface Product {
   name: string
   slug: string
   category: string
+  categorySlug: string | null
   imageUrl: string | null
   variants: Variant[]
   options: Option[]
@@ -87,12 +89,14 @@ async function getProduct(slug: string): Promise<Product | null> {
       options: { include: { values: true } },
       pricingRules: true,
       config: true,
+      productCategory: { select: { slug: true } },
     },
   })
   if (!p) return null
   return {
     ...p,
     imageUrl: p.imageUrl ?? null,
+    categorySlug: p.productCategory?.slug ?? null,
     // gallery: parse from specs if it contains an { images: [] } key, else empty
     images: (() => {
       const s = p.specs
@@ -346,10 +350,12 @@ export default async function ProductPage({
           {/* Category + title + description */}
           <div>
             <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">
-              {product.category}
+              {product.categorySlug
+                ? <CategoryName slug={product.categorySlug} fallback={product.category} />
+                : product.category}
             </p>
             <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
-              {product.name}
+              <ProductName slug={product.slug} fallback={product.name} />
             </h1>
             {product.description && (
               <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>

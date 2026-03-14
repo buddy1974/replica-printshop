@@ -6,6 +6,7 @@ import ProductCard from '@/components/ProductCard'
 import Container from '@/components/Container'
 import CategoryFooter from '@/components/CategoryFooter'
 import Link from 'next/link'
+import { CategoryName } from '@/components/TName'
 
 export const revalidate = 60
 
@@ -66,14 +67,14 @@ export default async function CategoryShopPage({ params }: { params: { categoryS
           />
         </div>
       )}
-      <h1 className="mb-2">{cat.name}</h1>
+      <h1 className="mb-2"><CategoryName slug={params.categorySlug} fallback={cat.name} /></h1>
       {cat.description && (
         <p className="text-sm text-gray-500 mb-6">{cat.description}</p>
       )}
       {cat.products.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {cat.products.map((p) => (
-            <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
+            <ProductCard key={p.id} id={p.id} slug={p.slug} name={p.name} category={cat.name} categorySlug={params.categorySlug} shortDescription={p.shortDescription} imageUrl={p.imageUrl} />
           ))}
         </div>
       ) : (

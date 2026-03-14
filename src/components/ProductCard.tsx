@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { useLocale } from '@/context/LocaleContext'
+import { getProductLabel, getCategoryLabel } from '@/lib/productTranslations'
 
 const ImageModal = dynamic(() => import('./ImageModal'))
 
@@ -15,13 +16,16 @@ interface ProductCardProps {
   slug: string
   name: string
   category: string
+  categorySlug?: string
   shortDescription?: string | null
   imageUrl?: string | null
 }
 
-export default function ProductCard({ slug, name, category, shortDescription, imageUrl }: ProductCardProps) {
+export default function ProductCard({ slug, name, category, categorySlug, shortDescription, imageUrl }: ProductCardProps) {
   const [modalOpen, setModalOpen] = useState(false)
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
+  const translatedName = getProductLabel(slug, locale, name)
+  const translatedCategory = categorySlug ? getCategoryLabel(categorySlug, locale, category) : category
 
   return (
     <>
@@ -62,8 +66,8 @@ export default function ProductCard({ slug, name, category, shortDescription, im
 
         <div className="p-4 flex flex-col gap-3 flex-1">
           <div className="flex-1">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{category}</p>
-            <h2 className="font-semibold text-sm leading-tight">{name}</h2>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{translatedCategory}</p>
+            <h2 className="font-semibold text-sm leading-tight">{translatedName}</h2>
             {shortDescription && (
               <p className="text-xs text-gray-500 leading-snug mt-1 line-clamp-2">{shortDescription}</p>
             )}
