@@ -901,8 +901,10 @@ async function seedKundestopper() {
       hasFixedSizes: false,
       hasCustomSize: false,
       productionType: 'ROLL_PRINT',
-      helpText: 'Select your frame size. Price includes aluminium frame and printed inserts (both sides). Upload your design — 2 pages or 2 files for front and back.',
-      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files for front and back. A1: 594 × 841 mm, A2: 420 × 594 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
+      printAreaWidthCm: 59.4,
+      printAreaHeightCm: 84.1,
+      helpText: 'A1 format only. Price includes aluminium frame and printed inserts (both sides). Upload your design — 2 pages or 2 files for front and back.',
+      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files for front and back. A1: 594 × 841 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
     },
     create: {
       productId: product.id,
@@ -914,17 +916,19 @@ async function seedKundestopper() {
       needsUpload: true,
       priceMode: 'PIECE',
       productionType: 'ROLL_PRINT',
-      helpText: 'Select your frame size. Price includes aluminium frame and printed inserts (both sides). Upload your design — 2 pages or 2 files for front and back.',
-      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files for front and back. A1: 594 × 841 mm, A2: 420 × 594 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
+      printAreaWidthCm: 59.4,
+      printAreaHeightCm: 84.1,
+      helpText: 'A1 format only. Price includes aluminium frame and printed inserts (both sides). Upload your design — 2 pages or 2 files for front and back.',
+      uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files for front and back. A1: 594 × 841 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
     },
   })
 
   // PIECE pricing — base price is in the variant
   await upsertPricingTable(product.id, 'FIXED', { price: 0 })
 
-  // Size variants
+  // A1 only — remove A2 if it exists (customer stopper is A1 only)
+  await db.productVariant.deleteMany({ where: { productId: product.id, name: 'A2 (420 × 594 mm)' } })
   await upsertVariant(product.id, 'A1 (594 × 841 mm)', 'Kundestopper', 149.00)
-  await upsertVariant(product.id, 'A2 (420 × 594 mm)', 'Kundestopper', 119.00)
 
   console.log(`  ✓ Kundestopper: ${product.id}`)
 }
@@ -2439,10 +2443,11 @@ async function seedDisplayFix() {
   })
   await db.productConfig.upsert({
     where: { productId: csOutdoor.id },
-    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: false, productionType: 'ROLL_PRINT' },
+    update: { needsUpload: true, priceMode: 'PIECE', hasVariants: false, productionType: 'ROLL_PRINT', printAreaWidthCm: 59.4, printAreaHeightCm: 84.1 },
     create: {
       productId: csOutdoor.id, type: 'FIXED', hasCustomSize: false, hasFixedSizes: false, hasVariants: false, hasOptions: false,
       needsUpload: true, priceMode: 'PIECE', productionType: 'ROLL_PRINT',
+      printAreaWidthCm: 59.4, printAreaHeightCm: 84.1,
       helpText: 'A1 format, double-sided with water tank base. Price includes frame, water tank base, and printed inserts for both sides.',
       uploadInstructions: 'Upload PDF (2 pages) or two separate PNG files. A1: 594 × 841 mm. Include 5 mm bleed on all sides. Minimum 150 DPI.',
     },
