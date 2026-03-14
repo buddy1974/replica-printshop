@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { type Locale, type Dictionary, DEFAULT_LOCALE, LOCALES, getDictionary } from '@/lib/i18n'
 
 interface LocaleContextValue {
@@ -13,20 +14,44 @@ const LocaleContext = createContext<LocaleContextValue | null>(null)
 
 const STORAGE_KEY = 'printshop-locale'
 
-export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE)
+function extractLocale(pathname: string): Locale | null {
+  const seg = pathname.split('/')[1]
+  return (LOCALES as string[]).includes(seg) ? (seg as Locale) : null
+}
 
-  // Restore from localStorage on mount (client only)
+function stripLocale(pathname: string): string {
+  const seg = pathname.split('/')[1]
+  if ((LOCALES as string[]).includes(seg)) {
+    return pathname.slice(seg.length + 1) || '/'
+  }
+  return pathname
+}
+
+export function LocaleProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Locale is URL-first, fallback to localStorage/default for initial render
+  const urlLocale = extractLocale(pathname)
+  const [fallbackLocale, setFallbackLocale] = useState<Locale>(DEFAULT_LOCALE)
+
+  const locale: Locale = urlLocale ?? fallbackLocale
+
+  // On mount: read localStorage for fallback (before middleware redirect fires)
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Locale | null
-    if (stored && (LOCALES as string[]).includes(stored)) {
-      setLocaleState(stored)
+    if (!extractLocale(window.location.pathname)) {
+      const stored = localStorage.getItem(STORAGE_KEY) as Locale | null
+      if (stored && (LOCALES as string[]).includes(stored)) {
+        setFallbackLocale(stored as Locale)
+      }
     }
   }, [])
 
   function setLocale(l: Locale) {
-    setLocaleState(l)
     localStorage.setItem(STORAGE_KEY, l)
+    setFallbackLocale(l)
+    const stripped = stripLocale(pathname)
+    router.push(`/${l}${stripped === '/' && pathname.endsWith('/') ? '/' : stripped}`)
   }
 
   return (

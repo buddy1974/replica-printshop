@@ -1,6 +1,7 @@
 'use client'
 
 import { useCart } from '@/context/CartContext'
+import { useLocale } from '@/context/LocaleContext'
 import Image from 'next/image'
 import RemoveCartItemButton from '@/components/cart/RemoveCartItemButton'
 
@@ -15,6 +16,7 @@ function XIcon() {
 
 export default function CartDrawer() {
   const { items, count, total, isOpen, closeDrawer, refresh } = useCart()
+  const { locale } = useLocale()
 
   return (
     <>
@@ -125,14 +127,14 @@ export default function CartDrawer() {
               <span className="text-base font-bold text-gray-900">€{total.toFixed(2)}</span>
             </div>
             <a
-              href="/cart"
+              href={`/${locale}/cart`}
               onClick={closeDrawer}
               className="block w-full py-2.5 rounded-lg border border-gray-300 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
               View Cart →
             </a>
             <a
-              href="/checkout"
+              href={`/${locale}/checkout`}
               onClick={closeDrawer}
               className="block w-full py-2.5 rounded-lg bg-red-600 text-center text-sm font-semibold text-white hover:bg-red-700 transition-colors"
             >

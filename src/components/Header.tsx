@@ -9,13 +9,13 @@ import { LOCALES, type Locale, type Dictionary } from '@/lib/i18n'
 
 type NavKey = keyof Dictionary['menu']
 
-const NAV_LINKS: { href: string; key: NavKey; mobileHide?: boolean }[] = [
-  { href: '/shop', key: 'shop' },
-  { href: '/shop/graphic-installation', key: 'installation', mobileHide: true },
-  { href: '/shop/graphic-design-layout', key: 'design', mobileHide: true },
-  { href: '/contact', key: 'contact', mobileHide: true },
-  { href: '/account', key: 'account' },
-  { href: '/admin', key: 'admin' },
+const NAV_PATHS: { path: string; key: NavKey; mobileHide?: boolean }[] = [
+  { path: '/shop', key: 'shop' },
+  { path: '/shop/graphic-installation', key: 'installation', mobileHide: true },
+  { path: '/shop/graphic-design-layout', key: 'design', mobileHide: true },
+  { path: '/contact', key: 'contact', mobileHide: true },
+  { path: '/account', key: 'account' },
+  { path: '/admin', key: 'admin' },
 ]
 
 function CartIcon() {
@@ -39,11 +39,12 @@ export default function Header() {
           <Logo />
         </div>
         <nav className="flex items-center gap-0 overflow-x-auto ml-3">
-          {NAV_LINKS.map(({ href, key, mobileHide }) => {
+          {NAV_PATHS.map(({ path, key, mobileHide }) => {
+            const href = `/${locale}${path}`
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
               <Link
-                key={href}
+                key={path}
                 href={href}
                 className={[
                   'whitespace-nowrap px-2 sm:px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-colors',
@@ -60,11 +61,11 @@ export default function Header() {
 
           {/* Cart button with badge */}
           <a
-            href="/cart"
+            href={`/${locale}/cart`}
             onClick={(e) => { e.preventDefault(); openDrawer() }}
             className={[
               'relative inline-flex items-center gap-1 whitespace-nowrap px-2 sm:px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-colors',
-              pathname === '/cart' || pathname.startsWith('/cart/')
+              pathname === `/${locale}/cart` || pathname.startsWith(`/${locale}/cart/`)
                 ? 'text-red-600'
                 : 'text-gray-900 hover:text-red-600',
             ].join(' ')}
