@@ -1,0 +1,162 @@
+{
+  "banner": {
+    "short": "PVC banners printed to size, hemmed and eyeleted.",
+    "long": "Durable PVC banners for indoor and outdoor use. Printed at high resolution and finished with hemmed edges and brass eyelets every 50 cm. Max width 160 cm."
+  },
+  "mesh-banner": {
+    "short": "Wind-through mesh banners for outdoor and scaffolding use.",
+    "long": "Printed mesh banners allow wind to pass through — ideal for scaffolding, fences, and exposed outdoor locations. Finished with hemmed edges and brass eyelets. Max width 160 cm."
+  },
+  "construction-banner": {
+    "short": "Heavy-duty banners for construction sites, scaffolding, and fencing.",
+    "long": "Construction banners printed on reinforced PVC or mesh material. UV and weather resistant. Finished with hemmed edges and reinforced eyelets for secure mounting on scaffolding, fences, and hoardings."
+  },
+  "rollup-banner": {
+    "short": "Vertical rollup-format PVC banners — print only, no stand.",
+    "long": "Printed PVC banners in tall rollup proportions. Print only — no stand. Suitable as replacement graphics for existing roll-up stands, or free-hanging banners. Max width 160 cm."
+  },
+  "event-banner": {
+    "short": "Large-format PVC banners for events, trade shows, and outdoor advertising.",
+    "long": "Full-colour event banners printed on durable PVC. Hemmed and eyeleted. Suitable for festivals, trade shows, storefronts, and outdoor promotions. Custom sizes available."
+  },
+  "backlit-banner": {
+    "short": "Backlit banner film for illuminated lightboxes and frames.",
+    "long": "High-clarity backlit film for lightbox and LED display panels. Vibrant, evenly backlit colours. Suitable for retail lightboxes, exhibition displays, and illuminated signage."
+  },
+  "blockout-banner": {
+    "short": "Opaque blockout PVC banner — double-sided, no light bleed.",
+    "long": "Blockout PVC banner with an opaque black centre layer that prevents light from passing through. Ideal for double-sided printing where backlit bleed must be eliminated."
+  },
+  "barrier-fence-banner": {
+    "short": "Printed banner for crowd control barriers, events and construction sites.",
+    "long": "Durable printed banners designed to attach to crowd control barriers and construction fencing. Weather-resistant material with eyelets for easy attachment."
+  },
+  "backlit-film": {
+    "short": "Backlit film for lightbox displays and illuminated signs.",
+    "long": "High-clarity backlit film for lightbox and LED display panels. Vibrant, evenly backlit colours. Suitable for retail lightboxes, exhibition displays, and illuminated signage. Max width 160 cm."
+  },
+  "roll-up": {
+    "short": "Retractable roll-up banner stands — print, assemble, display.",
+    "long": "High-quality retractable roll-up banner stands for trade shows, events, retail, and offices. Print is included — just upload your artwork. Available in two widths. Assembled and ready to use."
+  },
+  "rollup-85": {
+    "short": "Retractable 85×200 cm roll-up stand — print, pole and carry bag included.",
+    "long": "Standard retractable roll-up display 85 cm wide × 200 cm tall. High-quality print included. Comes with aluminium pole, carry bag, and assembled base. Ready to use straight out of the box."
+  },
+  "rollup-100": {
+    "short": "Wide 100×200 cm roll-up stand — maximum visibility, print included.",
+    "long": "Wide-format retractable roll-up display 100 cm wide × 200 cm tall. Maximum print area for high-impact display. Includes aluminium pole, carry bag, and assembled base."
+  },
+  "rollup-outdoor": {
+    "short": "Double-sided outdoor roll-up with water tank base — wind-stable, both sides printed.",
+    "long": "Heavy-duty outdoor roll-up stand with a weighted water tank base for wind stability. Both sides printed. Suitable for exterior entrances, events, and outdoor promotions."
+  },
+  "x-banner": {
+    "short": "Freestanding X-frame display — lightweight, fast to set up.",
+    "long": "X-frame banner stands for indoor events, trade shows, and retail. Lightweight aluminium frame with printed banner included. Quick to assemble, easy to transport. Available in 60×160 cm and 80×180 cm."
+  },
+  "l-banner": {
+    "short": "Slim L-frame display stands — economical and eye-catching.",
+    "long": "L-frame banner displays — a simple, economical alternative to roll-ups. Lightweight aluminium frame with printed banner. Available in 60×160 cm and 80×200 cm. No cassette mechanism — banner attaches with clips."
+  },
+  "kundestopper": {
+    "short": "A-frame pavement signs — double-sided, printed and ready.",
+    "long": "Double-sided A-frame pavement signs in A1 or A2 format. Durable aluminium frame with printed inserts included. Ideal for entrances, pavements, and retail environments. Folds flat for storage."
+  },
+  "stickers": {
+    "short": "Full-colour print & cut stickers. Any shape, any size.",
+    "long": "Full-colour stickers printed on premium vinyl and cut to your shape. Available in matte or gloss lamination. Waterproof, UV-resistant, and suitable for both indoor and outdoor use."
+  },
+  "sticker": {
+    "short": "Custom stickers printed to your design — any size, any shape.",
+    "long": "Full-colour printed stickers on premium self-adhesive material. Available in standard cut or contour cut. Gloss or matte finish. Durable and waterproof."
+  },
+  "magnetfolie": {
+    "short": "Printed magnetic foil — flexible, removable, repositionable.",
+    "long": "Full-colour print on flexible magnetic foil. Easily repositionable and leaves no residue. Ideal for vehicles, refrigerators, whiteboards, and metal surfaces. Max width 100 cm."
+  },
+  "car-magnet": {
+    "short": "Magnetic car signs — attach and remove in seconds.",
+    "long": "Full-colour printed magnetic car signs. Strong enough to stay on at motorway speed. Ideal for business vehicles, temporary branding, and event promotion. Max width 100 cm."
+  },
+  "car-magnet-schild": {
+    "short": "Pre-cut magnetic door signs with rounded corners.",
+    "long": "Full-colour magnetic door signs pre-cut to common car door formats. Rounded corners prevent lifting at speed. Supplied in pairs. Printed on 0.8 mm magnetic material."
+  },
+  "milchglasfolie": {
+    "short": "Frosted glass film — privacy and style for windows and glass doors.",
+    "long": "Self-adhesive frosted glass film printed with your design. Provides privacy while letting light through. Ideal for office partitions, shop windows, and glass doors. Max width 137 cm."
+  },
+  "lochfolie": {
+    "short": "Perforated window film — see-through from inside, opaque outside.",
+    "long": "Printed perforated vinyl film (50/50). Full-colour print visible from outside; transparent from inside. Ideal for shop windows and vehicle rear windows. Max width 137 cm."
+  },
+  "pvc-folie": {
+    "short": "Self-adhesive PVC film — for windows, walls, and smooth surfaces.",
+    "long": "Premium self-adhesive PVC film for indoor and outdoor use. Waterproof, UV-resistant, and easy to apply. Available in gloss or matte. Max width 137 cm."
+  },
+  "forex-board": {
+    "short": "Lightweight PVC foam board for indoor signs and displays.",
+    "long": "Printed directly onto white forex (PVC foam board). Lightweight, rigid, and easy to mount. Suitable for indoor signs, displays, posters, and point-of-sale. Available in 3 mm and 5 mm thickness."
+  },
+  "dibond-sign": {
+    "short": "Aluminium composite panel for outdoor and long-lasting signage.",
+    "long": "Printed on dibond (aluminium composite panel). Weather-resistant, UV-stable, and rigid. Ideal for outdoor signs, building fascia, and long-term displays."
+  },
+  "acrylic-sign": {
+    "short": "Premium glossy acrylic signs — vibrant colour, premium look.",
+    "long": "Printed on clear or white acrylic. High-gloss surface gives vivid colour reproduction. Ideal for reception signs, office decor, and premium retail displays."
+  },
+  "photo-print-large": {
+    "short": "Large format photo prints — vivid colours on premium paper or film.",
+    "long": "High-resolution large format photo prints on premium glossy or matte material. Suitable for photography, art prints, exhibitions, and interior decoration. Max width 160 cm."
+  },
+  "vinyl-lettering": {
+    "short": "Precision-cut vinyl letters and shapes. Choose your colour.",
+    "long": "Single-colour vinyl lettering cut on our precision plotter. Supplied pre-masked and ready to apply. Ideal for shop windows, vehicles, walls, and equipment."
+  },
+  "dtf": {
+    "short": "DTF transfers printed and cut to size — heat-press at home or in production.",
+    "long": "Full-colour direct-to-film (DTF) transfers. We print and cut — you heat-press onto any fabric. Works on cotton, polyester, nylon, and blends. Suitable for small runs."
+  },
+  "dtf-transfer": {
+    "short": "DTF transfers printed and cut to size — heat-press at home or in production.",
+    "long": "Full-colour direct-to-film (DTF) transfers. We print and cut — you heat-press onto any fabric. Works on cotton, polyester, nylon, and blends. Suitable for small runs."
+  },
+  "dtf-gang-sheet": {
+    "short": "DTF gang sheets — fill the 55 cm roll, cut to size, heat-press your prints.",
+    "long": "Gang up multiple designs on a single 55 cm wide DTF roll to minimise waste. You specify the width and height of the film area. We print and cut — you heat-press onto any fabric. Vibrant colours, soft hand feel."
+  },
+  "dtf-55x100": {
+    "short": "Full-size DTF gang sheet 55×100 cm — transfer up to 12 standard designs in one go.",
+    "long": "Maximum size DTF sheet at 55×100 cm. Fit multiple designs, minimise waste, and heat-press individually. Works on cotton, polyester, nylon, and blends."
+  },
+  "dtf-a3": {
+    "short": "DTF gang sheet A3 (29.7×42 cm) — ideal for 4–6 medium prints.",
+    "long": "A3 format DTF transfer sheet. Gang up medium-size designs to maximise print area. Works on all common fabrics. Supplied ready to cut and press."
+  },
+  "dtf-a4": {
+    "short": "DTF gang sheet A4 (21×29.7 cm) — perfect for small designs or single prints.",
+    "long": "A4 format DTF transfer sheet. Ideal for a single chest print or a few small designs. Works on all common fabrics. Supplied ready to cut and press."
+  },
+  "flex-print": {
+    "short": "Heat-transfer flex vinyl — bright, durable single-colour prints.",
+    "long": "Flex vinyl heat transfers for textiles. High opacity, single-colour. Suitable for sports kits, workwear, and promotional wear. Wash-resistant at 60°C. Max width 50 cm."
+  },
+  "flock-print": {
+    "short": "Flock heat transfers — soft, velvety finish for premium textiles.",
+    "long": "Flock heat-transfer material for textiles. Creates a soft, raised velvety surface. Ideal for premium fashion and workwear. Single-colour. Max width 50 cm."
+  },
+  "embroidery": {
+    "short": "Machine embroidery on garments — flat, 3D, or patch.",
+    "long": "High-quality machine embroidery on your garments. Choose between flat embroidery, 3D puff embroidery, or patch application. Pricing based on stitch count. Send your garment or order with ours."
+  },
+  "patches": {
+    "short": "Custom embroidered patches — iron-on, velcro, or sew-on.",
+    "long": "Custom machine-embroidered patches. Choose your border type and backing. Suitable for jackets, bags, hats, and uniforms. Min order 10 pieces."
+  },
+  "mug": {
+    "short": "Sublimation mugs printed with your design — full wrap, vibrant colour.",
+    "long": "Full-colour sublimation mugs with your artwork printed all the way around. Dishwasher-safe coating, vivid and durable colours. Standard 330 ml ceramic mug."
+  }
+}

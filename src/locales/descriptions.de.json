@@ -1,0 +1,162 @@
+{
+  "banner": {
+    "short": "PVC-Banner in Ihrer Wunschgröße — gesäumt und mit Ösen.",
+    "long": "Langlebige PVC-Banner für den Innen- und Außeneinsatz. Hochauflösend gedruckt, mit gesäumten Kanten und Messing-Ösen alle 50 cm. Maximale Breite 160 cm."
+  },
+  "mesh-banner": {
+    "short": "Windurchlässige Mesh-Banner für Außen- und Gerüsteinsatz.",
+    "long": "Bedruckte Mesh-Banner lassen Wind durch — ideal für Gerüste, Zäune und exponierte Außenstandorte. Gesäumt mit Messing-Ösen. Maximale Breite 160 cm."
+  },
+  "construction-banner": {
+    "short": "Robuste Banner für Baustellen, Gerüste und Zäune.",
+    "long": "Baustellen-Banner auf verstärktem PVC oder Mesh-Material. UV- und witterungsbeständig. Gesäumt mit verstärkten Ösen für sichere Befestigung an Gerüsten, Zäunen und Absperrungen."
+  },
+  "rollup-banner": {
+    "short": "Roll-Up-Format PVC-Banner — nur Druck, kein Ständer.",
+    "long": "Bedruckte PVC-Banner im Roll-Up-Format. Nur Druck — kein Ständer. Als Ersatzgrafik für vorhandene Roll-Up-Ständer oder als hängende Banner geeignet. Maximale Breite 160 cm."
+  },
+  "event-banner": {
+    "short": "Großformat-PVC-Banner für Events, Messen und Außenwerbung.",
+    "long": "Vollfarbige Event-Banner auf robustem PVC. Gesäumt und mit Ösen. Geeignet für Festivals, Messen, Ladenfronten und Außenpromotion. Individuelle Größen verfügbar."
+  },
+  "backlit-banner": {
+    "short": "Backlit-Bannerfolie für beleuchtete Leuchtkästen und Rahmen.",
+    "long": "Hochklare Backlit-Folie für Leuchtkasten- und LED-Displayrahmen. Lebendige, gleichmäßig hinterleuchtete Farben. Geeignet für Einzelhandel, Ausstellungen und beleuchtete Beschilderung."
+  },
+  "blockout-banner": {
+    "short": "Blickdichter Blockout-PVC-Banner — doppelseitig, kein Lichtdurchscheinen.",
+    "long": "Blockout-PVC-Banner mit einer opaken schwarzen Mittelschicht, die Lichtdurchfall verhindert. Ideal für doppelseitigen Druck, bei dem Hintergrundbeleuchtung ausgeblendet werden muss."
+  },
+  "barrier-fence-banner": {
+    "short": "Bedruckter Banner für Absperrgitter, Events und Baustellen.",
+    "long": "Robuste bedruckte Banner für Absperrgitter und Bauzäune. Witterungsbeständiges Material mit Ösen zur einfachen Befestigung."
+  },
+  "backlit-film": {
+    "short": "Backlit-Folie für Leuchtkasten-Displays und beleuchtete Schilder.",
+    "long": "Hochklare Backlit-Folie für Leuchtkasten- und LED-Displays. Lebendige, gleichmäßig hinterleuchtete Farben. Maximale Breite 160 cm."
+  },
+  "roll-up": {
+    "short": "Einziehbare Roll-Up-Displays — Druck, Aufbau, fertig.",
+    "long": "Hochwertige einziehbare Roll-Up-Banner-Ständer für Messen, Events, Einzelhandel und Büros. Druck inklusive — einfach Artwork hochladen. Zwei Breiten verfügbar. Montiert und einsatzbereit."
+  },
+  "rollup-85": {
+    "short": "Einziehbarer 85×200 cm Roll-Up — Druck, Mast und Tasche inklusive.",
+    "long": "Standard einziehbares Roll-Up-Display 85 cm breit × 200 cm hoch. Hochwertiger Druck inklusive. Mit Aluminiummast, Tragetasche und montiertem Fuß. Sofort einsatzbereit."
+  },
+  "rollup-100": {
+    "short": "Breites 100×200 cm Roll-Up — maximale Sichtbarkeit, Druck inklusive.",
+    "long": "Breitformat-Roll-Up-Display 100 cm breit × 200 cm hoch. Maximale Druckfläche für wirkungsvolle Präsentation. Mit Aluminiummast, Tragetasche und montiertem Fuß."
+  },
+  "rollup-outdoor": {
+    "short": "Doppelseitiger Outdoor-Roll-Up mit Wassertankfuß — windstabil, beidseitig bedruckt.",
+    "long": "Schwerlastiger Outdoor-Roll-Up-Ständer mit gewichtetem Wassertankfuß für Windstabilität. Beide Seiten bedruckt. Für Außeneingänge, Events und Außenpromotion geeignet."
+  },
+  "x-banner": {
+    "short": "Freistehender X-Frame-Display — leicht, schnell aufgebaut.",
+    "long": "X-Frame-Banner-Ständer für Indoor-Events, Messen und Einzelhandel. Leichter Aluminiumrahmen mit bedrucktem Banner inklusive. Schnell aufzubauen, einfach zu transportieren. Verfügbar in 60×160 cm und 80×180 cm."
+  },
+  "l-banner": {
+    "short": "Schlanke L-Frame-Displays — wirtschaftlich und auffällig.",
+    "long": "L-Frame-Banner-Displays — eine einfache, wirtschaftliche Alternative zu Roll-Ups. Leichter Aluminiumrahmen mit bedrucktem Banner. Verfügbar in 60×160 cm und 80×200 cm. Kein Kassettenmechanismus — Banner wird mit Clips befestigt."
+  },
+  "kundestopper": {
+    "short": "A-Frame-Kundenstopper — doppelseitig, bedruckt und einsatzbereit.",
+    "long": "Doppelseitige A-Frame-Kundenstopper im A1- oder A2-Format. Langlebiger Aluminiumrahmen mit bedruckten Einlagen inklusive. Ideal für Eingänge, Gehwege und Einzelhandel. Flach zusammenklappbar."
+  },
+  "stickers": {
+    "short": "Vollfarbige Druck- und Schnittaufkleber. Jede Form, jede Größe.",
+    "long": "Vollfarbige Aufkleber auf Premium-Vinyl, zugeschnitten auf Ihre Form. Erhältlich mit matter oder glänzender Laminierung. Wasserfest, UV-beständig, für Innen und Außen geeignet."
+  },
+  "sticker": {
+    "short": "Individuelle Aufkleber nach Ihrem Design — jede Größe, jede Form.",
+    "long": "Vollfarbig bedruckte Aufkleber auf hochwertigem Selbstklebematerial. Erhältlich als Rechteckschnitt oder Konturschnitt. Glanz- oder Mattoberfläche. Langlebig und wasserfest."
+  },
+  "magnetfolie": {
+    "short": "Bedruckte Magnetfolie — flexibel, abnehmbar, repositionierbar.",
+    "long": "Vollfarbdruck auf flexibler Magnetfolie. Einfach repositionierbar und rückstandsfrei entfernbar. Ideal für Fahrzeuge, Kühlschränke, Whiteboards und Metallflächen. Maximale Breite 100 cm."
+  },
+  "car-magnet": {
+    "short": "Magnetische Fahrzeugschilder — in Sekunden angebracht und entfernt.",
+    "long": "Vollfarbig bedruckte Magnetfahrzeugschilder. Stark genug für Autobahngeschwindigkeit. Ideal für Firmenfahrzeuge, temporäres Branding und Event-Promotion. Maximale Breite 100 cm."
+  },
+  "car-magnet-schild": {
+    "short": "Vorgeschnittene Magnettuerschilder mit abgerundeten Ecken.",
+    "long": "Vollfarbige Magnettürschilder, vorgeschnitten auf gängige Fahrzeugtürformate. Abgerundete Ecken verhindern Ablösen bei Fahrt. Paarweise geliefert. Auf 0,8 mm Magnetmaterial gedruckt."
+  },
+  "milchglasfolie": {
+    "short": "Milchglasfolie — Privatsphäre und Stil für Fenster und Glastüren.",
+    "long": "Selbstklebende Milchglasfolie mit Ihrem Design bedruckt. Bietet Sichtschutz bei gleichzeitigem Lichtdurchlass. Ideal für Bürotrennwände, Schaufenster und Glastüren. Maximale Breite 137 cm."
+  },
+  "lochfolie": {
+    "short": "Lochfolie — von innen durchsichtig, von außen blickdicht.",
+    "long": "Bedruckte Lochfolie (50/50). Vollfarbdruck von außen sichtbar; von innen transparent. Ideal für Schaufenster und Fahrzeugheckscheiben. Maximale Breite 137 cm."
+  },
+  "pvc-folie": {
+    "short": "Selbstklebende PVC-Folie — für Fenster, Wände und glatte Oberflächen.",
+    "long": "Premium selbstklebende PVC-Folie für Innen- und Außeneinsatz. Wasserfest, UV-beständig und leicht aufzubringen. Erhältlich in Glanz oder Matt. Maximale Breite 137 cm."
+  },
+  "forex-board": {
+    "short": "Leichte PVC-Schaumstoffplatte für Innenschilder und Displays.",
+    "long": "Direktdruck auf weiße Forex-Platte (PVC-Hartschaum). Leicht, starr und einfach zu befestigen. Geeignet für Innenschilder, Displays, Poster und POS-Material. Erhältlich in 3 mm und 5 mm Stärke."
+  },
+  "dibond-sign": {
+    "short": "Aluminiumverbundplatte für langlebige Außenbeschilderung.",
+    "long": "Druck auf Dibond (Aluminiumverbundplatte). Witterungsbeständig, UV-stabil und starr. Ideal für Außenschilder, Gebäudefassaden und Langzeit-Displays."
+  },
+  "acrylic-sign": {
+    "short": "Premium Hochglanz-Acrylschilder — lebendige Farben, edles Erscheinungsbild.",
+    "long": "Druck auf klarem oder weißem Acryl. Die hochglänzende Oberfläche sorgt für lebendige Farbwiedergabe. Ideal für Empfangsschilder, Bürodekoration und Premium-Retail-Displays."
+  },
+  "photo-print-large": {
+    "short": "Großformat-Fotodrucke — lebendige Farben auf Premium-Papier oder -Folie.",
+    "long": "Hochauflösende Großformat-Fotodrucke auf hochwertigem Glanz- oder Mattmaterial. Geeignet für Fotografie, Kunstdrucke, Ausstellungen und Innenraumdekoration. Maximale Breite 160 cm."
+  },
+  "vinyl-lettering": {
+    "short": "Präzise geschnittene Vinylbuchstaben und -formen. Farbe frei wählbar.",
+    "long": "Einfarb-Vinylbeschriftung, auf unserem Präzisionsplotter geschnitten. Vorkaschiert und aufklebebereit geliefert. Ideal für Schaufenster, Fahrzeuge, Wände und Gerätebeschriftung."
+  },
+  "dtf": {
+    "short": "DTF-Transfers gedruckt und zugeschnitten — zu Hause oder in der Produktion aufbügeln.",
+    "long": "Vollfarbige Direct-to-Film (DTF) Transfers. Wir drucken und schneiden — Sie bügeln auf jedes Gewebe auf. Funktioniert auf Baumwolle, Polyester, Nylon und Mischgewebe. Für Kleinserien geeignet."
+  },
+  "dtf-transfer": {
+    "short": "DTF-Transfers gedruckt und zugeschnitten — zu Hause oder in der Produktion aufbügeln.",
+    "long": "Vollfarbige Direct-to-Film (DTF) Transfers. Wir drucken und schneiden — Sie bügeln auf jedes Gewebe auf. Funktioniert auf Baumwolle, Polyester, Nylon und Mischgewebe."
+  },
+  "dtf-gang-sheet": {
+    "short": "DTF-Gangsheet — 55 cm-Rolle füllen, zuschneiden, aufbügeln.",
+    "long": "Mehrere Designs auf einer 55 cm breiten DTF-Rolle zusammenstellen, um Verschnitt zu minimieren. Sie geben Breite und Höhe an. Wir drucken und schneiden — Sie bügeln auf jedes Gewebe auf."
+  },
+  "dtf-55x100": {
+    "short": "Großes DTF-Gangsheet 55×100 cm — bis zu 12 Standarddesigns auf einmal transferieren.",
+    "long": "Maximales DTF-Sheet-Format 55×100 cm. Mehrere Designs unterbringen, Verschnitt minimieren und einzeln aufbügeln. Funktioniert auf Baumwolle, Polyester, Nylon und Mischgewebe."
+  },
+  "dtf-a3": {
+    "short": "DTF-Gangsheet A3 (29,7×42 cm) — ideal für 4–6 mittelgroße Drucke.",
+    "long": "A3-Format DTF-Transfer-Sheet. Mittelgroße Designs zusammenstellen, um die Druckfläche zu maximieren. Für alle gängigen Gewebe geeignet. Druckfertig zugeschnitten geliefert."
+  },
+  "dtf-a4": {
+    "short": "DTF-Gangsheet A4 (21×29,7 cm) — perfekt für kleine Designs oder Einzeldrucke.",
+    "long": "A4-Format DTF-Transfer-Sheet. Ideal für einen einzelnen Brustdruck oder einige kleine Designs. Für alle gängigen Gewebe geeignet. Druckfertig zugeschnitten geliefert."
+  },
+  "flex-print": {
+    "short": "Flex-Vinyl-Heißtransfer — leuchtende, langlebige Einfarb-Drucke.",
+    "long": "Flex-Vinyl-Heißtransfers für Textilien. Hohe Deckkraft, einfarbig. Geeignet für Sportbekleidung, Arbeitskleidung und Werbebekleidung. Waschbeständig bis 60°C. Maximale Breite 50 cm."
+  },
+  "flock-print": {
+    "short": "Flock-Heißtransfers — weiches, samtiges Finish für Premium-Textilien.",
+    "long": "Flock-Heißtransfermaterial für Textilien. Erzeugt eine weiche, erhabene Samtoberfläche. Ideal für Premium-Mode und Arbeitskleidung. Einfarbig. Maximale Breite 50 cm."
+  },
+  "embroidery": {
+    "short": "Maschinenstickerei auf Kleidungsstücken — flach, 3D oder Patch.",
+    "long": "Hochwertige Maschinenstickerei auf Ihren Kleidungsstücken. Wahl zwischen Flachstickerei, 3D-Puff-Stickerei oder Patch-Applikation. Preis nach Stichanzahl. Eigenes Kleidungsstück einsenden oder bei uns bestellen."
+  },
+  "patches": {
+    "short": "Individuelle Stickpatches — aufbügelbar, Klettverschluss oder aufnähbar.",
+    "long": "Individuelle Maschinenstick-Patches. Randtyp und Unterseite frei wählbar. Geeignet für Jacken, Taschen, Mützen und Uniformen. Mindestbestellung 10 Stück."
+  },
+  "mug": {
+    "short": "Sublimationstassen mit Ihrem Design — rundum bedruckt, leuchtende Farben.",
+    "long": "Vollfarbige Sublimationstassen mit Ihrem Artwork rundum bedruckt. Spülmaschinenfeste Beschichtung, leuchtende und langlebige Farben. Standard-Keramiktasse 330 ml."
+  }
+}

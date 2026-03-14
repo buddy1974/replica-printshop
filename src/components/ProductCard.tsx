@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { useLocale } from '@/context/LocaleContext'
-import { getProductLabel, getCategoryLabel } from '@/lib/productTranslations'
+import { getProductLabel, getCategoryLabel, getDescriptions } from '@/lib/productTranslations'
 
 const ImageModal = dynamic(() => import('./ImageModal'))
 
@@ -26,6 +26,8 @@ export default function ProductCard({ slug, name, category, categorySlug, shortD
   const { t, locale } = useLocale()
   const translatedName = getProductLabel(slug, locale, name)
   const translatedCategory = categorySlug ? getCategoryLabel(categorySlug, locale, category) : category
+  const descEntry = getDescriptions(slug, locale)
+  const translatedShort = descEntry?.short ?? shortDescription
 
   return (
     <>
@@ -68,8 +70,8 @@ export default function ProductCard({ slug, name, category, categorySlug, shortD
           <div className="flex-1">
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{translatedCategory}</p>
             <h2 className="font-semibold text-sm leading-tight">{translatedName}</h2>
-            {shortDescription && (
-              <p className="text-xs text-gray-500 leading-snug mt-1 line-clamp-2">{shortDescription}</p>
+            {translatedShort && (
+              <p className="text-xs text-gray-500 leading-snug mt-1 line-clamp-2">{translatedShort}</p>
             )}
           </div>
           <Link

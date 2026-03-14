@@ -1,0 +1,162 @@
+{
+  "banner": {
+    "short": "Bannières PVC à votre taille — ourlets et œillets inclus.",
+    "long": "Bannières PVC durables pour usage intérieur et extérieur. Impression haute résolution avec ourlets et œillets en laiton tous les 50 cm. Largeur maximale 160 cm."
+  },
+  "mesh-banner": {
+    "short": "Bannières mesh aérées pour l'extérieur et les échafaudages.",
+    "long": "Les bannières mesh imprimées laissent passer le vent — idéales pour les échafaudages, clôtures et emplacements extérieurs exposés. Ourlets et œillets en laiton. Largeur maximale 160 cm."
+  },
+  "construction-banner": {
+    "short": "Bannières robustes pour chantiers, échafaudages et clôtures.",
+    "long": "Bannières de chantier imprimées sur PVC renforcé ou mesh. Résistantes aux UV et aux intempéries. Ourlets et œillets renforcés pour une fixation sécurisée sur échafaudages, clôtures et palissades."
+  },
+  "rollup-banner": {
+    "short": "Bannières PVC format roll-up — impression seule, sans support.",
+    "long": "Bannières PVC imprimées en proportions roll-up. Impression uniquement — sans support. Convient comme graphique de remplacement pour des stands roll-up existants ou comme bannières suspendues. Largeur maximale 160 cm."
+  },
+  "event-banner": {
+    "short": "Bannières PVC grand format pour événements, salons et publicité extérieure.",
+    "long": "Bannières événementielles pleine couleur sur PVC durable. Ourlets et œillets. Convient pour festivals, salons, devantures et promotions extérieures. Tailles personnalisées disponibles."
+  },
+  "backlit-banner": {
+    "short": "Film bannière rétroéclairé pour caissons lumineux et cadres éclairés.",
+    "long": "Film rétroéclairé haute clarté pour caissons lumineux et panneaux LED. Couleurs vives et uniformément rétroéclairées. Convient pour le retail, les expositions et la signalétique lumineuse."
+  },
+  "blockout-banner": {
+    "short": "Bannière PVC blockout opaque — double face, sans halo lumineux.",
+    "long": "Bannière PVC blockout avec une couche centrale noire opaque qui empêche la lumière de passer. Idéale pour l'impression double face où le halo rétroéclairé doit être éliminé."
+  },
+  "barrier-fence-banner": {
+    "short": "Bannière imprimée pour barrières, événements et chantiers.",
+    "long": "Bannières robustes conçues pour s'attacher aux barrières de contrôle de foule et aux clôtures de chantier. Matériau résistant aux intempéries avec œillets pour fixation facile."
+  },
+  "backlit-film": {
+    "short": "Film rétroéclairé pour caissons lumineux et enseignes lumineuses.",
+    "long": "Film rétroéclairé haute clarté pour caissons lumineux et panneaux LED. Couleurs vives et uniformément rétroéclairées. Largeur maximale 160 cm."
+  },
+  "roll-up": {
+    "short": "Stands roll-up enroulables — impression, montage, affichage.",
+    "long": "Stands roll-up enroulables de haute qualité pour salons, événements, retail et bureaux. Impression incluse — téléchargez simplement votre visuel. Deux largeurs disponibles. Montés et prêts à l'emploi."
+  },
+  "rollup-85": {
+    "short": "Stand roll-up enroulable 85×200 cm — impression, mât et sac inclus.",
+    "long": "Stand roll-up enroulable standard 85 cm de large × 200 cm de haut. Impression haute qualité incluse. Livré avec mât aluminium, sac de transport et pied monté. Prêt à l'emploi immédiatement."
+  },
+  "rollup-100": {
+    "short": "Roll-up large 100×200 cm — visibilité maximale, impression incluse.",
+    "long": "Stand roll-up grand format 100 cm de large × 200 cm de haut. Surface d'impression maximale pour un affichage percutant. Comprend mât aluminium, sac de transport et pied monté."
+  },
+  "rollup-outdoor": {
+    "short": "Roll-up outdoor double face avec pied lestable — stable au vent, deux faces imprimées.",
+    "long": "Stand roll-up extérieur robuste avec pied à réservoir d'eau lesté pour la stabilité au vent. Les deux faces imprimées. Convient pour entrées extérieures, événements et promotions en plein air."
+  },
+  "x-banner": {
+    "short": "Display X-frame autoportant — léger, installation rapide.",
+    "long": "Stands bannière X-frame pour événements intérieurs, salons et retail. Cadre aluminium léger avec bannière imprimée incluse. Montage rapide, transport facile. Disponible en 60×160 cm et 80×180 cm."
+  },
+  "l-banner": {
+    "short": "Displays L-frame fins — économiques et accrocheurs.",
+    "long": "Displays bannière L-frame — une alternative simple et économique aux roll-ups. Cadre aluminium léger avec bannière imprimée. Disponible en 60×160 cm et 80×200 cm. Sans mécanisme à cassette — la bannière s'attache avec des clips."
+  },
+  "kundestopper": {
+    "short": "Chevalets trottoir A-frame — double face, imprimés et prêts à l'emploi.",
+    "long": "Chevalets trottoir A-frame double face en format A1 ou A2. Cadre aluminium durable avec inserts imprimés inclus. Idéal pour entrées, trottoirs et commerces. Se plie à plat pour le rangement."
+  },
+  "stickers": {
+    "short": "Autocollants pleine couleur imprimés et découpés. Toute forme, toute taille.",
+    "long": "Autocollants pleine couleur imprimés sur vinyle premium et découpés à votre forme. Disponibles en plastification mate ou brillante. Imperméables, résistants aux UV, adaptés intérieur et extérieur."
+  },
+  "sticker": {
+    "short": "Autocollants personnalisés selon votre design — toute taille, toute forme.",
+    "long": "Autocollants imprimés pleine couleur sur matériau auto-adhésif premium. Disponibles en découpe standard ou découpe de contour. Finition brillante ou mate. Durables et imperméables."
+  },
+  "magnetfolie": {
+    "short": "Film magnétique imprimé — flexible, amovible, repositionnable.",
+    "long": "Impression pleine couleur sur film magnétique flexible. Facilement repositionnable et sans résidu. Idéal pour véhicules, réfrigérateurs, tableaux blancs et surfaces métalliques. Largeur maximale 100 cm."
+  },
+  "car-magnet": {
+    "short": "Enseignes magnétiques voiture — à poser et retirer en quelques secondes.",
+    "long": "Enseignes magnétiques imprimées pleine couleur pour voitures. Suffisamment puissant pour rester en place à vitesse autoroute. Idéal pour véhicules professionnels, branding temporaire et promotion événementielle. Largeur maximale 100 cm."
+  },
+  "car-magnet-schild": {
+    "short": "Enseignes magnétiques prédécoupées avec coins arrondis.",
+    "long": "Enseignes magnétiques pleine couleur prédécoupées aux formats courants de portières. Les coins arrondis évitent le décollement à vitesse. Livrées par paires. Imprimées sur matériau magnétique 0,8 mm."
+  },
+  "milchglasfolie": {
+    "short": "Film dépoli — intimité et style pour fenêtres et portes vitrées.",
+    "long": "Film dépoli auto-adhésif imprimé avec votre design. Offre de l'intimité tout en laissant passer la lumière. Idéal pour cloisons de bureau, vitrines et portes vitrées. Largeur maximale 137 cm."
+  },
+  "lochfolie": {
+    "short": "Film perforé — transparent de l'intérieur, opaque de l'extérieur.",
+    "long": "Film vinyle perforé imprimé (50/50). Impression pleine couleur visible de l'extérieur ; transparent de l'intérieur. Idéal pour vitrines et lunettes arrière de véhicules. Largeur maximale 137 cm."
+  },
+  "pvc-folie": {
+    "short": "Film PVC auto-adhésif — pour fenêtres, murs et surfaces lisses.",
+    "long": "Film PVC auto-adhésif premium pour usage intérieur et extérieur. Imperméable, résistant aux UV et facile à appliquer. Disponible en brillant ou mat. Largeur maximale 137 cm."
+  },
+  "forex-board": {
+    "short": "Panneau forex léger pour enseignes intérieures et displays.",
+    "long": "Impression directe sur panneau forex blanc (mousse PVC). Léger, rigide et facile à monter. Convient pour enseignes intérieures, displays, affiches et PLV. Disponible en 3 mm et 5 mm d'épaisseur."
+  },
+  "dibond-sign": {
+    "short": "Panneau composite aluminium pour signalétique extérieure durable.",
+    "long": "Impression sur Dibond (panneau composite aluminium). Résistant aux intempéries, stable aux UV et rigide. Idéal pour enseignes extérieures, façades de bâtiments et displays longue durée."
+  },
+  "acrylic-sign": {
+    "short": "Enseignes acryliques premium haute brillance — couleurs vives, look premium.",
+    "long": "Impression sur acrylique transparent ou blanc. La surface haute brillance offre une reproduction des couleurs éclatante. Idéal pour enseignes d'accueil, décoration de bureau et displays retail premium."
+  },
+  "photo-print-large": {
+    "short": "Tirages photo grand format — couleurs vives sur papier ou film premium.",
+    "long": "Tirages photo grand format haute résolution sur matériau brillant ou mat premium. Convient pour la photographie, les tirages artistiques, les expositions et la décoration intérieure. Largeur maximale 160 cm."
+  },
+  "vinyl-lettering": {
+    "short": "Lettres et formes vinyle découpées avec précision. Couleur au choix.",
+    "long": "Lettrage vinyle monocouleur découpé sur notre traceur de précision. Livré pré-masqué et prêt à poser. Idéal pour vitrines, véhicules, murs et marquage d'équipements."
+  },
+  "dtf": {
+    "short": "Transferts DTF imprimés et découpés — à thermocoller chez vous ou en production.",
+    "long": "Transferts DTF (direct-to-film) pleine couleur. Nous imprimons et découpons — vous thermocollez sur n'importe quel tissu. Fonctionne sur coton, polyester, nylon et mélanges. Adapté aux petites séries."
+  },
+  "dtf-transfer": {
+    "short": "Transferts DTF imprimés et découpés — à thermocoller chez vous ou en production.",
+    "long": "Transferts DTF pleine couleur. Nous imprimons et découpons — vous thermocollez sur n'importe quel tissu. Fonctionne sur coton, polyester, nylon et mélanges."
+  },
+  "dtf-gang-sheet": {
+    "short": "Feuilles DTF gang — remplissez le rouleau 55 cm, découpez, thermokollez.",
+    "long": "Regroupez plusieurs designs sur un rouleau DTF de 55 cm de large pour minimiser les chutes. Vous spécifiez la largeur et la hauteur. Nous imprimons et découpons — vous thermocollez sur n'importe quel tissu."
+  },
+  "dtf-55x100": {
+    "short": "Grande feuille DTF 55×100 cm — transférez jusqu'à 12 designs standards en une fois.",
+    "long": "Format DTF maximum 55×100 cm. Placez plusieurs designs, minimisez les chutes et thermocollez individuellement. Fonctionne sur coton, polyester, nylon et mélanges."
+  },
+  "dtf-a3": {
+    "short": "Feuille DTF A3 (29,7×42 cm) — idéale pour 4 à 6 impressions moyennes.",
+    "long": "Feuille de transfert DTF format A3. Regroupez des designs de taille moyenne pour maximiser la surface d'impression. Fonctionne sur tous les tissus courants. Livré prêt à découper et thermocoller."
+  },
+  "dtf-a4": {
+    "short": "Feuille DTF A4 (21×29,7 cm) — parfaite pour petits designs ou impressions uniques.",
+    "long": "Feuille de transfert DTF format A4. Idéale pour une impression poitrine unique ou quelques petits designs. Fonctionne sur tous les tissus courants. Livré prêt à découper et thermocoller."
+  },
+  "flex-print": {
+    "short": "Flex vinyle thermocollant — impressions monochromes vives et durables.",
+    "long": "Transferts thermocollants en flex vinyle pour textiles. Haute opacité, monocouleur. Convient pour tenues de sport, vêtements de travail et vêtements promotionnels. Résistant au lavage à 60°C. Largeur maximale 50 cm."
+  },
+  "flock-print": {
+    "short": "Transferts flock thermocollants — finition veloutée douce pour textiles premium.",
+    "long": "Flock thermocollant pour textiles. Crée une surface veloutée douce et en relief. Idéal pour la mode premium et les vêtements de travail. Monocouleur. Largeur maximale 50 cm."
+  },
+  "embroidery": {
+    "short": "Broderie machine sur vêtements — plate, 3D ou patch.",
+    "long": "Broderie machine de haute qualité sur vos vêtements. Choisissez entre broderie plate, broderie 3D puff ou application de patch. Tarification selon le nombre de points. Envoyez votre vêtement ou commandez avec le nôtre."
+  },
+  "patches": {
+    "short": "Patches brodés personnalisés — thermocollants, velcro ou à coudre.",
+    "long": "Patches brodés machine personnalisés. Choisissez votre type de bordure et de support. Convient pour vestes, sacs, chapeaux et uniformes. Commande minimum 10 pièces."
+  },
+  "mug": {
+    "short": "Mugs sublimation imprimés avec votre design — impression tout autour, couleurs vives.",
+    "long": "Mugs sublimation pleine couleur avec votre visuel imprimé tout autour. Revêtement compatible lave-vaisselle, couleurs vives et durables. Mug céramique standard 330 ml."
+  }
+}

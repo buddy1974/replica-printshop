@@ -6,7 +6,7 @@ import Container from '@/components/Container'
 import CategoryFooter from '@/components/CategoryFooter'
 import ProductImageGallery from '@/components/ProductImageGallery'
 import { db } from '@/lib/db'
-import { ProductName, CategoryName } from '@/components/TName'
+import { ProductName, CategoryName, ProductDescription } from '@/components/TName'
 
 export const revalidate = 60
 
@@ -357,9 +357,11 @@ export default async function ProductPage({
             <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-2">
               <ProductName slug={product.slug} fallback={product.name} />
             </h1>
-            {product.description && (
-              <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
-            )}
+            <ProductDescription
+              slug={product.slug}
+              fallback={product.description}
+              className="text-sm text-gray-600 leading-relaxed"
+            />
           </div>
 
           {/* Help text */}
