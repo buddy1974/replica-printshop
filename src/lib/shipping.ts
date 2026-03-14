@@ -171,16 +171,6 @@ export function validateShippingRestrictions(
       }
     }
 
-    // Step 156 — large format roll: no standard shipping above 100 cm width
-    if (
-      config?.isRoll &&
-      Number(item.width) > 100 &&
-      deliveryType === 'STANDARD'
-    ) {
-      throw new ValidationError(
-        `"${name}" is a large format roll item (width > 100 cm). Standard shipping is not available. Choose pickup or request manual shipping.`
-      )
-    }
   }
 }
 
