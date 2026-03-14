@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { type Metadata } from 'next'
+import Image from 'next/image'
 import ConfiguratorForm from '@/components/ConfiguratorForm'
 import Container from '@/components/Container'
 import CategoryFooter from '@/components/CategoryFooter'
@@ -328,12 +329,14 @@ export default async function ProductPage({
               extraImages={product.images}
             />
           ) : (
-            <div className="aspect-square rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-16 h-16">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="m21 15-5-5L5 21" />
-              </svg>
+            <div className="aspect-square rounded-xl border border-gray-200 bg-white overflow-hidden relative">
+              <Image
+                src="/products/window-graphics.png"
+                alt={product.name}
+                fill
+                className="object-contain p-4"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
             </div>
           )}
         </div>

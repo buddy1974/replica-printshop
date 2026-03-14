@@ -48,13 +48,13 @@ export default function ProductCard({ slug, name, category, shortDescription, im
               </button>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-2 text-gray-300 w-full h-full">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="w-12 h-12">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="m21 15-5-5L5 21" />
-              </svg>
-            </div>
+            <Image
+              src="/products/window-graphics.png"
+              alt={name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-contain p-2"
+            />
           )}
         </Link>
 
