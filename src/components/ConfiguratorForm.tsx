@@ -114,7 +114,7 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
   const [width, setWidth] = useState(initialWidth ?? fixedSizeOptions[0]?.w ?? cfg?.printAreaWidthCm ?? 100)
   const [height, setHeight] = useState(initialHeight ?? fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
   const [quantity, setQuantity] = useState(1)
-  const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS' | 'PICKUP'>('STANDARD')
+  const deliveryType = 'STANDARD' as const
   const [placement, setPlacement] = useState<'front' | 'back'>('front')
 
   // Price state — manual calculate only (no auto-fetch)
@@ -291,22 +291,6 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
         </label>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <span className={labelTextCls}>Delivery</span>
-        <div className="flex flex-wrap gap-2">
-          {(['STANDARD', 'EXPRESS'] as const).map((type) => (
-            <PillButton key={type} active={deliveryType === type} onClick={() => { setDeliveryType(type); resetPrice() }}>
-              {type.charAt(0) + type.slice(1).toLowerCase()}
-            </PillButton>
-          ))}
-          {cfg?.pickupAllowed && (
-            <PillButton active={deliveryType === 'PICKUP'} onClick={() => { setDeliveryType('PICKUP'); resetPrice() }}>
-              Pickup
-            </PillButton>
-          )}
-        </div>
-      </div>
-
       {showPlacement && (
         <div className="flex flex-col gap-2">
           <span className={labelTextCls}>Placement</span>
@@ -363,7 +347,6 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
             if (variantId) p.set('variant', variantId)
             if (optionValueIds.length) p.set('opts', optionValueIds.join(','))
             if (showPlacement && placement) p.set('placement', placement)
-            if (deliveryType === 'EXPRESS') p.set('express', '1')
             router.push(`/upload/${product.id}?${p}`)
           }}
         >

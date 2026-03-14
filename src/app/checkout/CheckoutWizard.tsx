@@ -57,7 +57,6 @@ interface DeliveryAddress {
 
 const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] = [
   { value: 'STANDARD', label: 'Standard shipping', desc: '3–5 business days' },
-  { value: 'EXPRESS', label: 'Express shipping', desc: '1–2 business days' },
   { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store' },
 ]
 
