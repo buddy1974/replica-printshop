@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import RemoveCartItemButton from '@/components/cart/RemoveCartItemButton'
+import { useLocale } from '@/context/LocaleContext'
 
 const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null
@@ -55,20 +56,7 @@ interface DeliveryAddress {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DELIVERY_OPTIONS: { value: DeliveryType; label: string; desc: string }[] = [
-  { value: 'STANDARD', label: 'Standard shipping', desc: '3–5 business days' },
-  { value: 'PICKUP', label: 'Pickup', desc: 'Collect in store' },
-]
-
-const STEPS: { key: Step; label: string }[] = [
-  { key: 'account', label: 'Account' },
-  { key: 'address', label: 'Address' },
-  { key: 'delivery', label: 'Delivery' },
-  { key: 'payment', label: 'Payment' },
-]
-
 const STEP_ORDER: Step[] = ['account', 'address', 'delivery', 'payment']
-
 const IC = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400'
 
 function stepIndex(s: Step) { return STEP_ORDER.indexOf(s) }
@@ -81,7 +69,15 @@ function isAddressValid(b: Partial<BillingAddress>): boolean {
 // ── StepIndicator ─────────────────────────────────────────────────────────────
 
 function StepIndicator({ currentStep, isGuest }: { currentStep: Step; isGuest: boolean }) {
+  const { t } = useLocale()
+  const tc = t.checkout
   const current = stepIndex(currentStep)
+  const STEPS: { key: Step; label: string }[] = [
+    { key: 'account', label: tc.account },
+    { key: 'address', label: tc.address },
+    { key: 'delivery', label: tc.delivery },
+    { key: 'payment', label: tc.payment },
+  ]
   return (
     <div className="flex items-start justify-between mb-2">
       {STEPS.map(({ key, label }, idx) => {
@@ -117,6 +113,8 @@ function StepIndicator({ currentStep, isGuest }: { currentStep: Step; isGuest: b
 // ── AccountStep ───────────────────────────────────────────────────────────────
 
 function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegisterDone: () => void }) {
+  const { t } = useLocale()
+  const tc = t.checkout
   const [mode, setMode] = useState<'choose' | 'register'>('choose')
   const [regFirstName, setRegFirstName] = useState('')
   const [regLastName, setRegLastName] = useState('')
@@ -151,17 +149,17 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Create account</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Create account for faster future orders</p>
+          <h2 className="text-base font-semibold text-gray-900">{tc.create}</h2>
+          <p className="text-xs text-gray-500 mt-0.5">{tc.createDesc}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <input type="text" placeholder="First name" value={regFirstName} onChange={e => setRegFirstName(e.target.value)} className={IC} />
-          <input type="text" placeholder="Last name" value={regLastName} onChange={e => setRegLastName(e.target.value)} className={IC} />
+          <input type="text" placeholder={tc.firstName} value={regFirstName} onChange={e => setRegFirstName(e.target.value)} className={IC} />
+          <input type="text" placeholder={tc.lastName} value={regLastName} onChange={e => setRegLastName(e.target.value)} className={IC} />
           <div className="col-span-2">
-            <input type="email" placeholder="Email address" value={regEmail} onChange={e => setRegEmail(e.target.value)} className={IC} />
+            <input type="email" placeholder={tc.email} value={regEmail} onChange={e => setRegEmail(e.target.value)} className={IC} />
           </div>
           <div className="col-span-2">
-            <input type="password" placeholder="Password *" value={regPassword} onChange={e => setRegPassword(e.target.value)} className={IC} />
+            <input type="password" placeholder={`${tc.password} *`} value={regPassword} onChange={e => setRegPassword(e.target.value)} className={IC} />
           </div>
         </div>
         {regError && (
@@ -169,7 +167,7 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
         )}
         <div className="flex items-center gap-4 pt-1">
           <button type="button" onClick={() => setMode('choose')} className="text-sm text-gray-500 hover:text-gray-700 underline">
-            ← Back
+            ← {tc.back}
           </button>
           <button
             type="button"
@@ -177,7 +175,7 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
             disabled={regLoading || !regFirstName.trim() || !regLastName.trim() || !regEmail.trim() || !regPassword}
             className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {regLoading ? 'Creating…' : 'Create account'}
+            {regLoading ? tc.creating : tc.create}
           </button>
         </div>
       </div>
@@ -186,7 +184,7 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-3">
-      <h2 className="text-base font-semibold text-gray-900 mb-1">How do you want to continue?</h2>
+      <h2 className="text-base font-semibold text-gray-900 mb-1">{tc.howToContinue}</h2>
 
       <button
         type="button"
@@ -195,20 +193,19 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
       >
         <span className="text-lg">🛍️</span>
         <div>
-          <p className="text-sm font-medium text-gray-900">Continue as guest</p>
-          <p className="text-xs text-gray-500">Guest checkout — your data will not be saved</p>
+          <p className="text-sm font-medium text-gray-900">{tc.guest}</p>
+          <p className="text-xs text-gray-500">{tc.guestDesc}</p>
         </div>
       </button>
 
-      {/* Direct OAuth link — carries returnTo=/checkout so after login we land back here */}
       <a
         href="/api/auth/google?returnTo=/checkout"
         className="w-full flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-4 text-left hover:border-gray-400 transition-colors"
       >
         <span className="text-lg">🔑</span>
         <div>
-          <p className="text-sm font-medium text-gray-900">Sign in with Google</p>
-          <p className="text-xs text-gray-500">Sign in with Google for quick checkout</p>
+          <p className="text-sm font-medium text-gray-900">{tc.google}</p>
+          <p className="text-xs text-gray-500">{tc.googleDesc}</p>
         </div>
       </a>
 
@@ -219,8 +216,8 @@ function AccountStep({ onGuest, onRegisterDone }: { onGuest: () => void; onRegis
       >
         <span className="text-lg">✉️</span>
         <div>
-          <p className="text-sm font-medium text-gray-900">Create account</p>
-          <p className="text-xs text-gray-500">Create account for faster future orders</p>
+          <p className="text-sm font-medium text-gray-900">{tc.create}</p>
+          <p className="text-xs text-gray-500">{tc.createDesc}</p>
         </div>
       </button>
     </div>
@@ -250,6 +247,8 @@ function AddressStep({
   onBack: () => void
   onNext: () => void
 }) {
+  const { t } = useLocale()
+  const tc = t.checkout
   const [error, setError] = useState<string | null>(null)
 
   const setB = (field: keyof BillingAddress) =>
@@ -263,85 +262,69 @@ function AddressStep({
   const handleNext = () => {
     const billingReq: (keyof BillingAddress)[] = ['firstName', 'lastName', 'email', 'country', 'street', 'city', 'postalCode']
     for (const f of billingReq) {
-      if (!billing[f].trim()) {
-        setError('Please fill in all required billing fields.')
-        return
-      }
+      if (!billing[f].trim()) { setError(tc.fillBillingFields); return }
     }
     if (!sameAsBilling) {
       const deliveryReq: (keyof DeliveryAddress)[] = ['firstName', 'lastName', 'country', 'street', 'city', 'postalCode']
       for (const f of deliveryReq) {
-        if (!deliveryAddr[f].trim()) {
-          setError('Please fill in all required delivery fields.')
-          return
-        }
+        if (!deliveryAddr[f].trim()) { setError(tc.fillDeliveryFields); return }
       }
     }
     setError(null)
     onNext()
   }
 
+  const CountrySelect = ({ value, onChange }: { value: string; onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void }) => (
+    <select value={value} onChange={onChange} className={IC}>
+      <option value="AT">{tc.austria}</option>
+      <option value="DE">{tc.germany}</option>
+      <option value="CH">{tc.switzerland}</option>
+      <option value="OTHER">{tc.other}</option>
+    </select>
+  )
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
-
-      {/* Billing address */}
       <div className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-900">Billing address</h2>
+        <h2 className="text-base font-semibold text-gray-900">{tc.billingAddress}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" placeholder="First name *" value={billing.firstName} onChange={setB('firstName')} className={IC} />
-          <input type="text" placeholder="Last name *" value={billing.lastName} onChange={setB('lastName')} className={IC} />
-          <input type="email" placeholder="Email address *" value={billing.email} onChange={setB('email')} className={IC} />
-          <input type="tel" placeholder="Phone (optional)" value={billing.phone} onChange={setB('phone')} className={IC} />
+          <input type="text" placeholder={`${tc.firstName} *`} value={billing.firstName} onChange={setB('firstName')} className={IC} />
+          <input type="text" placeholder={`${tc.lastName} *`} value={billing.lastName} onChange={setB('lastName')} className={IC} />
+          <input type="email" placeholder={`${tc.email} *`} value={billing.email} onChange={setB('email')} className={IC} />
+          <input type="tel" placeholder={tc.phone} value={billing.phone} onChange={setB('phone')} className={IC} />
           <div className="sm:col-span-2">
-            <select value={billing.country} onChange={setB('country')} className={IC}>
-              <option value="AT">Austria</option>
-              <option value="DE">Germany</option>
-              <option value="CH">Switzerland</option>
-              <option value="OTHER">Other</option>
-            </select>
+            <CountrySelect value={billing.country} onChange={setB('country')} />
           </div>
           <div className="sm:col-span-2">
-            <input type="text" placeholder="Street address *" value={billing.street} onChange={setB('street')} className={IC} />
+            <input type="text" placeholder={`${tc.street} *`} value={billing.street} onChange={setB('street')} className={IC} />
           </div>
-          <input type="text" placeholder="City *" value={billing.city} onChange={setB('city')} className={IC} />
-          <input type="text" placeholder="Postal code *" value={billing.postalCode} onChange={setB('postalCode')} className={IC} />
+          <input type="text" placeholder={`${tc.city} *`} value={billing.city} onChange={setB('city')} className={IC} />
+          <input type="text" placeholder={`${tc.zip} *`} value={billing.postalCode} onChange={setB('postalCode')} className={IC} />
         </div>
       </div>
 
-      {/* Same as billing checkbox */}
       <label className="flex items-center gap-2.5 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={sameAsBilling}
-          onChange={e => onSameAsBilling(e.target.checked)}
-          className="w-4 h-4 accent-red-600"
-        />
-        <span className="text-sm text-gray-700">Delivery address same as billing</span>
+        <input type="checkbox" checked={sameAsBilling} onChange={e => onSameAsBilling(e.target.checked)} className="w-4 h-4 accent-red-600" />
+        <span className="text-sm text-gray-700">{tc.sameAddress}</span>
       </label>
 
-      {/* Delivery address — shown when different */}
       {!sameAsBilling && (
         <div className="space-y-3 pt-1">
-          <h3 className="text-sm font-semibold text-gray-900">Delivery address</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{tc.deliveryAddress}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input type="text" placeholder="First name *" value={deliveryAddr.firstName} onChange={setD('firstName')} className={IC} />
-            <input type="text" placeholder="Last name *" value={deliveryAddr.lastName} onChange={setD('lastName')} className={IC} />
+            <input type="text" placeholder={`${tc.firstName} *`} value={deliveryAddr.firstName} onChange={setD('firstName')} className={IC} />
+            <input type="text" placeholder={`${tc.lastName} *`} value={deliveryAddr.lastName} onChange={setD('lastName')} className={IC} />
             <div className="sm:col-span-2">
-              <input type="tel" placeholder="Phone (optional)" value={deliveryAddr.phone} onChange={setD('phone')} className={IC} />
+              <input type="tel" placeholder={tc.phone} value={deliveryAddr.phone} onChange={setD('phone')} className={IC} />
             </div>
             <div className="sm:col-span-2">
-              <select value={deliveryAddr.country} onChange={setD('country')} className={IC}>
-                <option value="AT">Austria</option>
-                <option value="DE">Germany</option>
-                <option value="CH">Switzerland</option>
-                <option value="OTHER">Other</option>
-              </select>
+              <CountrySelect value={deliveryAddr.country} onChange={setD('country')} />
             </div>
             <div className="sm:col-span-2">
-              <input type="text" placeholder="Street address *" value={deliveryAddr.street} onChange={setD('street')} className={IC} />
+              <input type="text" placeholder={`${tc.street} *`} value={deliveryAddr.street} onChange={setD('street')} className={IC} />
             </div>
-            <input type="text" placeholder="City *" value={deliveryAddr.city} onChange={setD('city')} className={IC} />
-            <input type="text" placeholder="Postal code *" value={deliveryAddr.postalCode} onChange={setD('postalCode')} className={IC} />
+            <input type="text" placeholder={`${tc.city} *`} value={deliveryAddr.city} onChange={setD('city')} className={IC} />
+            <input type="text" placeholder={`${tc.zip} *`} value={deliveryAddr.postalCode} onChange={setD('postalCode')} className={IC} />
           </div>
         </div>
       )}
@@ -352,16 +335,12 @@ function AddressStep({
 
       <div className="flex items-center justify-between pt-1">
         {isGuest ? (
-          <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← Back</button>
+          <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← {tc.back}</button>
         ) : (
           <span />
         )}
-        <button
-          type="button"
-          onClick={handleNext}
-          className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm"
-        >
-          Continue →
+        <button type="button" onClick={handleNext} className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm">
+          {tc.continue} →
         </button>
       </div>
     </div>
@@ -385,12 +364,20 @@ function DeliveryStep({
   onBack: () => void
   onNext: () => void
 }) {
+  const { t } = useLocale()
+  const tc = t.checkout
+
+  const deliveryOptions: { value: DeliveryType; label: string; desc: string }[] = [
+    { value: 'STANDARD', label: tc.standard, desc: tc.standardDesc },
+    { value: 'PICKUP', label: tc.pickup, desc: tc.pickupDesc },
+  ]
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-      <h2 className="text-base font-semibold text-gray-900">Delivery method</h2>
+      <h2 className="text-base font-semibold text-gray-900">{tc.deliveryMethod}</h2>
 
       <div className="flex flex-col gap-2">
-        {DELIVERY_OPTIONS.map(({ value, label, desc }) => {
+        {deliveryOptions.map(({ value, label, desc }) => {
           const selected = deliveryType === value
           const price = deliveryPrices[value] ?? 0
           return (
@@ -410,7 +397,7 @@ function DeliveryStep({
               <span className={`font-semibold shrink-0 ml-4 ${selected ? 'text-red-600' : 'text-gray-500'}`}>
                 {pricesLoading ? (
                   <span className="inline-block w-10 h-4 bg-gray-100 rounded animate-pulse" />
-                ) : value === 'PICKUP' || price === 0 ? 'Free' : `€${price.toFixed(2)}`}
+                ) : value === 'PICKUP' || price === 0 ? tc.free : `€${price.toFixed(2)}`}
               </span>
             </button>
           )
@@ -418,19 +405,13 @@ function DeliveryStep({
       </div>
 
       {deliveryType === 'PICKUP' && (
-        <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-          No shipping address required — you will collect your order in store.
-        </p>
+        <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">{tc.pickupNote}</p>
       )}
 
       <div className="flex items-center justify-between pt-1">
-        <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← Back</button>
-        <button
-          type="button"
-          onClick={onNext}
-          className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm"
-        >
-          Continue →
+        <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">← {tc.back}</button>
+        <button type="button" onClick={onNext} className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm">
+          {tc.continue} →
         </button>
       </div>
     </div>
@@ -458,6 +439,8 @@ function PaymentStep({
   sameAsBilling: boolean
   onBack: () => void
 }) {
+  const { t } = useLocale()
+  const tc = t.checkout
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [serverTotal, setServerTotal] = useState<number | null>(null)
   const [intentError, setIntentError] = useState<string | null>(null)
@@ -477,19 +460,19 @@ function PaymentStep({
           setClientSecret(d.clientSecret)
           setServerTotal(d.total ?? null)
         } else {
-          setIntentError(d.error ?? 'Could not initialize payment')
+          setIntentError(d.error ?? tc.paymentUnavailable)
         }
       })
-      .catch(() => setIntentError('Could not connect to payment service'))
+      .catch(() => setIntentError(tc.connectionError))
       .finally(() => setLoading(false))
-  }, [deliveryType])
+  }, [deliveryType]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-center justify-center min-h-[220px]">
         <div className="flex flex-col items-center gap-2 text-gray-400">
           <div className="animate-spin w-6 h-6 border-2 border-gray-200 border-t-red-600 rounded-full" />
-          <p className="text-sm">Setting up payment…</p>
+          <p className="text-sm">{tc.settingUpPayment}</p>
         </div>
       </div>
     )
@@ -499,10 +482,10 @@ function PaymentStep({
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {intentError ?? 'Payment is not available. Please contact support.'}
+          {intentError ?? tc.paymentUnavailable}
         </p>
         <button type="button" onClick={onBack} className="text-sm text-gray-500 hover:text-gray-700 underline">
-          ← Back to delivery
+          ← {tc.backToDelivery}
         </button>
       </div>
     )
@@ -511,10 +494,7 @@ function PaymentStep({
   return (
     <Elements
       stripe={stripePromise}
-      options={{
-        clientSecret,
-        appearance: { theme: 'stripe', variables: { colorPrimary: '#dc2626' } },
-      }}
+      options={{ clientSecret, appearance: { theme: 'stripe', variables: { colorPrimary: '#dc2626' } } }}
     >
       <PaymentForm
         itemCount={itemCount}
@@ -551,12 +531,19 @@ function PaymentForm({
   sameAsBilling: boolean
   onBack: () => void
 }) {
+  const { t } = useLocale()
+  const tc = t.checkout
   const stripe = useStripe()
   const elements = useElements()
   const [paying, setPaying] = useState(false)
   const [payError, setPayError] = useState<string | null>(null)
   const displayTotal = serverTotal ?? subtotal
-  const deliveryOption = DELIVERY_OPTIONS.find(o => o.value === deliveryType) ?? DELIVERY_OPTIONS[0]
+
+  const deliveryLabels: Record<DeliveryType, string> = {
+    STANDARD: tc.standard,
+    EXPRESS: 'Express',
+    PICKUP: tc.pickup,
+  }
 
   const handlePay = async () => {
     if (!stripe || !elements) return
@@ -565,9 +552,7 @@ function PaymentForm({
 
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout/processing`,
-      },
+      confirmParams: { return_url: `${window.location.origin}/checkout/processing` },
       redirect: 'if_required',
     })
 
@@ -598,7 +583,7 @@ function PaymentForm({
         }
         setPayError(data.error ?? 'Order could not be created')
       } catch {
-        setPayError('Connection error. Please contact support.')
+        setPayError(tc.connectionError)
       }
     }
 
@@ -611,17 +596,17 @@ function PaymentForm({
         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
         </svg>
-        <h2 className="text-base font-semibold text-gray-900">Secure payment</h2>
+        <h2 className="text-base font-semibold text-gray-900">{tc.securePayment}</h2>
       </div>
 
       <PaymentElement options={{ layout: 'tabs' }} />
 
       <div className="bg-gray-50 rounded-lg px-4 py-3 text-sm border border-gray-100">
         <div className="flex justify-between text-gray-600 mb-1">
-          <span>{itemCount} item{itemCount !== 1 ? 's' : ''} · {deliveryOption.label}</span>
+          <span>{itemCount} item{itemCount !== 1 ? 's' : ''} · {deliveryLabels[deliveryType]}</span>
         </div>
         <div className="flex justify-between font-semibold text-gray-900 text-base">
-          <span>Total</span>
+          <span>{tc.total}</span>
           <span>€{displayTotal.toFixed(2)}</span>
         </div>
       </div>
@@ -637,7 +622,7 @@ function PaymentForm({
           disabled={paying}
           className="text-sm text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
         >
-          ← Back to delivery
+          ← {tc.backToDelivery}
         </button>
         <button
           type="button"
@@ -645,7 +630,7 @@ function PaymentForm({
           disabled={!stripe || !elements || paying}
           className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {paying ? 'Processing…' : `Pay €${displayTotal.toFixed(2)}`}
+          {paying ? tc.processing : `${tc.pay} €${displayTotal.toFixed(2)}`}
         </button>
       </div>
     </div>
@@ -667,32 +652,28 @@ function CartSummary({
   vatRate: number
   onDeleted: (id: string) => void
 }) {
+  const { t } = useLocale()
+  const tc = t.checkout
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-4">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Order summary</p>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">{tc.orderSummary}</p>
 
       <div className="space-y-3 mb-4">
         {items.map(item => (
           <div key={item.id} className="flex items-start gap-2 text-sm">
-            {/* Thumbnail — design preview or product image */}
             <div className="w-10 h-10 rounded overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
               {item.previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.previewUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                <img src={item.previewUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gray-100" />
               )}
             </div>
-
             <div className="flex-1 min-w-0">
               <p className="text-gray-900 truncate">{item.name}</p>
               {item.variant && <p className="text-xs text-gray-400 truncate">{item.variant}</p>}
-              <p className="text-xs text-gray-400">Qty {item.quantity}</p>
+              <p className="text-xs text-gray-400">{tc.qty} {item.quantity}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="font-medium text-gray-900">€{item.lineTotal.toFixed(2)}</span>
@@ -704,19 +685,19 @@ function CartSummary({
 
       <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
         <div className="flex justify-between text-gray-600">
-          <span>Subtotal</span>
+          <span>{tc.subtotal}</span>
           <span>€{subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-gray-500">
-          <span>Delivery</span>
-          <span>{deliveryPrice === 0 ? 'Free' : `€${deliveryPrice.toFixed(2)}`}</span>
+          <span>{tc.shipping}</span>
+          <span>{deliveryPrice === 0 ? tc.free : `€${deliveryPrice.toFixed(2)}`}</span>
         </div>
         <div className="flex justify-between font-semibold text-gray-900 pt-1.5 border-t border-gray-100">
-          <span>Total</span>
+          <span>{tc.total}</span>
           <span>€{(subtotal + deliveryPrice).toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-xs text-gray-400">
-          <span>incl. {vatRate}% VAT</span>
+          <span>incl. {vatRate}% {tc.tax}</span>
           <span>€{((subtotal + deliveryPrice) * vatRate / (100 + vatRate)).toFixed(2)}</span>
         </div>
       </div>
@@ -728,6 +709,8 @@ function CartSummary({
 
 export default function CheckoutWizard(props: Props) {
   const { isGuest } = props
+  const { t } = useLocale()
+  const tc = t.checkout
 
   const [step, setStep] = useState<Step>(isGuest ? 'account' : 'address')
   const [deliveryType, setDeliveryType] = useState<DeliveryType>('STANDARD')
@@ -742,7 +725,6 @@ export default function CheckoutWizard(props: Props) {
   })
   const [sameAsBilling, setSameAsBilling] = useState(true)
 
-  // Restore wizard state from sessionStorage on mount (survives page refresh)
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem('checkout_wizard')
@@ -759,7 +741,6 @@ export default function CheckoutWizard(props: Props) {
       if (typeof d.sameAsBilling === 'boolean') setSameAsBilling(d.sameAsBilling)
       if (d.deliveryType) setDeliveryType(d.deliveryType)
       if (d.step) {
-        // Guard: delivery/payment require a valid address — fall back if missing
         const needsAddress = d.step === 'delivery' || d.step === 'payment'
         if (needsAddress && !isAddressValid(d.billing ?? {})) {
           setStep('address')
@@ -770,7 +751,6 @@ export default function CheckoutWizard(props: Props) {
     } catch {}
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist wizard state to sessionStorage on every relevant change
   useEffect(() => {
     try {
       sessionStorage.setItem('checkout_wizard', JSON.stringify({
@@ -779,7 +759,6 @@ export default function CheckoutWizard(props: Props) {
     } catch {}
   }, [step, billing, deliveryAddr, sameAsBilling, deliveryType])
 
-  // Dynamic delivery prices + VAT rate fetched from /api/shipping/estimate
   const [deliveryPrices, setDeliveryPrices] = useState<Record<DeliveryType, number>>({
     STANDARD: 5, EXPRESS: 12, PICKUP: 0,
   })
@@ -802,7 +781,6 @@ export default function CheckoutWizard(props: Props) {
       .finally(() => setPricesLoading(false))
   }, [step, billing.country]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Items in local state so cart edits (delete) update the summary live
   const [items, setItems] = useState<CartItem[]>(props.cartItems)
   const subtotal = items.reduce((s, i) => s + i.lineTotal, 0)
   const deliveryPrice = deliveryPrices[deliveryType] ?? 0
@@ -817,12 +795,10 @@ export default function CheckoutWizard(props: Props) {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <a href="/cart" className="text-xs text-gray-400 hover:text-gray-700 mb-6 inline-flex items-center gap-1">
-          ← Cart
+          ← {tc.cart}
         </a>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-
-          {/* Left — wizard steps */}
           <div className="lg:col-span-2 space-y-5">
             <StepIndicator currentStep={step} isGuest={isGuest} />
 
@@ -872,7 +848,6 @@ export default function CheckoutWizard(props: Props) {
             )}
           </div>
 
-          {/* Right — editable cart summary */}
           <CartSummary
             items={items}
             subtotal={subtotal}
@@ -880,7 +855,6 @@ export default function CheckoutWizard(props: Props) {
             vatRate={vatRate}
             onDeleted={handleItemDeleted}
           />
-
         </div>
       </div>
     </div>
