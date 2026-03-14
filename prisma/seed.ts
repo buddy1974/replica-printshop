@@ -3385,6 +3385,9 @@ async function main() {
   // Magnetic products — car sign + printable sheet
   await seedMagneticProducts()
 
+  // Self-Adhesive Film (Klebefolie) + Foils category cleanup
+  await seedAdhesiveFoil()
+
   console.log('\nAll seeds complete.')
 }
 
@@ -3541,6 +3544,117 @@ async function seedMagneticProducts() {
   console.log(`  ✓ Magnetic Sheet (Printable): ${magSheet.id}`)
 
   console.log('  Magnetic products complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Self-Adhesive Film (Klebefolie) + Foils category cleanup
+// ---------------------------------------------------------------------------
+
+async function seedAdhesiveFoil() {
+  console.log('Seeding Self-Adhesive Film (Klebefolie)...')
+
+  const foilCat = await db.productCategory.findUnique({ where: { slug: 'foil' }, select: { id: true } })
+  const catId = foilCat?.id ?? null
+
+  // ── Self-Adhesive Film ───────────────────────────────────────────────────
+  const film = await db.product.upsert({
+    where: { slug: 'self-adhesive-film' },
+    update: {
+      categoryId: catId,
+      active: true,
+      name: 'Self-Adhesive Film',
+      shortDescription: 'Printable self-adhesive film — monomer or polymer, choice of adhesive and laminate.',
+      description: 'White printable self-adhesive film, one-sided print. Available in monomer (B1 fire-rated) or polymer. Custom size up to 5 × 1.32 m. Choose transparent or grey adhesive and optional gloss or matt laminate for outdoor durability.',
+    },
+    create: {
+      name: 'Self-Adhesive Film',
+      slug: 'self-adhesive-film',
+      category: 'Foils',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/products/foil-adhessive-hero-banner.png',
+      shortDescription: 'Printable self-adhesive film — monomer or polymer, choice of adhesive and laminate.',
+      description: 'White printable self-adhesive film, one-sided print. Available in monomer (B1 fire-rated) or polymer. Custom size up to 5 × 1.32 m. Choose transparent or grey adhesive and optional gloss or matt laminate for outdoor durability.',
+      guideText: 'PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width 132 cm. One-sided print only.',
+      minDpi: 100,
+      recommendedDpi: 150,
+      bleedMm: 3,
+      safeMarginMm: 5,
+      allowedFormats: 'PDF,PNG,SVG',
+      notes: 'One-sided print. Max width 132 cm. Monomer film is B1 fire-rated.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: film.id },
+    update: {
+      needsUpload: true,
+      priceMode: 'AREA',
+      hasOptions: true,
+      isRoll: true,
+      isPrintCut: true,
+      rollWidthCm: 132,
+      maxWidthCm: 132,
+      productionType: 'PRINT_CUT',
+      helpText: 'One-sided print. Select material, adhesive type, and laminate finish. Monomer film is B1 fire-rated.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed on all sides. One-sided print only.',
+    },
+    create: {
+      productId: film.id,
+      type: 'FOIL',
+      hasCustomSize: true,
+      hasFixedSizes: false,
+      hasVariants: false,
+      hasOptions: true,
+      needsUpload: true,
+      priceMode: 'AREA',
+      isRoll: true,
+      isPrintCut: true,
+      rollWidthCm: 132,
+      maxWidthCm: 132,
+      minWidth: 10,
+      maxWidth: 132,
+      minHeight: 10,
+      maxHeight: 500,
+      productionType: 'PRINT_CUT',
+      helpText: 'One-sided print. Select material, adhesive type, and laminate finish. Monomer film is B1 fire-rated.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at final size. Include 3 mm bleed on all sides. One-sided print only.',
+    },
+  })
+  await upsertPricingTable(film.id, 'AREA', { pricePerM2: 12.00 })
+  await upsertOption(film.id, 'Material', [
+    { name: 'Monomer (B1 fire-rated)', priceModifier: 0 },
+    { name: 'Polymer', priceModifier: 5 },
+  ])
+  await upsertOption(film.id, 'Adhesive', [
+    { name: 'Transparent adhesive', priceModifier: 0 },
+    { name: 'Grey adhesive', priceModifier: 2 },
+  ])
+  await upsertOption(film.id, 'Laminate', [
+    { name: 'No laminate', priceModifier: 0 },
+    { name: 'Gloss laminate', priceModifier: 4 },
+    { name: 'Matt laminate', priceModifier: 4 },
+  ])
+  console.log(`  ✓ Self-Adhesive Film: ${film.id}`)
+
+  // ── Deactivate products no longer in Foils lineup ────────────────────────
+  await db.product.updateMany({
+    where: {
+      slug: {
+        in: [
+          'milchglasfolie',     // Frosted glass film — removed from lineup
+          'lochfolie',          // Perforated window film — removed from lineup
+          'car-graphics',       // Moved out of adhesive foils
+          'window-graphics',    // Moved out of adhesive foils
+          'car-magnet',         // Replaced by magnetic-car-sign
+          'car-magnet-schild',  // Replaced by magnetic-car-sign
+        ],
+      },
+    },
+    data: { active: false },
+  })
+  console.log('  ✓ Deactivated superseded foil products')
+
+  console.log('  Self-Adhesive Film complete.')
 }
 
 // ---------------------------------------------------------------------------
