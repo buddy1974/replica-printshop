@@ -2840,12 +2840,85 @@ async function seedTextileRebuild() {
     { name: 'Natural', priceModifier: 0 }, { name: 'Black', priceModifier: 0 }, { name: 'White', priceModifier: 0 },
   ])
   await upsertOption(bag.id, 'Print method', [
-    { name: 'DTF', priceModifier: 0 }, { name: 'Flex', priceModifier: 2 },
+    { name: 'DTF', priceModifier: 0 }, { name: 'Flex', priceModifier: 2 }, { name: 'Flock', priceModifier: 4 },
   ])
   await upsertOption(bag.id, 'Position', [
-    { name: 'Front', priceModifier: 0 }, { name: 'Back', priceModifier: 0 },
+    { name: 'Front', priceModifier: 0 }, { name: 'Back', priceModifier: 0 }, { name: 'Front + Back', priceModifier: 5 },
   ])
+  await db.productConfig.updateMany({
+    where: { productId: bag.id },
+    data: {
+      allowedPositions: JSON.stringify(['front', 'back', 'front-back']),
+      helpText: 'Embroidery available on request — please contact us or chat with our assistant. For special marking, custom positions, or special printing, contact us before ordering.',
+    },
+  })
   console.log(`  ✓ Bag: ${bag.id}`)
+
+  // ── Textile options fix ──────────────────────────────────────────────────
+
+  const textileHelpText = 'Embroidery available on request — please contact us or chat with our assistant. For special marking, custom positions, or special printing, please contact us before ordering.'
+  const fullPositions = ['front', 'back', 'front-back', 'left-chest', 'right-chest', 'sleeve', 'custom']
+  const fullPositionOptions = [
+    { name: 'Front', priceModifier: 0 },
+    { name: 'Back', priceModifier: 0 },
+    { name: 'Front + Back', priceModifier: 5 },
+    { name: 'Left chest', priceModifier: 0 },
+    { name: 'Right chest', priceModifier: 0 },
+    { name: 'Sleeve', priceModifier: 2 },
+    { name: 'Custom', priceModifier: 4 },
+  ]
+  const printMethodOptions = [
+    { name: 'DTF', priceModifier: 0 },
+    { name: 'Flex', priceModifier: 2 },
+    { name: 'Flock', priceModifier: 4 },
+  ]
+
+  // Update T-shirt V-neck — extend positions + add helpText
+  await upsertOption(tshirtV.id, 'Position', fullPositionOptions)
+  await db.productConfig.updateMany({
+    where: { productId: tshirtV.id },
+    data: { allowedPositions: JSON.stringify(fullPositions), helpText: textileHelpText },
+  })
+  console.log('  ✓ T-shirt V-neck: positions extended')
+
+  // Update existing garment products — add Print method + Position + helpText
+  for (const slug of ['t-shirt-print', 'hoodie-print', 'polo-print']) {
+    const gp = await db.product.findUnique({ where: { slug }, select: { id: true } })
+    if (!gp) continue
+    await db.productConfig.updateMany({
+      where: { productId: gp.id },
+      data: {
+        hasOptions: true,
+        allowedPositions: JSON.stringify(fullPositions),
+        helpText: textileHelpText,
+      },
+    })
+    await upsertOption(gp.id, 'Print method', printMethodOptions)
+    await upsertOption(gp.id, 'Position', fullPositionOptions)
+    console.log(`  ✓ ${slug}: print method + positions added`)
+  }
+
+  // Cap embroidery — remove stitch count + 3D puff, simplify to €8 flat
+  const cap = await db.product.findUnique({ where: { slug: 'cap-embroidery' }, select: { id: true } })
+  if (cap) {
+    const capOpts = await db.productOption.findMany({
+      where: { productId: cap.id, name: { in: ['Stitch count', 'Embroidery type'] } },
+      select: { id: true },
+    })
+    if (capOpts.length) {
+      await db.productOptionValue.deleteMany({ where: { optionId: { in: capOpts.map((o) => o.id) } } })
+      await db.productOption.deleteMany({ where: { id: { in: capOpts.map((o) => o.id) } } })
+    }
+    await db.productConfig.updateMany({
+      where: { productId: cap.id },
+      data: {
+        hasOptions: false,
+        helpText: 'Embroidery on cap — flat stitch, up to 10 000 stitches included. Logo digitisation included. For larger designs or multiple positions contact us.',
+        uploadInstructions: 'Upload vector (SVG, AI, EPS) or high-res PNG. Design will be digitised for embroidery.',
+      },
+    })
+    console.log('  ✓ Cap: simplified to flat embroidery €8')
+  }
 
   console.log('  Textile rebuild complete.')
 }
