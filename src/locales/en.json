@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "shop": "Shop",
+    "graphicInstallation": "Graphic Installation",
+    "designService": "Design Service",
+    "contact": "Contact",
+    "account": "Account",
+    "admin": "Admin",
+    "cart": "Cart"
+  }
+}

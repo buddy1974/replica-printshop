@@ -4,14 +4,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
 import { useCart } from '@/context/CartContext'
+import { useLocale } from '@/context/LocaleContext'
+import { LOCALES, type Locale, type Dictionary } from '@/lib/i18n'
 
-const links: { href: string; label: string; mobileHide?: boolean }[] = [
-  { href: '/shop', label: 'Shop' },
-  { href: '/shop/graphic-installation', label: 'Graphic Installation', mobileHide: true },
-  { href: '/shop/graphic-design-layout', label: 'Design Service', mobileHide: true },
-  { href: '/contact', label: 'Contact', mobileHide: true },
-  { href: '/account', label: 'Account' },
-  { href: '/admin', label: 'Admin' },
+type NavKey = keyof Dictionary['nav']
+
+const NAV_LINKS: { href: string; key: NavKey; mobileHide?: boolean }[] = [
+  { href: '/shop', key: 'shop' },
+  { href: '/shop/graphic-installation', key: 'graphicInstallation', mobileHide: true },
+  { href: '/shop/graphic-design-layout', key: 'designService', mobileHide: true },
+  { href: '/contact', key: 'contact', mobileHide: true },
+  { href: '/account', key: 'account' },
+  { href: '/admin', key: 'admin' },
 ]
 
 function CartIcon() {
@@ -26,6 +30,7 @@ function CartIcon() {
 export default function Header() {
   const pathname = usePathname()
   const { count, openDrawer } = useCart()
+  const { t, locale, setLocale } = useLocale()
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-red-600 bg-white">
@@ -34,7 +39,7 @@ export default function Header() {
           <Logo />
         </div>
         <nav className="flex items-center gap-0 overflow-x-auto ml-3">
-          {links.map(({ href, label, mobileHide }) => {
+          {NAV_LINKS.map(({ href, key, mobileHide }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
               <Link
@@ -48,7 +53,7 @@ export default function Header() {
                     : 'text-gray-900 hover:text-red-600',
                 ].join(' ')}
               >
-                {label}
+                {t.nav[key]}
               </Link>
             )
           })}
@@ -66,13 +71,31 @@ export default function Header() {
             title="View cart"
           >
             <CartIcon />
-            <span className="hidden sm:inline">Cart</span>
+            <span className="hidden sm:inline">{t.nav.cart}</span>
             {count > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 leading-none">
                 {count > 9 ? '9+' : count}
               </span>
             )}
           </a>
+
+          {/* Language switcher */}
+          <div className="hidden sm:flex items-center gap-0 border-l border-gray-200 ml-2 pl-2">
+            {LOCALES.map((l: Locale, i) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setLocale(l)}
+                className={[
+                  'text-[10px] font-black uppercase px-1 py-0.5 transition-colors tracking-wider',
+                  locale === l ? 'text-red-600' : 'text-gray-400 hover:text-gray-900',
+                ].join(' ')}
+              >
+                {l === 'en' ? 'EN' : l === 'de' ? 'DE' : 'FR'}
+                {i < LOCALES.length - 1 && <span className="text-gray-200 ml-1">·</span>}
+              </button>
+            ))}
+          </div>
         </nav>
       </div>
     </header>

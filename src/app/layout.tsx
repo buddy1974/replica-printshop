@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import FloatingChat from '@/components/FloatingChat'
 import { BRANDING } from '@/config/branding'
 import { CartProvider } from '@/context/CartContext'
+import { LocaleProvider } from '@/context/LocaleContext'
 import CartDrawer from '@/components/CartDrawer'
 
 const SITE_DESCRIPTION = 'Professional print, textile, banners and advertising technology. Fast turnaround, in-house production.'
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50">
+        <LocaleProvider>
         <CartProvider>
           <Header />
           <main>{children}</main>
@@ -51,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FloatingChat />
           <CartDrawer />
         </CartProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

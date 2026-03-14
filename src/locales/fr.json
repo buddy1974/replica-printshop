@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "shop": "Boutique",
+    "graphicInstallation": "Pose Graphique",
+    "designService": "Design & Mise en Page",
+    "contact": "Contact",
+    "account": "Mon Compte",
+    "admin": "Admin",
+    "cart": "Panier"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "shop": "Shop",
+    "graphicInstallation": "Werbetechnik",
+    "designService": "Design Service",
+    "contact": "Kontakt",
+    "account": "Konto",
+    "admin": "Admin",
+    "cart": "Warenkorb"
+  }
+}
