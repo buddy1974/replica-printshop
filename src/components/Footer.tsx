@@ -25,7 +25,7 @@ export default function Footer() {
               <span className="block w-3.5 h-0.5 bg-white rounded-full" />
               <span className="block w-3.5 h-0.5 bg-white rounded-full" />
             </div>
-            <span className="text-sm font-extrabold tracking-tight text-white">{BRANDING.name}</span>
+            <span className="text-sm font-black tracking-tighter uppercase text-white">{BRANDING.name}</span>
           </div>
           <p className="text-xs leading-relaxed text-gray-500">
             In-house print production. Large format, textile, foil, banners, advertising technology and graphic installation.
@@ -59,7 +59,7 @@ export default function Footer() {
           <ul className="space-y-2.5">
             {QUICK_LINKS.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href={link.href} className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-white transition-colors">
                   {link.label}
                 </Link>
               </li>
@@ -73,7 +73,7 @@ export default function Footer() {
           <ul className="space-y-2.5">
             {SERVICES.map((s) => (
               <li key={s.href}>
-                <Link href={s.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href={s.href} className="text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-white transition-colors">
                   {s.name}
                 </Link>
               </li>
