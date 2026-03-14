@@ -3382,8 +3382,168 @@ async function main() {
   // Banner + DTF product fix
   await seedBannerDTFFix()
 
+  // Magnetic products — car sign + printable sheet
+  await seedMagneticProducts()
+
   console.log('\nAll seeds complete.')
 }
+
+// ---------------------------------------------------------------------------
+// Magnetic products — Magnetic Car Sign + Magnetic Sheet (Printable)
+// ---------------------------------------------------------------------------
+
+async function seedMagneticProducts() {
+  console.log('Seeding Magnetic products...')
+
+  const foilCat = await db.productCategory.findUnique({ where: { slug: 'foil' }, select: { id: true } })
+  const catId = foilCat?.id ?? null
+
+  // ── Magnetic Car Sign ────────────────────────────────────────────────────
+  const carSign = await db.product.upsert({
+    where: { slug: 'magnetic-car-sign' },
+    update: {
+      categoryId: catId,
+      active: true,
+      shortDescription: 'Magnetic car signs — protective laminate included, strong hold at speed.',
+      description: 'Magnetic film with UV-protective laminate. Custom size up to 5 × 0.92 m. Very strong magnetic adhesion — stays secure at motorway speed. Suitable for car doors, vans, and temporary vehicle branding. Laminate always included.',
+    },
+    create: {
+      name: 'Magnetic Car Sign',
+      slug: 'magnetic-car-sign',
+      category: 'Foils',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/products/car-magnet.png',
+      shortDescription: 'Magnetic car signs — protective laminate included, strong hold at speed.',
+      description: 'Magnetic film with UV-protective laminate. Custom size up to 5 × 0.92 m. Very strong magnetic adhesion — stays secure at motorway speed. Suitable for car doors, vans, and temporary vehicle branding. Laminate always included.',
+      guideText: 'PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width 92 cm.',
+      minDpi: 100,
+      recommendedDpi: 150,
+      bleedMm: 3,
+      safeMarginMm: 5,
+      allowedFormats: 'PDF,PNG,SVG',
+      notes: 'Laminate always included. Max width 92 cm. Supplied flat. Best for: Cars, Vehicle doors, Temporary advertising, Taxi signs.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: carSign.id },
+    update: {
+      needsUpload: true,
+      priceMode: 'AREA',
+      hasOptions: true,
+      isRoll: true,
+      isPrintCut: true,
+      rollWidthCm: 92,
+      maxWidthCm: 92,
+      productionType: 'PRINT_CUT',
+      helpText: 'Laminate included — no extra option needed. Best for: Cars, Vehicle doors, Temporary advertising, Taxi signs.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed on all sides.',
+    },
+    create: {
+      productId: carSign.id,
+      type: 'FOIL',
+      hasCustomSize: true,
+      hasFixedSizes: false,
+      hasVariants: false,
+      hasOptions: true,
+      needsUpload: true,
+      priceMode: 'AREA',
+      isRoll: true,
+      isPrintCut: true,
+      rollWidthCm: 92,
+      maxWidthCm: 92,
+      minWidth: 10,
+      maxWidth: 92,
+      minHeight: 10,
+      maxHeight: 500,
+      productionType: 'PRINT_CUT',
+      helpText: 'Laminate included — no extra option needed. Best for: Cars, Vehicle doors, Temporary advertising, Taxi signs.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed on all sides.',
+    },
+  })
+  await upsertPricingTable(carSign.id, 'AREA', { pricePerM2: 24.00 })
+  await upsertOption(carSign.id, 'Magnetic strength', [
+    { name: 'Standard', priceModifier: 0 },
+    { name: 'Strong', priceModifier: 3 },
+    { name: 'Extra strong', priceModifier: 6 },
+  ])
+  console.log(`  ✓ Magnetic Car Sign: ${carSign.id}`)
+
+  // ── Magnetic Sheet (Printable) ───────────────────────────────────────────
+  const magSheet = await db.product.upsert({
+    where: { slug: 'magnetic-sheet' },
+    update: {
+      categoryId: catId,
+      active: true,
+      shortDescription: 'Printable magnetic sheet — custom size, selectable strength.',
+      description: 'White printable magnetic sheet with magnetic layer on backside. Custom size up to 5 × 1.20 m. Available in different magnetic strengths. Ideal for whiteboards, metal displays, indoor signs, and repositionable panels. No laminate.',
+    },
+    create: {
+      name: 'Magnetic Sheet (Printable)',
+      slug: 'magnetic-sheet',
+      category: 'Foils',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/products/car-magnet.png',
+      shortDescription: 'Printable magnetic sheet — custom size, selectable strength.',
+      description: 'White printable magnetic sheet with magnetic layer on backside. Custom size up to 5 × 1.20 m. Available in different magnetic strengths. Ideal for whiteboards, metal displays, indoor signs, and repositionable panels. No laminate.',
+      guideText: 'PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed. Max width 120 cm.',
+      minDpi: 100,
+      recommendedDpi: 150,
+      bleedMm: 3,
+      safeMarginMm: 5,
+      allowedFormats: 'PDF,PNG,SVG',
+      notes: 'No laminate. Max width 120 cm. Best for: Whiteboards, Displays, Metal surfaces, Indoor signs.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: magSheet.id },
+    update: {
+      needsUpload: true,
+      priceMode: 'AREA',
+      hasOptions: true,
+      isRoll: true,
+      isPrintCut: true,
+      rollWidthCm: 120,
+      maxWidthCm: 120,
+      productionType: 'PRINT_CUT',
+      helpText: 'No laminate — indoor use. Best for: Whiteboards, Displays, Metal surfaces, Indoor advertising.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed on all sides.',
+    },
+    create: {
+      productId: magSheet.id,
+      type: 'FOIL',
+      hasCustomSize: true,
+      hasFixedSizes: false,
+      hasVariants: false,
+      hasOptions: true,
+      needsUpload: true,
+      priceMode: 'AREA',
+      isRoll: true,
+      isPrintCut: true,
+      rollWidthCm: 120,
+      maxWidthCm: 120,
+      minWidth: 10,
+      maxWidth: 120,
+      minHeight: 10,
+      maxHeight: 500,
+      productionType: 'PRINT_CUT',
+      helpText: 'No laminate — indoor use. Best for: Whiteboards, Displays, Metal surfaces, Indoor advertising.',
+      uploadInstructions: 'Upload PDF or high-res PNG. Minimum 100 DPI at full size. Include 3 mm bleed on all sides.',
+    },
+  })
+  await upsertPricingTable(magSheet.id, 'AREA', { pricePerM2: 16.00 })
+  await upsertOption(magSheet.id, 'Magnetic strength', [
+    { name: 'Light', priceModifier: 0 },
+    { name: 'Medium', priceModifier: 2 },
+    { name: 'Strong', priceModifier: 4 },
+  ])
+  console.log(`  ✓ Magnetic Sheet (Printable): ${magSheet.id}`)
+
+  console.log('  Magnetic products complete.')
+}
+
+// ---------------------------------------------------------------------------
 
 main()
   .catch((e) => {
