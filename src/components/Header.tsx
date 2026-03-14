@@ -28,12 +28,12 @@ export default function Header() {
   const { count, openDrawer } = useCart()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
-      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
+    <header className="sticky top-0 z-40 border-b-2 border-red-600 bg-white">
+      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-11">
         <div className="shrink-0">
           <Logo />
         </div>
-        <nav className="flex items-center gap-0.5 overflow-x-auto ml-2">
+        <nav className="flex items-center gap-0 overflow-x-auto ml-3">
           {links.map(({ href, label, mobileHide }) => {
             const active = pathname === href || pathname.startsWith(href + '/')
             return (
@@ -41,11 +41,11 @@ export default function Header() {
                 key={href}
                 href={href}
                 className={[
-                  'whitespace-nowrap px-2.5 sm:px-3 py-1.5 rounded-lg text-sm transition-colors',
+                  'whitespace-nowrap px-2 sm:px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-colors',
                   mobileHide ? 'hidden sm:inline-flex' : 'inline-flex',
                   active
-                    ? 'text-red-600 font-semibold bg-red-50'
-                    : 'text-gray-600 font-medium hover:text-gray-900 hover:bg-gray-100',
+                    ? 'text-red-600'
+                    : 'text-gray-900 hover:text-red-600',
                 ].join(' ')}
               >
                 {label}
@@ -58,10 +58,10 @@ export default function Header() {
             href="/cart"
             onClick={(e) => { e.preventDefault(); openDrawer() }}
             className={[
-              'relative inline-flex items-center gap-1 whitespace-nowrap px-2.5 sm:px-3 py-1.5 rounded-lg text-sm transition-colors',
+              'relative inline-flex items-center gap-1 whitespace-nowrap px-2 sm:px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-colors',
               pathname === '/cart' || pathname.startsWith('/cart/')
-                ? 'text-red-600 font-semibold bg-red-50'
-                : 'text-gray-600 font-medium hover:text-gray-900 hover:bg-gray-100',
+                ? 'text-red-600'
+                : 'text-gray-900 hover:text-red-600',
             ].join(' ')}
             title="View cart"
           >

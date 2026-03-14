@@ -50,6 +50,15 @@ const SLIDES: Slide[] = [
     cta: { label: 'Shop vinyl', href: '/shop/vinyl-plot' },
     image: '/images/hero/slide4.png',
   },
+  {
+    id: 5,
+    gradient: 'from-gray-900/70 via-gray-900/40 to-transparent',
+    eyebrow: 'Design Service',
+    headline: 'Layout & Design',
+    sub: 'Professional graphic design for print — flyers, brochures, logos, and corporate materials.',
+    cta: { label: 'Design service', href: '/shop/graphic-design-layout' },
+    image: '/images/hero/slide5.png',
+  },
 ]
 
 export default function HeroSlider() {

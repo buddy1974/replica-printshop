@@ -11,7 +11,7 @@ export default function Logo() {
         <div className="w-3 h-0.5 bg-white rounded-full" />
       </div>
       {/* Text */}
-      <span className="text-base font-extrabold tracking-tight text-gray-900 leading-none">
+      <span className="text-base font-black tracking-tighter uppercase text-gray-950 leading-none">
         {BRANDING.logoText}
       </span>
     </Link>
