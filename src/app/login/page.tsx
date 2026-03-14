@@ -33,6 +33,9 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const rawReturn = searchParams.get('returnTo') ?? ''
+  const safeReturn = rawReturn.startsWith('/') && !rawReturn.startsWith('//') ? rawReturn : ''
+
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [error, setError] = useState(searchParams.get('error') ?? '')
@@ -66,7 +69,7 @@ export default function LoginPage() {
     const user = await res.json()
     setUserId(user.id)
     setUserEmail(user.email)
-    router.push('/shop')
+    router.push(safeReturn || '/account')
   }
 
   return (
@@ -76,7 +79,7 @@ export default function LoginPage() {
 
         {/* Google Sign In */}
         <a
-          href="/api/auth/google"
+          href={safeReturn ? `/api/auth/google?returnTo=${encodeURIComponent(safeReturn)}` : '/api/auth/google'}
           className="flex items-center justify-center gap-3 w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
         >
           <GoogleIcon />

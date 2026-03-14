@@ -17,7 +17,7 @@ export default function AuthCompletePage() {
     // Read returnTo from URL without useSearchParams (avoids Suspense requirement)
     const params = new URLSearchParams(window.location.search)
     const returnTo = params.get('returnTo') ?? ''
-    const dest = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/shop'
+    const dest = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/account'
 
     fetch('/api/user/me')
       .then((r) => (r.ok ? r.json() : null))
