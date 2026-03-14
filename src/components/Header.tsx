@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext'
 const links: { href: string; label: string; mobileHide?: boolean }[] = [
   { href: '/shop', label: 'Shop' },
   { href: '/shop/graphic-installation', label: 'Graphic Installation', mobileHide: true },
+  { href: '/shop/graphic-design-layout', label: 'Design Service', mobileHide: true },
   { href: '/contact', label: 'Contact', mobileHide: true },
   { href: '/account', label: 'Account' },
   { href: '/admin', label: 'Admin' },
