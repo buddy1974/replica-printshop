@@ -93,7 +93,9 @@ export default function UploadClient({ product, config }: Props) {
       let blobUrl: string
       let blobPathname: string | undefined
       try {
-        const blob = await upload(file.name, file, {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const uniquePathname = `uploads/${Date.now()}-${safeName}`
+        const blob = await upload(uniquePathname, file, {
           access: 'public',
           handleUploadUrl: '/api/upload/token',
         })

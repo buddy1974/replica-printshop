@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
         return {
           allowedContentTypes: ALLOWED_TYPES,
           maximumSizeInBytes: MAX_SIZE,
+          addRandomSuffix: true,
         }
       },
       onUploadCompleted: async ({ blob }) => {
