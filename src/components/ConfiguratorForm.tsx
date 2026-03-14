@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPreview from '@/components/ProductPreview'
 import { setUserId as setSessionUserId, setUserEmail as setSessionUserEmail } from '@/lib/session'
@@ -115,9 +115,13 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
   const [height, setHeight] = useState(initialHeight ?? fixedSizeOptions[0]?.h ?? cfg?.printAreaHeightCm ?? 100)
   const [quantity, setQuantity] = useState(1)
   const [deliveryType, setDeliveryType] = useState<'STANDARD' | 'EXPRESS' | 'PICKUP'>('STANDARD')
-  const [price, setPrice] = useState<PriceResult | null>(null)
-  const [sizeError, setSizeError] = useState<string | null>(null)
   const [placement, setPlacement] = useState<'front' | 'back'>('front')
+
+  // Price state — manual calculate only (no auto-fetch)
+  const [price, setPrice] = useState<PriceResult | null>(null)
+  const [priceError, setPriceError] = useState<string | null>(null)
+  const [priceCalculated, setPriceCalculated] = useState(false)
+  const [calculating, setCalculating] = useState(false)
 
   // Sync guest session on mount
   useEffect(() => {
@@ -137,6 +141,12 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
       .catch(() => {})
   }, [])
 
+  const resetPrice = useCallback(() => {
+    setPrice(null)
+    setPriceError(null)
+    setPriceCalculated(false)
+  }, [])
+
   const showPlacement = useMemo(() => cfg?.needsPlacement || (cfg?.placementMode && cfg.placementMode !== 'none'), [cfg])
   const showVariants = useMemo(() => cfg ? cfg.hasVariants && product.variants.length > 0 : product.variants.length > 0, [cfg, product.variants.length])
   const showOptions = useMemo(() => cfg ? cfg.hasOptions && product.options.length > 0 : product.options.length > 0, [cfg, product.options.length])
@@ -148,8 +158,12 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
   const minH = cfg?.minHeight ?? 1
   const maxH = cfg?.maxHeight ?? 500
 
-  useEffect(() => {
-    const fetchPrice = async () => {
+  const handleCalculate = async () => {
+    setCalculating(true)
+    setPrice(null)
+    setPriceError(null)
+    setPriceCalculated(false)
+    try {
       const res = await fetch('/api/configurator/price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,16 +178,18 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
         }),
       })
       if (res.ok) {
-        setSizeError(null)
         setPrice(await res.json())
       } else {
         const body = await res.json().catch(() => ({}))
-        setSizeError(body.error ?? 'Invalid size')
-        setPrice(null)
+        setPriceError(body.error ?? 'Price not configured for this product')
       }
+    } catch {
+      setPriceError('Could not connect to pricing service. Please try again.')
+    } finally {
+      setPriceCalculated(true)
+      setCalculating(false)
     }
-    fetchPrice()
-  }, [product.id, variantId, optionValueIds, width, height, quantity, deliveryType, showCustomSize, showFixedSizes])
+  }
 
   const toggleOptionValue = (valueId: string, optionId: string) => {
     const option = product.options.find((o) => o.id === optionId)
@@ -182,14 +198,18 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
       const withoutThisOption = prev.filter((id) => !optionValueSet.has(id))
       return prev.includes(valueId) ? withoutThisOption : [...withoutThisOption, valueId]
     })
+    resetPrice()
   }
+
+  // Can proceed to upload/designer only when price was successfully calculated
+  const canProceed = priceCalculated && price !== null
 
   return (
     <div className="flex flex-col gap-5">
       {showVariants && (
         <label className={labelCls}>
           <span className={labelTextCls}>Variant</span>
-          <select value={variantId} onChange={(e) => setVariantId(e.target.value)} className={inputCls}>
+          <select value={variantId} onChange={(e) => { setVariantId(e.target.value); resetPrice() }} className={inputCls}>
             {product.variants.map((v) => (
               <option key={v.id} value={v.id}>{v.name} — {v.material}</option>
             ))}
@@ -204,7 +224,7 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
             className={inputCls}
             onChange={(e) => {
               const opt = fixedSizeOptions[Number(e.target.value)]
-              if (opt) { setWidth(opt.w); setHeight(opt.h) }
+              if (opt) { setWidth(opt.w); setHeight(opt.h); resetPrice() }
             }}
           >
             {fixedSizeOptions.map((opt, i) => (
@@ -215,21 +235,17 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
       )}
 
       {showCustomSize && (
-        <div className="flex flex-col gap-1.5">
-          <div className="grid grid-cols-2 gap-3">
-            <label className={labelCls}>
-              <span className={labelTextCls}>Width (cm)</span>
-              <input type="number" min={minW} max={maxW} value={width} onChange={(e) => setWidth(Number(e.target.value))} className={inputCls} />
-            </label>
-            <label className={labelCls}>
-              <span className={labelTextCls}>Height (cm)</span>
-              <input type="number" min={minH} max={maxH} value={height} onChange={(e) => setHeight(Number(e.target.value))} className={inputCls} />
-            </label>
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className={labelCls}>
+            <span className={labelTextCls}>Width (cm)</span>
+            <input type="number" min={minW} max={maxW} value={width} onChange={(e) => { setWidth(Number(e.target.value)); resetPrice() }} className={inputCls} />
+          </label>
+          <label className={labelCls}>
+            <span className={labelTextCls}>Height (cm)</span>
+            <input type="number" min={minH} max={maxH} value={height} onChange={(e) => { setHeight(Number(e.target.value)); resetPrice() }} className={inputCls} />
+          </label>
         </div>
       )}
-
-      {sizeError && <p className="text-red-600 text-sm">{sizeError}</p>}
 
       {showOptions && product.options.map((option) => {
         // Banner: replace Print selector with static info text
@@ -269,23 +285,22 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
             type="number"
             min={1}
             value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+            onChange={(e) => { setQuantity(Math.max(1, Number(e.target.value))); resetPrice() }}
             className={inputCls}
           />
         </label>
-        {quantity < 1 && <p className="text-sm text-red-600">Quantity must be at least 1.</p>}
       </div>
 
       <div className="flex flex-col gap-2">
         <span className={labelTextCls}>Delivery</span>
         <div className="flex flex-wrap gap-2">
           {(['STANDARD', 'EXPRESS'] as const).map((type) => (
-            <PillButton key={type} active={deliveryType === type} onClick={() => setDeliveryType(type)}>
+            <PillButton key={type} active={deliveryType === type} onClick={() => { setDeliveryType(type); resetPrice() }}>
               {type.charAt(0) + type.slice(1).toLowerCase()}
             </PillButton>
           ))}
           {cfg?.pickupAllowed && (
-            <PillButton active={deliveryType === 'PICKUP'} onClick={() => setDeliveryType('PICKUP')}>
+            <PillButton active={deliveryType === 'PICKUP'} onClick={() => { setDeliveryType('PICKUP'); resetPrice() }}>
               Pickup
             </PillButton>
           )}
@@ -306,44 +321,66 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
         </div>
       )}
 
-      {price && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm flex flex-col gap-1.5">
-          <div className="flex justify-between text-gray-600">
-            <span>Unit price</span><span>€{price.unitPrice.toFixed(2)}</span>
+      {/* ── Calculate Price ── */}
+      <button
+        type="button"
+        onClick={handleCalculate}
+        disabled={calculating}
+        className="w-full py-3 rounded-lg bg-gray-900 text-white font-semibold text-base hover:bg-gray-700 disabled:opacity-50 transition-colors"
+      >
+        {calculating ? 'Calculating…' : priceCalculated ? 'Recalculate Price' : 'Calculate Price'}
+      </button>
+
+      {/* ── Price result ── */}
+      {priceCalculated && (
+        price ? (
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm flex flex-col gap-1.5">
+            <div className="flex justify-between text-gray-600">
+              <span>Unit price</span><span>€{price.unitPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-600">
+              <span>Shipping</span><span>€{price.shippingPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-semibold text-gray-900 border-t border-gray-200 pt-2 mt-0.5">
+              <span>Total</span><span>€{price.totalPrice.toFixed(2)}</span>
+            </div>
           </div>
-          <div className="flex justify-between text-gray-600">
-            <span>Shipping</span><span>€{price.shippingPrice.toFixed(2)}</span>
+        ) : (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {priceError ?? 'Price not configured for this product'}
           </div>
-          <div className="flex justify-between font-semibold text-gray-900 border-t border-gray-200 pt-2 mt-0.5">
-            <span>Total</span><span>€{price.totalPrice.toFixed(2)}</span>
-          </div>
-        </div>
+        )
       )}
 
-      {width > 0 && height > 0 && (
-        <div className="mt-6 grid grid-cols-2 gap-4">
-          <button
-            className="bg-red-600 text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2"
-            onClick={() => {
-              const p = new URLSearchParams({ w: String(width), h: String(height), qty: String(quantity) })
-              if (variantId) p.set('variant', variantId)
-              if (optionValueIds.length) p.set('opts', optionValueIds.join(','))
-              if (showPlacement && placement) p.set('placement', placement)
-              if (deliveryType === 'EXPRESS') p.set('express', '1')
-              router.push(`/upload/${product.id}?${p}`)
-            }}
-          >
-            📤 Upload print file
-          </button>
-          <button
-            className="bg-black text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2"
-            onClick={() => { router.push(`/editor/${product.id}?w=${width}&h=${height}`) }}
-          >
-            ✏️ Use online designer
-          </button>
-        </div>
+      {/* ── Upload / Designer — always visible, disabled until price OK ── */}
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          disabled={!canProceed}
+          className="bg-red-600 text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          onClick={() => {
+            const p = new URLSearchParams({ w: String(width), h: String(height), qty: String(quantity) })
+            if (variantId) p.set('variant', variantId)
+            if (optionValueIds.length) p.set('opts', optionValueIds.join(','))
+            if (showPlacement && placement) p.set('placement', placement)
+            if (deliveryType === 'EXPRESS') p.set('express', '1')
+            router.push(`/upload/${product.id}?${p}`)
+          }}
+        >
+          📤 Upload print file
+        </button>
+        <button
+          type="button"
+          disabled={!canProceed}
+          className="bg-black text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          onClick={() => router.push(`/editor/${product.id}?w=${width}&h=${height}`)}
+        >
+          ✏️ Use online designer
+        </button>
+      </div>
+      {!canProceed && (
+        <p className="text-xs text-center text-gray-400">Calculate price to continue</p>
       )}
-
     </div>
   )
 }
