@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import { useLocale } from '@/context/LocaleContext'
 
 const ImageModal = dynamic(() => import('./ImageModal'))
 
@@ -20,6 +21,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ slug, name, category, shortDescription, imageUrl }: ProductCardProps) {
   const [modalOpen, setModalOpen] = useState(false)
+  const { t } = useLocale()
 
   return (
     <>
@@ -70,7 +72,7 @@ export default function ProductCard({ slug, name, category, shortDescription, im
             href={`/product/${slug}`}
             className="btn-primary w-fit"
           >
-            Select →
+            {t.buttons.select} →
           </Link>
         </div>
       </div>

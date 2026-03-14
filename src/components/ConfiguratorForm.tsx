@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPreview from '@/components/ProductPreview'
 import { setUserId as setSessionUserId, setUserEmail as setSessionUserEmail } from '@/lib/session'
+import { useLocale } from '@/context/LocaleContext'
 
 interface OptionValue {
   id: string
@@ -102,6 +103,7 @@ function PillButton({ active, onClick, children }: { active: boolean; onClick: (
 
 export default function ConfiguratorForm({ product, initialWidth, initialHeight }: ConfiguratorFormProps) {
   const router = useRouter()
+  const { t } = useLocale()
   const cfg = product.config
 
   // Banner: auto-select 4/0 print mode, hide Print selector
@@ -339,7 +341,7 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
         disabled={calculating}
         className="w-full py-3 rounded-lg bg-gray-900 text-white font-semibold text-base hover:bg-gray-700 disabled:opacity-50 transition-colors"
       >
-        {calculating ? 'Calculating…' : priceCalculated ? 'Recalculate Price' : 'Calculate Price'}
+        {calculating ? 'Calculating…' : t.buttons.calculate}
       </button>
 
       {/* ── Price result ── */}
@@ -377,7 +379,7 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
             router.push(`/upload/${product.id}?${p}`)
           }}
         >
-          📤 Upload print file
+          📤 {t.buttons.upload}
         </button>
         <button
           type="button"
@@ -385,11 +387,11 @@ export default function ConfiguratorForm({ product, initialWidth, initialHeight 
           className="bg-black text-white text-lg py-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           onClick={() => router.push(`/editor/${product.id}?w=${width}&h=${height}`)}
         >
-          ✏️ Use online designer
+          ✏️ {t.buttons.designer}
         </button>
       </div>
       {!canProceed && (
-        <p className="text-xs text-center text-gray-400">Calculate price to continue</p>
+        <p className="text-xs text-center text-gray-400">{t.buttons.calculate} to continue</p>
       )}
     </div>
   )
