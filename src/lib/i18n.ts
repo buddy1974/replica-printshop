@@ -7,16 +7,57 @@ export type Locale = 'en' | 'de' | 'fr'
 export const LOCALES: Locale[] = ['en', 'de', 'fr']
 export const DEFAULT_LOCALE: Locale = 'en'
 
-// Shape all translation files must conform to
 export interface Dictionary {
-  nav: {
+  menu: {
     shop: string
-    graphicInstallation: string
-    designService: string
+    installation: string
+    design: string
     contact: string
     account: string
     admin: string
     cart: string
+  }
+  buttons: {
+    select: string
+    upload: string
+    designer: string
+    calculate: string
+    addToCart: string
+    continue: string
+    back: string
+    contact: string
+  }
+  shop: {
+    title: string
+    services: string
+    products: string
+  }
+  upload: {
+    title: string
+    requirements: string
+    drop: string
+    browse: string
+  }
+  designer: {
+    title: string
+    text: string
+    image: string
+    shape: string
+    layer: string
+    center: string
+    fit: string
+    delete: string
+  }
+  designService: {
+    title: string
+    desc: string
+    contact: string
+  }
+  contact: {
+    title: string
+    call: string
+    email: string
+    message: string
   }
 }
 

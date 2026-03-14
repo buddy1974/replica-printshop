@@ -7,12 +7,12 @@ import { useCart } from '@/context/CartContext'
 import { useLocale } from '@/context/LocaleContext'
 import { LOCALES, type Locale, type Dictionary } from '@/lib/i18n'
 
-type NavKey = keyof Dictionary['nav']
+type NavKey = keyof Dictionary['menu']
 
 const NAV_LINKS: { href: string; key: NavKey; mobileHide?: boolean }[] = [
   { href: '/shop', key: 'shop' },
-  { href: '/shop/graphic-installation', key: 'graphicInstallation', mobileHide: true },
-  { href: '/shop/graphic-design-layout', key: 'designService', mobileHide: true },
+  { href: '/shop/graphic-installation', key: 'installation', mobileHide: true },
+  { href: '/shop/graphic-design-layout', key: 'design', mobileHide: true },
   { href: '/contact', key: 'contact', mobileHide: true },
   { href: '/account', key: 'account' },
   { href: '/admin', key: 'admin' },
@@ -53,7 +53,7 @@ export default function Header() {
                     : 'text-gray-900 hover:text-red-600',
                 ].join(' ')}
               >
-                {t.nav[key]}
+                {t.menu[key]}
               </Link>
             )
           })}
@@ -71,7 +71,7 @@ export default function Header() {
             title="View cart"
           >
             <CartIcon />
-            <span className="hidden sm:inline">{t.nav.cart}</span>
+            <span className="hidden sm:inline">{t.menu.cart}</span>
             {count > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 leading-none">
                 {count > 9 ? '9+' : count}

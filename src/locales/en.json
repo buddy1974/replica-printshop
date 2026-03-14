@@ -1,11 +1,59 @@
 {
-  "nav": {
-    "shop": "Shop",
-    "graphicInstallation": "Graphic Installation",
-    "designService": "Design Service",
-    "contact": "Contact",
-    "account": "Account",
-    "admin": "Admin",
-    "cart": "Cart"
+  "menu": {
+    "shop": "SHOP",
+    "installation": "GRAPHIC INSTALLATION",
+    "design": "DESIGN SERVICES",
+    "contact": "CONTACT",
+    "account": "ACCOUNT",
+    "admin": "ADMIN",
+    "cart": "CART"
+  },
+
+  "buttons": {
+    "select": "Select",
+    "upload": "Upload file",
+    "designer": "Use online designer",
+    "calculate": "Calculate price",
+    "addToCart": "Add to cart",
+    "continue": "Continue",
+    "back": "Back",
+    "contact": "Contact us"
+  },
+
+  "shop": {
+    "title": "Shop",
+    "services": "Services",
+    "products": "Products"
+  },
+
+  "upload": {
+    "title": "Upload file",
+    "requirements": "File requirements",
+    "drop": "Drop your file here",
+    "browse": "Browse files"
+  },
+
+  "designer": {
+    "title": "Online Designer",
+    "text": "Text",
+    "image": "Image",
+    "shape": "Shape",
+    "layer": "Layer",
+    "center": "Center",
+    "fit": "Fit",
+    "delete": "Delete"
+  },
+
+  "designService": {
+    "title": "Graphic Design & Layout",
+    "desc": "Professional layout and design for flyers, brochures, banners, logos and print materials.",
+    "contact": "Request design"
+  },
+
+  "contact": {
+    "title": "Contact",
+    "call": "Call us",
+    "email": "Email",
+    "message": "Message"
   }
 }

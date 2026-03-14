@@ -1,11 +1,59 @@
 {
-  "nav": {
-    "shop": "Shop",
-    "graphicInstallation": "Werbetechnik",
-    "designService": "Design Service",
-    "contact": "Kontakt",
-    "account": "Konto",
-    "admin": "Admin",
-    "cart": "Warenkorb"
+  "menu": {
+    "shop": "SHOP",
+    "installation": "MONTAGE",
+    "design": "DESIGN SERVICE",
+    "contact": "KONTAKT",
+    "account": "KONTO",
+    "admin": "ADMIN",
+    "cart": "WARENKORB"
+  },
+
+  "buttons": {
+    "select": "Auswählen",
+    "upload": "Datei hochladen",
+    "designer": "Online Designer",
+    "calculate": "Preis berechnen",
+    "addToCart": "In den Warenkorb",
+    "continue": "Weiter",
+    "back": "Zurück",
+    "contact": "Kontakt"
+  },
+
+  "shop": {
+    "title": "Shop",
+    "services": "Services",
+    "products": "Produkte"
+  },
+
+  "upload": {
+    "title": "Datei hochladen",
+    "requirements": "Dateianforderungen",
+    "drop": "Datei hier ablegen",
+    "browse": "Dateien auswählen"
+  },
+
+  "designer": {
+    "title": "Online Designer",
+    "text": "Text",
+    "image": "Bild",
+    "shape": "Form",
+    "layer": "Ebene",
+    "center": "Zentrieren",
+    "fit": "Anpassen",
+    "delete": "Löschen"
+  },
+
+  "designService": {
+    "title": "Grafikdesign & Layout",
+    "desc": "Professionelles Layout für Flyer, Broschüren, Banner, Logos und Druckprodukte.",
+    "contact": "Design anfragen"
+  },
+
+  "contact": {
+    "title": "Kontakt",
+    "call": "Anrufen",
+    "email": "E-Mail",
+    "message": "Nachricht"
   }
 }

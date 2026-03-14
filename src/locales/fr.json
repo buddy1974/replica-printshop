@@ -1,11 +1,59 @@
 {
-  "nav": {
-    "shop": "Boutique",
-    "graphicInstallation": "Pose Graphique",
-    "designService": "Design & Mise en Page",
-    "contact": "Contact",
-    "account": "Mon Compte",
-    "admin": "Admin",
-    "cart": "Panier"
+  "menu": {
+    "shop": "BOUTIQUE",
+    "installation": "INSTALLATION GRAPHIQUE",
+    "design": "SERVICE DESIGN",
+    "contact": "CONTACT",
+    "account": "COMPTE",
+    "admin": "ADMIN",
+    "cart": "PANIER"
+  },
+
+  "buttons": {
+    "select": "Choisir",
+    "upload": "Télécharger fichier",
+    "designer": "Designer en ligne",
+    "calculate": "Calculer le prix",
+    "addToCart": "Ajouter au panier",
+    "continue": "Continuer",
+    "back": "Retour",
+    "contact": "Nous contacter"
+  },
+
+  "shop": {
+    "title": "Boutique",
+    "services": "Services",
+    "products": "Produits"
+  },
+
+  "upload": {
+    "title": "Télécharger fichier",
+    "requirements": "Exigences fichier",
+    "drop": "Déposez votre fichier ici",
+    "browse": "Choisir fichier"
+  },
+
+  "designer": {
+    "title": "Designer en ligne",
+    "text": "Texte",
+    "image": "Image",
+    "shape": "Forme",
+    "layer": "Calque",
+    "center": "Centrer",
+    "fit": "Adapter",
+    "delete": "Supprimer"
+  },
+
+  "designService": {
+    "title": "Design graphique & mise en page",
+    "desc": "Création professionnelle pour flyers, brochures, bannières, logos et impressions.",
+    "contact": "Demander un design"
+  },
+
+  "contact": {
+    "title": "Contact",
+    "call": "Appeler",
+    "email": "Email",
+    "message": "Message"
   }
 }
