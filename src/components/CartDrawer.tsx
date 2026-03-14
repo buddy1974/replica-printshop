@@ -2,17 +2,7 @@
 
 import { useCart } from '@/context/CartContext'
 import Image from 'next/image'
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6M14 11v6" />
-      <path d="M9 6V4h6v2" />
-    </svg>
-  )
-}
+import RemoveCartItemButton from '@/components/cart/RemoveCartItemButton'
 
 function XIcon() {
   return (
@@ -24,7 +14,7 @@ function XIcon() {
 }
 
 export default function CartDrawer() {
-  const { items, count, total, isOpen, closeDrawer, removeItem } = useCart()
+  const { items, count, total, isOpen, closeDrawer, refresh } = useCart()
 
   return (
     <>
@@ -119,13 +109,7 @@ export default function CartDrawer() {
                     </div>
 
                     {/* Remove */}
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="p-1.5 text-red-600 hover:text-red-700 transition-colors self-start shrink-0"
-                      aria-label="Remove item"
-                    >
-                      <TrashIcon />
-                    </button>
+                    <RemoveCartItemButton itemId={item.id} onRemoved={() => refresh()} variant="icon" />
                   </li>
                 )
               })}

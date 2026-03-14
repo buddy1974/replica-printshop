@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import { db } from '@/lib/db'
+import RemoveCartItemButton from '@/components/cart/RemoveCartItemButton'
 
 function scoreBadge(score: number | null | undefined) {
   if (score == null) return null
@@ -116,9 +117,10 @@ export default async function CartPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 shrink-0">
-                      €{lineTotal.toFixed(2)}
-                    </p>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <p className="text-sm font-semibold text-gray-900">€{lineTotal.toFixed(2)}</p>
+                      <RemoveCartItemButton itemId={item.id} />
+                    </div>
                   </div>
                 )
               })}
@@ -129,7 +131,7 @@ export default async function CartPage() {
               <table className="w-full text-sm">
                 <thead className="border-b border-gray-200 bg-gray-50">
                   <tr>
-                    {['Preview', 'Product', 'Size', 'Qty', 'Price', 'Total'].map((h) => (
+                    {['Preview', 'Product', 'Size', 'Qty', 'Price', 'Total', ''].map((h) => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -196,6 +198,9 @@ export default async function CartPage() {
                         </td>
                         <td className="px-4 py-3 font-semibold text-gray-900">
                           €{lineTotal.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <RemoveCartItemButton itemId={item.id} />
                         </td>
                       </tr>
                     )

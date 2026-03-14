@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import RemoveCartItemButton from '@/components/cart/RemoveCartItemButton'
 
 const STRIPE_PK = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 const stripePromise = STRIPE_PK ? loadStripe(STRIPE_PK) : null
@@ -667,17 +668,6 @@ function CartSummary({
   vatRate: number
   onDeleted: (id: string) => void
 }) {
-  const [deleting, setDeleting] = useState<string | null>(null)
-
-  const handleDelete = async (id: string) => {
-    setDeleting(id)
-    try {
-      const res = await fetch(`/api/cart/item/${id}`, { method: 'DELETE' })
-      if (res.ok) onDeleted(id)
-    } finally {
-      setDeleting(null)
-    }
-  }
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 sticky top-4">
@@ -707,21 +697,7 @@ function CartSummary({
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="font-medium text-gray-900">€{item.lineTotal.toFixed(2)}</span>
-              <button
-                type="button"
-                onClick={() => handleDelete(item.id)}
-                disabled={deleting === item.id}
-                title="Remove item"
-                className="w-5 h-5 flex items-center justify-center rounded text-red-500 hover:text-red-700 hover:bg-red-50 disabled:opacity-40 transition-colors"
-              >
-                {deleting === item.id ? (
-                  <span className="text-xs leading-none">…</span>
-                ) : (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </button>
+              <RemoveCartItemButton itemId={item.id} onRemoved={onDeleted} variant="icon" />
             </div>
           </div>
         ))}
