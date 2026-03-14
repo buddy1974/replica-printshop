@@ -27,7 +27,7 @@ export default async function CartPage() {
               product: { select: { name: true, imageUrl: true } },
               variant: { select: { name: true } },
               design: { select: { id: true, preview: true, preflightScore: true } },
-              pendingUpload: { select: { id: true, filename: true, validStatus: true } },
+              pendingUpload: { select: { id: true, filename: true, validStatus: true, blobUrl: true, mime: true } },
             },
           },
         },
@@ -72,7 +72,9 @@ export default async function CartPage() {
               {items.map((item) => {
                 const previewUrl = item.design?.preview
                   ? `/api/design/${item.design.id}/preview`
-                  : item.product.imageUrl ?? null
+                  : (item.pendingUpload?.blobUrl && item.pendingUpload.mime?.startsWith('image/'))
+                    ? item.pendingUpload.blobUrl
+                    : item.product.imageUrl ?? null
                 const lineTotal = Number(item.priceSnapshot) * item.quantity
                 const size = Number(item.width) > 0 && Number(item.height) > 0
                   ? `${Number(item.width)} × ${Number(item.height)} cm`
@@ -141,7 +143,9 @@ export default async function CartPage() {
                   {items.map((item) => {
                     const previewUrl = item.design?.preview
                       ? `/api/design/${item.design.id}/preview`
-                      : item.product.imageUrl ?? null
+                      : (item.pendingUpload?.blobUrl && item.pendingUpload.mime?.startsWith('image/'))
+                        ? item.pendingUpload.blobUrl
+                        : item.product.imageUrl ?? null
                     const lineTotal = Number(item.priceSnapshot) * item.quantity
 
                     return (

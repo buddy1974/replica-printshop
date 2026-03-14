@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { upload } from '@vercel/blob/client'
 import PrintCheckPanel from '@/components/PrintCheckPanel'
 import type { PrintCheckResult } from '@/lib/ai/printAssist'
 
@@ -39,6 +40,7 @@ interface UploadResult {
   validStatus: string
   validMessages: string[]
   aiCheck?: PrintCheckResult
+  blobUrl?: string | null
 }
 
 interface Props {
@@ -46,32 +48,85 @@ interface Props {
   config: Config
 }
 
+/** Extract pixel dimensions from an image file using the browser. Returns null for PDF. */
+function getImageDimensions(file: File): Promise<{ widthPx: number; heightPx: number } | null> {
+  if (!file.type.startsWith('image/')) return Promise.resolve(null)
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      resolve({ widthPx: img.naturalWidth, heightPx: img.naturalHeight })
+      URL.revokeObjectURL(url)
+    }
+    img.onerror = () => {
+      resolve(null)
+      URL.revokeObjectURL(url)
+    }
+    img.src = url
+  })
+}
+
 export default function UploadClient({ product, config }: Props) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadStep, setUploadStep] = useState<'idle' | 'reading' | 'uploading' | 'saving'>('idle')
   const [result, setResult] = useState<UploadResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [warningConfirmed, setWarningConfirmed] = useState(false)
   const [addingToCart, setAddingToCart] = useState(false)
 
-  const resetFile = () => { setResult(null); setError(null); setWarningConfirmed(false) }
+  const resetFile = () => { setResult(null); setError(null); setWarningConfirmed(false); setUploadStep('idle') }
 
   const handleFile = useCallback(async (file: File) => {
     resetFile()
     setUploading(true)
-    try {
-      const form = new FormData()
-      form.append('file', file)
-      form.append('productId', product.id)
-      if (config.widthCm)  form.append('widthCm',  String(config.widthCm))
-      if (config.heightCm) form.append('heightCm', String(config.heightCm))
 
-      const res = await fetch('/api/upload/pending', { method: 'POST', body: form })
+    try {
+      // Step 1: read image dimensions in browser (null for PDF)
+      setUploadStep('reading')
+      const dims = await getImageDimensions(file)
+
+      // Step 2: upload directly to Vercel Blob — bypasses serverless payload limit
+      setUploadStep('uploading')
+      let blobUrl: string
+      try {
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/upload/token',
+        })
+        blobUrl = blob.url
+      } catch (uploadErr) {
+        const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr)
+        setError(`Upload failed: ${msg}`)
+        return
+      }
+
+      // Step 3: save metadata to DB via lightweight JSON-only API
+      setUploadStep('saving')
+      const payload: Record<string, unknown> = {
+        blobUrl,
+        mime: file.type || 'application/octet-stream',
+        size: file.size,
+        filename: file.name,
+        productId: product.id,
+        widthCm: config.widthCm || null,
+        heightCm: config.heightCm || null,
+      }
+      if (dims) {
+        payload.widthPx = dims.widthPx
+        payload.heightPx = dims.heightPx
+      }
+
+      const res = await fetch('/api/upload/pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data.error ?? 'Upload failed. Please try again.')
+        setError(data.error ?? 'Could not save upload. Please try again.')
       } else {
         setResult(data as UploadResult)
       }
@@ -79,6 +134,7 @@ export default function UploadClient({ product, config }: Props) {
       setError('Connection error. Please try again.')
     } finally {
       setUploading(false)
+      setUploadStep('idle')
     }
   }, [product.id, config.widthCm, config.heightCm]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -131,9 +187,13 @@ export default function UploadClient({ product, config }: Props) {
   const hasSize = config.widthCm > 0 && config.heightCm > 0
   const backHref = `/product/${product.slug}${hasSize ? `?w=${config.widthCm}&h=${config.heightCm}` : ''}`
 
-  // Whether the Add to cart button is gated by a confirmation
   const needsWarningConfirm = result?.validStatus === 'WARNING' && !warningConfirmed
   const canAddToCart = !!result && !addingToCart && !needsWarningConfirm
+
+  const uploadStepLabel = uploadStep === 'reading' ? 'Reading file…'
+    : uploadStep === 'uploading' ? 'Uploading to storage…'
+    : uploadStep === 'saving' ? 'Checking file…'
+    : 'Uploading and checking file…'
 
   // Guard — must have size selected before uploading
   if (!hasSize) {
@@ -212,7 +272,7 @@ export default function UploadClient({ product, config }: Props) {
           {uploading ? (
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-gray-200 border-t-red-600 rounded-full animate-spin" />
-              <p className="text-sm text-gray-500">Uploading and checking file…</p>
+              <p className="text-sm text-gray-500">{uploadStepLabel}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3">
@@ -232,6 +292,18 @@ export default function UploadClient({ product, config }: Props) {
       {/* Result panel */}
       {result && (
         <div className="mb-5 space-y-3">
+          {/* Image preview (for PNG/JPG with Blob URL) */}
+          {result.blobUrl && result.mime?.startsWith('image/') && (
+            <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={result.blobUrl}
+                alt="Upload preview"
+                className="w-full max-h-48 object-contain"
+              />
+            </div>
+          )}
+
           {/* File details row */}
           <div className="rounded-xl border border-gray-200 bg-white p-4">
             <div className="flex items-start gap-3">

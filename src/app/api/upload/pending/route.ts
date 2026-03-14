@@ -1,77 +1,43 @@
-// Force Node.js runtime — required for Buffer + file uploads on Vercel
+// Lightweight metadata-only route — file goes directly to Vercel Blob,
+// only JSON metadata (blobUrl, dimensions, product info) is posted here.
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
 
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { AppError } from '@/lib/errors'
 import { checkRateLimit, getClientKey } from '@/lib/rateLimit'
-import { readImageDimensions } from '@/lib/storage'
 import { analyzeUpload, calculateScore } from '@/lib/ai/printAssist'
 
-const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'pdf'])
-const ALLOWED_MIMES      = new Set(['image/png', 'image/jpeg', 'application/pdf'])
-
 export async function POST(req: NextRequest) {
-  console.log('UPLOAD ROUTE HIT')
+  console.log('PENDING UPLOAD ROUTE HIT')
 
   try {
-    // Rate limit
     if (!checkRateLimit(getClientKey(req), 10, 60_000)) {
       return NextResponse.json({ error: 'Too many uploads. Try again in a minute.' }, { status: 429 })
     }
 
-    const contentType = req.headers.get('content-type') ?? ''
-    if (!contentType.includes('multipart/form-data')) {
-      return NextResponse.json({ error: 'multipart/form-data required' }, { status: 400 })
+    const body = await req.json()
+    const { blobUrl, mime, size, filename, productId, widthCm, heightCm, widthPx, heightPx } = body
+
+    console.log('PENDING BODY', { filename, mime, size, widthPx, heightPx, productId, widthCm, heightCm })
+
+    if (!blobUrl || typeof blobUrl !== 'string') {
+      return NextResponse.json({ error: 'blobUrl is required' }, { status: 400 })
+    }
+    if (!filename || typeof filename !== 'string') {
+      return NextResponse.json({ error: 'filename is required' }, { status: 400 })
     }
 
-    // Parse form
-    const form      = await req.formData()
-    const file      = form.get('file') as File | null
-    const widthCm   = form.get('widthCm')  ? Number(form.get('widthCm'))  : null
-    const heightCm  = form.get('heightCm') ? Number(form.get('heightCm')) : null
-    const productId = form.get('productId') as string | null
+    const wPx: number | null = typeof widthPx === 'number' && widthPx > 0 ? Math.round(widthPx) : null
+    const hPx: number | null = typeof heightPx === 'number' && heightPx > 0 ? Math.round(heightPx) : null
+    const wCm: number | null = typeof widthCm === 'number' && widthCm > 0 ? widthCm : null
+    const hCm: number | null = typeof heightCm === 'number' && heightCm > 0 ? heightCm : null
 
-    console.log('FILE RECEIVED', file?.name, file?.size, file?.type)
-    console.log('PRODUCT', productId, 'SIZE', widthCm, 'x', heightCm)
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file received. Please select a file and try again.' }, { status: 400 })
-    }
-
-    // Validate type
-    const ext    = file.name.split('.').pop()?.toLowerCase() ?? ''
-    const typeOk = ALLOWED_MIMES.has(file.type) || ALLOWED_EXTENSIONS.has(ext)
-    if (!typeOk) {
-      console.log('FILE TYPE REJECTED', file.type, ext)
-      return NextResponse.json(
-        { error: `File type not supported. Please upload PDF, PNG, or JPG. (Got: ${file.type || `.${ext}`})` },
-        { status: 400 },
-      )
-    }
-    console.log('FILE TYPE OK', file.type, ext)
-
-    // Read buffer (no disk write on Vercel)
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const mime   = file.type || 'application/octet-stream'
-    const size   = buffer.length
-    console.log('BUFFER READ', size, 'bytes')
-
-    // Dimensions (PNG/JPG only — null for PDF)
-    const dims     = readImageDimensions(buffer, mime)
-    const widthPx  = dims?.widthPx  ?? null
-    const heightPx = dims?.heightPx ?? null
-    console.log('DIMS', dims ? `${widthPx}x${heightPx}` : 'not available (PDF/SVG)')
-
-    // DPI
+    // DPI from pixel + cm dimensions
     let dpi: number | null = null
-    if (dims && widthCm && heightCm && widthCm > 0 && heightCm > 0) {
-      dpi = Math.round(Math.min(
-        (dims.widthPx  * 2.54) / widthCm,
-        (dims.heightPx * 2.54) / heightCm,
-      ))
+    if (wPx && hPx && wCm && hCm) {
+      dpi = Math.round(Math.min((wPx * 2.54) / wCm, (hPx * 2.54) / hCm))
     }
     console.log('DPI', dpi)
 
@@ -84,42 +50,58 @@ export async function POST(req: NextRequest) {
           where: { id: productId },
           select: { minDpi: true, recommendedDpi: true, bleedMm: true, safeMarginMm: true },
         })
-        minDpi = p?.minDpi ?? null; recommendedDpi = p?.recommendedDpi ?? null
-        bleedMm = p?.bleedMm ?? null; safeMarginMm = p?.safeMarginMm ?? null
+        minDpi = p?.minDpi ?? null
+        recommendedDpi = p?.recommendedDpi ?? null
+        bleedMm = p?.bleedMm ?? null
+        safeMarginMm = p?.safeMarginMm ?? null
       } catch (e) {
         console.warn('PRODUCT CONFIG FETCH FAILED (non-fatal)', e instanceof Error ? e.message : e)
       }
     }
 
-    // Validation result
-    const { validStatus, validMessages } = getValidationResult(dpi, dims, widthCm, heightCm, minDpi)
+    // Validation
+    const dims = wPx && hPx ? { widthPx: wPx, heightPx: hPx } : null
+    const { validStatus, validMessages } = getValidationResult(dpi, dims, wCm, hCm, minDpi)
     console.log('VALIDATION', validStatus, validMessages)
 
-    // AI check + preflight score
-    const aiCheck      = analyzeUpload({ widthPx, heightPx, dpi, productWidthCm: widthCm ?? 0, productHeightCm: heightCm ?? 0, bleedMm, safeMarginMm, minDpi, recommendedDpi })
-    const preflightScore = calculateScore(aiCheck).score
-    console.log('AI CHECK', aiCheck.overall, 'score', preflightScore)
+    // AI check + preflight score (images only; skip for PDF where dims are null)
+    let aiCheck = null
+    let preflightScore: number | null = null
+    if (dims) {
+      const check = analyzeUpload({
+        widthPx: wPx,
+        heightPx: hPx,
+        dpi,
+        productWidthCm: wCm ?? 0,
+        productHeightCm: hCm ?? 0,
+        bleedMm,
+        safeMarginMm,
+        minDpi,
+        recommendedDpi,
+      })
+      aiCheck = check
+      preflightScore = calculateScore(check).score
+      console.log('AI CHECK', check.overall, 'score', preflightScore)
+    }
 
-    const tempId = crypto.randomUUID().replace(/-/g, '')
     const userId = req.cookies.get('replica_uid')?.value ?? null
 
-    // DB record
     console.log('SAVING TO DB...')
     let pending
     try {
       pending = await db.pendingUpload.create({
         data: {
-          id:            tempId,
           userId,
-          filename:      file.name,
-          filePath:      null,       // No disk storage on Vercel
-          size,
-          mime,
+          filename,
+          filePath: null,
+          blobUrl,
+          size: typeof size === 'number' ? size : null,
+          mime: typeof mime === 'string' ? mime : null,
           dpi,
-          widthPx,
-          heightPx,
+          widthPx: wPx,
+          heightPx: hPx,
           validStatus,
-          aiCheck:       aiCheck as object,
+          aiCheck: aiCheck ? (aiCheck as object) : undefined,
           preflightScore,
         },
       })
@@ -141,11 +123,12 @@ export async function POST(req: NextRequest) {
       validMessages,
       aiCheck,
       preflightScore,
+      blobUrl:       pending.blobUrl,
     }, { status: 201 })
 
   } catch (e) {
     if (e instanceof AppError) return NextResponse.json({ error: e.message }, { status: e.status })
-    console.error('UPLOAD UNEXPECTED ERROR', e instanceof Error ? e.message : e)
+    console.error('PENDING UPLOAD UNEXPECTED ERROR', e instanceof Error ? e.message : e)
     return NextResponse.json({ error: 'An unexpected error occurred. Please try again.' }, { status: 500 })
   }
 }
