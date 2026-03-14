@@ -3391,6 +3391,9 @@ async function main() {
   // Foils / Adhesive — full product lineup fix
   await seedFoilCategoryFix()
 
+  // Banner — new specialty banner products
+  await seedBannerProducts()
+
   console.log('\nAll seeds complete.')
 }
 
@@ -3788,6 +3791,170 @@ async function seedFoilCategoryFix() {
   })
 
   console.log('  Foil / Adhesive category fix complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Banner — new specialty banner products (step 699)
+// ---------------------------------------------------------------------------
+
+async function seedBannerProducts() {
+  console.log('Seeding new banner products...')
+
+  const cat = await db.productCategory.findUnique({ where: { slug: 'banner' }, select: { id: true } })
+  const catId = cat?.id ?? null
+
+  const bannerConfig = {
+    type: 'BANNER' as const,
+    hasCustomSize: true,
+    hasFixedSizes: false,
+    hasVariants: false,
+    hasOptions: true,
+    isRoll: true,
+    needsUpload: true,
+    priceMode: 'AREA' as const,
+    rollWidthCm: 160,
+    maxWidthCm: 160,
+    minWidth: 30,
+    maxWidth: 160,
+    minHeight: 30,
+    maxHeight: 1000,
+    productionType: 'ROLL_PRINT' as const,
+    uploadInstructions: 'Upload PDF or high-res PNG. Minimum 72 DPI at final size. Include 20 mm bleed on all sides.',
+  }
+
+  // ── Backlit Banner ────────────────────────────────────────────────────────
+  const backlit = await db.product.upsert({
+    where: { slug: 'backlit-banner' },
+    update: {
+      categoryId: catId,
+      active: true,
+      name: 'Backlit Banner',
+      shortDescription: 'Backlit banner film for illuminated lightboxes and frames.',
+      description: 'High-opacity backlit banner film with vibrant colour reproduction when illuminated from behind. Ideal for lightboxes, illuminated frames, shop displays and indoor/outdoor advertising. Max width 160 cm.',
+    },
+    create: {
+      name: 'Backlit Banner',
+      slug: 'backlit-banner',
+      category: 'Banner',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/products/banner-hero-section.png',
+      shortDescription: 'Backlit banner film for illuminated lightboxes and frames.',
+      description: 'High-opacity backlit banner film with vibrant colour reproduction when illuminated from behind. Ideal for lightboxes, illuminated frames, shop displays and indoor/outdoor advertising. Max width 160 cm.',
+      guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 20 mm bleed. Designed for backlit viewing — use saturated colours.',
+      minDpi: 72,
+      recommendedDpi: 100,
+      bleedMm: 20,
+      safeMarginMm: 20,
+      allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Lightboxes / Illuminated signs / Shop displays / Indoor advertising / Outdoor advertising. Max width 160 cm.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: backlit.id },
+    update: {
+      ...bannerConfig,
+      helpText: 'For lightboxes, illuminated frames and shop displays. Enter width and height in cm. Max width 160 cm.',
+    },
+    create: {
+      productId: backlit.id,
+      ...bannerConfig,
+      helpText: 'For lightboxes, illuminated frames and shop displays. Enter width and height in cm. Max width 160 cm.',
+    },
+  })
+  await upsertPricingTable(backlit.id, 'AREA', { pricePerM2: 22.00 })
+  await applyBannerOptions(backlit.id)
+  console.log(`  ✓ Backlit Banner: ${backlit.id}`)
+
+  // ── Blockout Banner ───────────────────────────────────────────────────────
+  const blockout = await db.product.upsert({
+    where: { slug: 'blockout-banner' },
+    update: {
+      categoryId: catId,
+      active: true,
+      name: 'Blockout Banner',
+      shortDescription: 'Opaque blockout PVC banner — double-sided, no light bleed.',
+      description: 'PVC blockout banner with a solid black core that prevents light bleed, making it suitable for double-sided printing and street advertising. Max width 160 cm. Hemmed and eyeleted.',
+    },
+    create: {
+      name: 'Blockout Banner',
+      slug: 'blockout-banner',
+      category: 'Banner',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/products/banner-hero-section.png',
+      shortDescription: 'Opaque blockout PVC banner — double-sided, no light bleed.',
+      description: 'PVC blockout banner with a solid black core that prevents light bleed, making it suitable for double-sided printing and street advertising. Max width 160 cm. Hemmed and eyeleted.',
+      guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 20 mm bleed. For double-sided, supply front and back as separate files.',
+      minDpi: 72,
+      recommendedDpi: 100,
+      bleedMm: 20,
+      safeMarginMm: 20,
+      allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Double-sided banners / Street advertising / Event banners / Fence banners / Outdoor use. Max width 160 cm.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: blockout.id },
+    update: {
+      ...bannerConfig,
+      helpText: 'Opaque black core — ideal for double-sided or street-facing banners. Max width 160 cm.',
+    },
+    create: {
+      productId: blockout.id,
+      ...bannerConfig,
+      helpText: 'Opaque black core — ideal for double-sided or street-facing banners. Max width 160 cm.',
+    },
+  })
+  await upsertPricingTable(blockout.id, 'AREA', { pricePerM2: 18.00 })
+  await applyBannerOptions(blockout.id)
+  console.log(`  ✓ Blockout Banner: ${blockout.id}`)
+
+  // ── Barrier Fence Banner ──────────────────────────────────────────────────
+  const fence = await db.product.upsert({
+    where: { slug: 'barrier-fence-banner' },
+    update: {
+      categoryId: catId,
+      active: true,
+      name: 'Barrier Fence Banner',
+      shortDescription: 'Printed banner for crowd control barriers, events and construction sites.',
+      description: 'Durable printed PVC banner designed to attach to crowd control barriers, construction site fencing and event barriers. Reinforced hem and eyelets every 50 cm. Max width 160 cm.',
+    },
+    create: {
+      name: 'Barrier Fence Banner',
+      slug: 'barrier-fence-banner',
+      category: 'Banner',
+      categoryId: catId,
+      active: true,
+      imageUrl: '/products/banner-hero-section.png',
+      shortDescription: 'Printed banner for crowd control barriers, events and construction sites.',
+      description: 'Durable printed PVC banner designed to attach to crowd control barriers, construction site fencing and event barriers. Reinforced hem and eyelets every 50 cm. Max width 160 cm.',
+      guideText: 'PDF or high-res PNG. Minimum 72 DPI at full size. Include 20 mm bleed on all sides.',
+      minDpi: 72,
+      recommendedDpi: 100,
+      bleedMm: 20,
+      safeMarginMm: 20,
+      allowedFormats: 'PDF,PNG,TIFF',
+      notes: 'Event barriers / Construction sites / Crowd control fences / Outdoor advertising. Max width 160 cm.',
+    },
+  })
+  await db.productConfig.upsert({
+    where: { productId: fence.id },
+    update: {
+      ...bannerConfig,
+      helpText: 'For crowd control barriers, event fencing and construction sites. Enter width and height in cm.',
+    },
+    create: {
+      productId: fence.id,
+      ...bannerConfig,
+      helpText: 'For crowd control barriers, event fencing and construction sites. Enter width and height in cm.',
+    },
+  })
+  await upsertPricingTable(fence.id, 'AREA', { pricePerM2: 14.00 })
+  await applyBannerOptions(fence.id)
+  console.log(`  ✓ Barrier Fence Banner: ${fence.id}`)
+
+  console.log('  Banner products seeded.')
 }
 
 // ---------------------------------------------------------------------------
