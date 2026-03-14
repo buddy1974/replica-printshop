@@ -71,10 +71,7 @@ export default function UploadClient({ product, config }: Props) {
       const res = await fetch('/api/upload/pending', { method: 'POST', body: form })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const msg = data.error === 'Internal error'
-          ? 'Upload failed. Please try again or use a different file.'
-          : (data.error ?? 'Upload failed. Please try again.')
-        setError(msg)
+        setError(data.error ?? 'Upload failed. Please try again.')
       } else {
         setResult(data as UploadResult)
       }
@@ -208,7 +205,7 @@ export default function UploadClient({ product, config }: Props) {
           <input
             ref={inputRef}
             type="file"
-            accept=".pdf,.png,.jpg,.jpeg,.svg"
+            accept=".pdf,.png,.jpg,.jpeg"
             className="hidden"
             onChange={onInputChange}
           />
@@ -224,7 +221,7 @@ export default function UploadClient({ product, config }: Props) {
               </svg>
               <div>
                 <p className="font-medium text-gray-700">Drop your file here</p>
-                <p className="text-xs text-gray-400 mt-0.5">PDF, PNG, JPG, SVG · max 50 MB</p>
+                <p className="text-xs text-gray-400 mt-0.5">PDF, PNG, JPG · max 50 MB</p>
               </div>
               <span className="text-xs text-red-600 font-medium underline">Browse files</span>
             </div>

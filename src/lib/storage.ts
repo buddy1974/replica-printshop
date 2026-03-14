@@ -82,12 +82,18 @@ export function getAbsPath(storagePath: string): string {
   return abs
 }
 
-/** Save a pre-checkout pending file. Returns storagePath + buffer (for dimension reading). */
+/** Save a pre-checkout pending file. Returns buffer always; storagePath is null when disk write
+ *  fails (e.g. read-only filesystem on Vercel). Dimension reading works regardless. */
 export async function savePendingFile(
   file: File,
   uploadId: string,
-): Promise<{ storagePath: string; size: number; mime: string; buffer: Buffer }> {
+): Promise<{ storagePath: string | null; size: number; mime: string; buffer: Buffer }> {
   validateFileInput(file)
+
+  // Read into memory first — always works, needed for dimension extraction
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const size   = buffer.length
+  const mime   = file.type || 'application/octet-stream'
 
   const sanitizedId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '')
   const rawName = path.basename(file.name)
@@ -103,18 +109,18 @@ export async function savePendingFile(
     throw new ValidationError('Invalid file path')
   }
 
-  fs.mkdirSync(dir, { recursive: true })
-
-  const buffer = Buffer.from(await file.arrayBuffer())
+  // Attempt disk write — non-fatal (read-only on serverless platforms)
+  let storagePath: string | null = null
   try {
+    fs.mkdirSync(dir, { recursive: true })
     fs.writeFileSync(diskPath, buffer)
-  } catch (err) {
-    if (fs.existsSync(diskPath)) fs.unlinkSync(diskPath)
-    throw err
+    storagePath = `storage/pending/${sanitizedId}/${safeName}`
+  } catch (diskErr) {
+    console.warn('[storage] savePendingFile: disk write failed (non-fatal):', diskErr instanceof Error ? diskErr.message : diskErr)
+    // storagePath stays null — dimensions still extracted from buffer
   }
 
-  const storagePath = `storage/pending/${sanitizedId}/${safeName}`
-  return { storagePath, size: buffer.length, mime: file.type || 'application/octet-stream', buffer }
+  return { storagePath, size, mime, buffer }
 }
 
 /** Read pixel dimensions from a PNG or JPEG buffer. Returns null for PDF/SVG. */
