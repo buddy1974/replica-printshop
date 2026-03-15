@@ -1,0 +1,32 @@
+{
+  "trust": {
+    "fast":     { "title": "Fast production",      "text": "1–3 business days" },
+    "delivery": { "title": "Pickup or shipping",   "text": "Flexible delivery options" },
+    "quality":  { "title": "Professional quality", "text": "Industrial print equipment" },
+    "custom":   { "title": "Custom jobs",          "text": "Contact us for specials" }
+  },
+  "services": {
+    "title":    "Our services",
+    "subtitle": "Everything from large-format print to textile and advertising technology.",
+    "browse":   "Browse →"
+  },
+  "products": {
+    "title":    "Popular products",
+    "subtitle": "Our most ordered items — ready to configure and order.",
+    "viewAll":  "View all products →"
+  },
+  "how": {
+    "title":    "How it works",
+    "subtitle": "Order in 4 simple steps",
+    "step1": { "title": "Choose product",        "text": "Browse our catalog and pick what you need." },
+    "step2": { "title": "Customize & upload",    "text": "Use our online editor or upload your own file." },
+    "step3": { "title": "We produce",            "text": "Fast turnaround in our in-house workshop." },
+    "step4": { "title": "Pickup or delivery",    "text": "Collect in person or have it shipped to you." },
+    "startNow": "Start now →"
+  },
+  "cta": {
+    "title":    "Did not find what you need?",
+    "subtitle": "We also produce custom jobs, special formats, workwear, and installation work. Contact us and we will find the right solution for you.",
+    "button":   "Contact us →"
+  }
+}

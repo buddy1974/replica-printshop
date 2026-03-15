@@ -4,6 +4,9 @@ import frRaw from '@/locales/fr.json'
 import checkoutEn from '@/locales/checkout.en.json'
 import checkoutDe from '@/locales/checkout.de.json'
 import checkoutFr from '@/locales/checkout.fr.json'
+import homeEn from '@/locales/home.en.json'
+import homeDe from '@/locales/home.de.json'
+import homeFr from '@/locales/home.fr.json'
 
 export type Locale = 'en' | 'de' | 'fr'
 
@@ -81,6 +84,29 @@ export interface CheckoutDictionary {
   fileUploaded: string
 }
 
+interface TrustItem { title: string; text: string }
+
+export interface HomeDictionary {
+  trust: {
+    fast: TrustItem
+    delivery: TrustItem
+    quality: TrustItem
+    custom: TrustItem
+  }
+  services: { title: string; subtitle: string; browse: string }
+  products: { title: string; subtitle: string; viewAll: string }
+  how: {
+    title: string
+    subtitle: string
+    step1: TrustItem
+    step2: TrustItem
+    step3: TrustItem
+    step4: TrustItem
+    startNow: string
+  }
+  cta: { title: string; subtitle: string; button: string }
+}
+
 export interface Dictionary {
   menu: {
     shop: string
@@ -134,12 +160,13 @@ export interface Dictionary {
     message: string
   }
   checkout: CheckoutDictionary
+  home: HomeDictionary
 }
 
 const dictionaries: Record<Locale, Dictionary> = {
-  en: { ...(enRaw as Omit<Dictionary, 'checkout'>), checkout: checkoutEn },
-  de: { ...(deRaw as Omit<Dictionary, 'checkout'>), checkout: checkoutDe },
-  fr: { ...(frRaw as Omit<Dictionary, 'checkout'>), checkout: checkoutFr },
+  en: { ...(enRaw as Omit<Dictionary, 'checkout' | 'home'>), checkout: checkoutEn, home: homeEn },
+  de: { ...(deRaw as Omit<Dictionary, 'checkout' | 'home'>), checkout: checkoutDe, home: homeDe },
+  fr: { ...(frRaw as Omit<Dictionary, 'checkout' | 'home'>), checkout: checkoutFr, home: homeFr },
 }
 
 export function getDictionary(locale: Locale): Dictionary {

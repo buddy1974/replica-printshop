@@ -1,0 +1,32 @@
+{
+  "trust": {
+    "fast":     { "title": "Production rapide",          "text": "1–3 jours ouvrables" },
+    "delivery": { "title": "Retrait ou livraison",       "text": "Options de livraison flexibles" },
+    "quality":  { "title": "Qualité professionnelle",    "text": "Équipement d'impression industriel" },
+    "custom":   { "title": "Commandes sur mesure",       "text": "Contactez-nous pour les spéciaux" }
+  },
+  "services": {
+    "title":    "Nos services",
+    "subtitle": "De l'impression grand format au textile et à la publicité.",
+    "browse":   "Parcourir →"
+  },
+  "products": {
+    "title":    "Produits populaires",
+    "subtitle": "Nos articles les plus commandés — prêts à configurer et commander.",
+    "viewAll":  "Voir tous les produits →"
+  },
+  "how": {
+    "title":    "Comment ça marche",
+    "subtitle": "Commandez en 4 étapes simples",
+    "step1": { "title": "Choisir un produit",          "text": "Parcourez notre catalogue et choisissez ce qu'il vous faut." },
+    "step2": { "title": "Personnaliser & téléverser",  "text": "Utilisez l'éditeur en ligne ou téléversez votre propre fichier." },
+    "step3": { "title": "Nous produisons",             "text": "Production rapide dans notre atelier interne." },
+    "step4": { "title": "Retrait ou livraison",        "text": "Récupérez en personne ou faites livrer chez vous." },
+    "startNow": "Commencer →"
+  },
+  "cta": {
+    "title":    "Vous n'avez pas trouvé ce qu'il vous faut ?",
+    "subtitle": "Nous produisons aussi des commandes spéciales, des formats particuliers, des vêtements de travail et des travaux de montage. Contactez-nous.",
+    "button":   "Nous contacter →"
+  }
+}

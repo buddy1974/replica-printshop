@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { cookies } from 'next/headers'
 import { type Metadata } from 'next'
 import { db } from '@/lib/db'
 import { BRANDING } from '@/config/branding'
 import { SERVICES } from '@/config/services'
+import { getDictionary, LOCALES, DEFAULT_LOCALE, type Locale } from '@/lib/i18n'
 import HeroSlider from '@/components/HeroSlider'
 import ServiceImage from '@/components/ServiceImage'
 
@@ -26,35 +28,33 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 }
 
-// ---------------------------------------------------------------------------
-// Static data
-// ---------------------------------------------------------------------------
-
-const TRUST_ITEMS = [
-  { icon: '⚡', title: 'Fast production', text: '1–3 business days' },
-  { icon: '📦', title: 'Pickup or shipping', text: 'Flexible delivery options' },
-  { icon: '✓', title: 'Professional quality', text: 'Industrial print equipment' },
-  { icon: '✏', title: 'Custom jobs', text: 'Contact us for specials' },
-]
-
-const HOW_IT_WORKS = [
-  { n: '01', title: 'Choose product', text: 'Browse our catalog and pick what you need.' },
-  { n: '02', title: 'Customize & upload', text: 'Use our online editor or upload your own file.' },
-  { n: '03', title: 'We produce', text: 'Fast turnaround in our in-house workshop.' },
-  { n: '04', title: 'Pickup or delivery', text: 'Collect in person or have it shipped to you.' },
-]
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+const TRUST_ICONS = ['⚡', '📦', '✓', '✏']
 
 export default async function Home() {
+  const cookieLocale = cookies().get('replica_locale')?.value as Locale | undefined
+  const locale: Locale = cookieLocale && (LOCALES as string[]).includes(cookieLocale) ? cookieLocale : DEFAULT_LOCALE
+  const { home: th } = getDictionary(locale)
+
   const featured = await db.product.findMany({
     where: { active: true, imageUrl: { not: null } },
     orderBy: { name: 'asc' },
     take: 6,
     select: { id: true, name: true, slug: true, imageUrl: true },
   })
+
+  const trustItems = [
+    { icon: TRUST_ICONS[0], ...th.trust.fast },
+    { icon: TRUST_ICONS[1], ...th.trust.delivery },
+    { icon: TRUST_ICONS[2], ...th.trust.quality },
+    { icon: TRUST_ICONS[3], ...th.trust.custom },
+  ]
+
+  const howSteps = [
+    { n: '01', ...th.how.step1 },
+    { n: '02', ...th.how.step2 },
+    { n: '03', ...th.how.step3 },
+    { n: '04', ...th.how.step4 },
+  ]
 
   return (
     <div>
@@ -65,7 +65,7 @@ export default async function Home() {
       {/* ── 2. Trust / service strip ────────────────────────────────────────── */}
       <section className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-7 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {TRUST_ITEMS.map((item) => (
+          {trustItems.map((item) => (
             <div key={item.title} className="flex items-start gap-3">
               <span className="text-xl shrink-0">{item.icon}</span>
               <div>
@@ -80,8 +80,8 @@ export default async function Home() {
       {/* ── 3. Services — static config ─────────────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 py-14">
         <div className="mb-7">
-          <h2 className="text-2xl font-bold text-gray-900">Our services</h2>
-          <p className="text-sm text-gray-500 mt-1">Everything from large-format print to textile and advertising technology.</p>
+          <h2 className="text-2xl font-bold text-gray-900">{th.services.title}</h2>
+          <p className="text-sm text-gray-500 mt-1">{th.services.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -91,21 +91,18 @@ export default async function Home() {
               href={svc.href}
               className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-400 hover:shadow-md transition-all"
             >
-              {/* Service image */}
               <div className="relative aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
                 <ServiceImage src={svc.image} alt={svc.name} />
-                {/* Fallback icon shown behind image */}
                 <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 z-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
               </div>
-              {/* Text */}
               <div className="p-3 flex-1">
                 <p className="text-sm font-semibold text-gray-900 leading-tight">{svc.name}</p>
                 <p className="text-xs text-red-500 mt-2 font-medium group-hover:text-red-700">
-                  Browse →
+                  {th.services.browse}
                 </p>
               </div>
             </Link>
@@ -118,8 +115,8 @@ export default async function Home() {
         <section className="border-t border-gray-100 bg-white">
           <div className="max-w-5xl mx-auto px-4 py-14">
             <div className="mb-7">
-              <h2 className="text-2xl font-bold text-gray-900">Popular products</h2>
-              <p className="text-sm text-gray-500 mt-1">Our most ordered items — ready to configure and order.</p>
+              <h2 className="text-2xl font-bold text-gray-900">{th.products.title}</h2>
+              <p className="text-sm text-gray-500 mt-1">{th.products.subtitle}</p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -150,7 +147,7 @@ export default async function Home() {
                 href="/shop"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 font-medium hover:border-gray-400 transition-colors"
               >
-                View all products →
+                {th.products.viewAll}
               </Link>
             </div>
           </div>
@@ -161,12 +158,12 @@ export default async function Home() {
       <section className="border-t border-gray-200 bg-gray-50">
         <div className="max-w-5xl mx-auto px-4 py-14">
           <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold text-gray-900">How it works</h2>
-            <p className="text-sm text-gray-500 mt-1">Order in 4 simple steps</p>
+            <h2 className="text-2xl font-bold text-gray-900">{th.how.title}</h2>
+            <p className="text-sm text-gray-500 mt-1">{th.how.subtitle}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {HOW_IT_WORKS.map((step) => (
+            {howSteps.map((step) => (
               <div key={step.n} className="flex flex-col items-center text-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-sm font-bold shrink-0">
                   {step.n}
@@ -184,7 +181,7 @@ export default async function Home() {
               href="/shop"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
             >
-              Start now →
+              {th.how.startNow}
             </Link>
           </div>
         </div>
@@ -193,16 +190,15 @@ export default async function Home() {
       {/* ── 6. Custom job CTA ────────────────────────────────────────────────── */}
       <section className="bg-red-600 text-white">
         <div className="max-w-5xl mx-auto px-4 py-14 text-center">
-          <h2 className="text-2xl font-bold mb-3">Did not find what you need?</h2>
+          <h2 className="text-2xl font-bold mb-3">{th.cta.title}</h2>
           <p className="text-red-100 text-sm leading-relaxed max-w-lg mx-auto mb-6">
-            We also produce custom jobs, special formats, workwear, and installation work.
-            Contact us and we will find the right solution for you.
+            {th.cta.subtitle}
           </p>
           <Link
             href="/contact"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
           >
-            Contact us →
+            {th.cta.button}
           </Link>
         </div>
       </section>
