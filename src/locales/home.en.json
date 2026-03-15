@@ -1,32 +1,35 @@
 {
-  "trust": {
-    "fast":     { "title": "Fast production",      "text": "1–3 business days" },
-    "delivery": { "title": "Pickup or shipping",   "text": "Flexible delivery options" },
-    "quality":  { "title": "Professional quality", "text": "Industrial print equipment" },
-    "custom":   { "title": "Custom jobs",          "text": "Contact us for specials" }
+  "hero": {
+    "title": "Large Format Printing & Advertising Technology",
+    "subtitle": "Banners • Adhesive Foils • DTF • Boards • Textile Print",
+    "shop": "SHOP NOW",
+    "contact": "CONTACT"
   },
-  "services": {
-    "title":    "Our services",
-    "subtitle": "Everything from large-format print to textile and advertising technology.",
-    "browse":   "Browse →"
+  "categories": {
+    "title": "Categories"
   },
   "products": {
-    "title":    "Popular products",
-    "subtitle": "Our most ordered items — ready to configure and order.",
-    "viewAll":  "View all products →"
+    "title": "Popular products"
   },
-  "how": {
-    "title":    "How it works",
-    "subtitle": "Order in 4 simple steps",
-    "step1": { "title": "Choose product",        "text": "Browse our catalog and pick what you need." },
-    "step2": { "title": "Customize & upload",    "text": "Use our online editor or upload your own file." },
-    "step3": { "title": "We produce",            "text": "Fast turnaround in our in-house workshop." },
-    "step4": { "title": "Pickup or delivery",    "text": "Collect in person or have it shipped to you." },
-    "startNow": "Start now →"
+  "services": {
+    "title": "Services",
+    "text": "We offer installation, graphic design and custom production."
   },
-  "cta": {
-    "title":    "Did not find what you need?",
-    "subtitle": "We also produce custom jobs, special formats, workwear, and installation work. Contact us and we will find the right solution for you.",
-    "button":   "Contact us →"
+  "why": {
+    "title": "Why choose us",
+    "fast": "Fast production",
+    "quality": "Professional quality",
+    "custom": "Custom sizes",
+    "design": "Design service",
+    "install": "Installation service",
+    "shipping": "Shipping Germany & EU"
+  },
+  "delivery": {
+    "title": "Delivery",
+    "text": "We ship with UPS, GLS or DHL. Delivery time depends on product."
+  },
+  "contact": {
+    "title": "Need help?",
+    "text": "Call or email us for custom orders."
   }
 }

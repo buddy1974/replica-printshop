@@ -1,32 +1,35 @@
 {
-  "trust": {
-    "fast":     { "title": "Schnelle Produktion",       "text": "1–3 Werktage" },
-    "delivery": { "title": "Abholung oder Versand",     "text": "Flexible Lieferoptionen" },
-    "quality":  { "title": "Professionelle Qualität",   "text": "Industrielle Druckmaschinen" },
-    "custom":   { "title": "Sonderaufträge",            "text": "Kontaktieren Sie uns" }
+  "hero": {
+    "title": "Großformatdruck & Werbetechnik",
+    "subtitle": "Banner • Klebefolie • DTF • Platten • Textildruck",
+    "shop": "JETZT SHOP",
+    "contact": "KONTAKT"
   },
-  "services": {
-    "title":    "Unsere Leistungen",
-    "subtitle": "Von Großformatdruck bis Textil und Werbetechnik.",
-    "browse":   "Entdecken →"
+  "categories": {
+    "title": "Kategorien"
   },
   "products": {
-    "title":    "Beliebte Produkte",
-    "subtitle": "Unsere meistbestellten Artikel — sofort konfigurierbar.",
-    "viewAll":  "Alle Produkte →"
+    "title": "Beliebte Produkte"
   },
-  "how": {
-    "title":    "So funktioniert es",
-    "subtitle": "In 4 einfachen Schritten bestellen",
-    "step1": { "title": "Produkt wählen",         "text": "Durchsuchen Sie unseren Katalog und wählen Sie aus." },
-    "step2": { "title": "Anpassen & hochladen",   "text": "Nutzen Sie den Online-Editor oder laden Sie Ihre Datei hoch." },
-    "step3": { "title": "Wir produzieren",        "text": "Schnelle Produktion in unserer eigenen Werkstatt." },
-    "step4": { "title": "Abholung oder Versand",  "text": "Persönlich abholen oder zu Ihnen liefern lassen." },
-    "startNow": "Jetzt starten →"
+  "services": {
+    "title": "Services",
+    "text": "Wir bieten Montage, Grafikdesign und Sonderanfertigungen."
   },
-  "cta": {
-    "title":    "Nicht gefunden, was Sie suchen?",
-    "subtitle": "Wir produzieren auch Sonderaufträge, Spezialformate, Arbeitskleidung und Montagearbeiten. Kontaktieren Sie uns — wir finden die richtige Lösung.",
-    "button":   "Kontakt aufnehmen →"
+  "why": {
+    "title": "Warum wir",
+    "fast": "Schnelle Produktion",
+    "quality": "Profi Qualität",
+    "custom": "Individuelle Größen",
+    "design": "Design Service",
+    "install": "Montage Service",
+    "shipping": "Versand Deutschland & EU"
+  },
+  "delivery": {
+    "title": "Versand",
+    "text": "Versand mit UPS, GLS oder DHL. Lieferzeit je nach Produkt."
+  },
+  "contact": {
+    "title": "Brauchen Sie Hilfe?",
+    "text": "Kontaktieren Sie uns für Sonderanfertigungen."
   }
 }

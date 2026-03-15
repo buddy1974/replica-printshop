@@ -84,27 +84,22 @@ export interface CheckoutDictionary {
   fileUploaded: string
 }
 
-interface TrustItem { title: string; text: string }
-
 export interface HomeDictionary {
-  trust: {
-    fast: TrustItem
-    delivery: TrustItem
-    quality: TrustItem
-    custom: TrustItem
-  }
-  services: { title: string; subtitle: string; browse: string }
-  products: { title: string; subtitle: string; viewAll: string }
-  how: {
+  hero: { title: string; subtitle: string; shop: string; contact: string }
+  categories: { title: string }
+  products: { title: string }
+  services: { title: string; text: string }
+  why: {
     title: string
-    subtitle: string
-    step1: TrustItem
-    step2: TrustItem
-    step3: TrustItem
-    step4: TrustItem
-    startNow: string
+    fast: string
+    quality: string
+    custom: string
+    design: string
+    install: string
+    shipping: string
   }
-  cta: { title: string; subtitle: string; button: string }
+  delivery: { title: string; text: string }
+  contact: { title: string; text: string }
 }
 
 export interface Dictionary {
