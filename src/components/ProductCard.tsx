@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import ImagePlaceholder from '@/components/ImagePlaceholder'
 import { useLocale } from '@/context/LocaleContext'
 import { getProductLabel, getCategoryLabel, getDescriptions } from '@/lib/productTranslations'
 
@@ -23,6 +24,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ slug, name, category, categorySlug, shortDescription, imageUrl }: ProductCardProps) {
   const [modalOpen, setModalOpen] = useState(false)
+  const [imgError, setImgError] = useState(false)
   const { t, locale } = useLocale()
   const translatedName = getProductLabel(slug, locale, name)
   const translatedCategory = categorySlug ? getCategoryLabel(categorySlug, locale, category) : category
@@ -34,7 +36,7 @@ export default function ProductCard({ slug, name, category, categorySlug, shortD
       <div className="group rounded-xl border border-gray-200 bg-white overflow-hidden flex flex-col hover:border-red-300 hover:shadow-sm transition-all">
         {/* Image — clicking navigates to product page */}
         <Link href={`/product/${slug}`} className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
-          {imageUrl ? (
+          {imageUrl && !imgError ? (
             <>
               <Image
                 src={imageUrl}
@@ -42,6 +44,7 @@ export default function ProductCard({ slug, name, category, categorySlug, shortD
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-contain p-2"
+                onError={() => setImgError(true)}
               />
               {/* Zoom button opens modal — stops link navigation */}
               <button
@@ -56,13 +59,7 @@ export default function ProductCard({ slug, name, category, categorySlug, shortD
               </button>
             </>
           ) : (
-            <Image
-              src="/products/window-graphics.png"
-              alt={name}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-contain p-2"
-            />
+            <ImagePlaceholder className="absolute inset-0 rounded-none border-0 bg-gray-50" />
           )}
         </Link>
 

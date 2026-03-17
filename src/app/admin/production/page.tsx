@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Container from '@/components/Container'
 import { orderStatusLabel } from '@/lib/statusLabel'
+import ImagePlaceholder from '@/components/ImagePlaceholder'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -122,7 +123,8 @@ function Thumb({ item }: { item: OrderItem }) {
       />
     )
   }
-  const label = f?.mime === 'application/pdf' ? 'PDF' : f ? 'FILE' : 'NONE'
+  if (!f) return <ImagePlaceholder className="w-14 h-14 shrink-0" />
+  const label = f.mime === 'application/pdf' ? 'PDF' : 'FILE'
   return (
     <div className="w-14 h-14 rounded-lg border border-gray-200 bg-gray-50 shrink-0 flex items-center justify-center">
       <span className="text-[9px] font-bold text-gray-400 uppercase">{label}</span>

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import DeleteDesignButton from './DeleteDesignButton'
 import AddToCartForm from './AddToCartForm'
+import ImagePlaceholder from '@/components/ImagePlaceholder'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ export default async function DesignsPage() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <span className="text-xs text-gray-400">No preview</span>
+                  <ImagePlaceholder className="w-20 h-20" />
                 )}
               </div>
 

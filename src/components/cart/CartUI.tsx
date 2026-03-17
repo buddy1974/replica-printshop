@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useLocale } from '@/context/LocaleContext'
 import RemoveCartItemButton from '@/components/cart/RemoveCartItemButton'
+import ImagePlaceholder from '@/components/ImagePlaceholder'
 
 interface CartItem {
   id: string
@@ -72,7 +73,7 @@ export default function CartUI({ items, subtotal }: { items: CartItem[]; subtota
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={previewUrl} alt="preview" className="w-12 h-12 object-contain rounded-lg border border-gray-200 bg-gray-50 shrink-0" />
                 ) : (
-                  <div className="w-12 h-12 rounded-lg border border-gray-200 bg-gray-100 shrink-0" />
+                  <ImagePlaceholder className="w-12 h-12 shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-gray-800 truncate">{item.productName}</p>
@@ -133,7 +134,7 @@ export default function CartUI({ items, subtotal }: { items: CartItem[]; subtota
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={previewUrl} alt="preview" className="w-14 h-14 object-contain rounded-lg border border-gray-200 bg-gray-50" />
                       ) : (
-                        <div className="w-14 h-14 rounded-lg border border-gray-200 bg-gray-100" />
+                        <ImagePlaceholder className="w-14 h-14" />
                       )}
                     </td>
                     <td className="px-4 py-3">
