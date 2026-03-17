@@ -3,9 +3,9 @@ import fs from 'fs'
 import path from 'path'
 import { db } from '@/lib/db'
 import { extractVat } from '@/lib/tax'
+import { getCompanySettings, getSetting } from '@/lib/settings/settingsService'
 
 const INVOICE_DIR = path.resolve(process.cwd(), 'storage', 'invoices')
-const BRAND_NAME = 'Printshop'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +40,18 @@ interface InvoiceOrder {
 
 // ── PDF builder ──────────────────────────────────────────────────────────────
 
-function buildPdf(order: InvoiceOrder): Promise<Buffer> {
+interface CompanyData {
+  name:      string
+  street:    string
+  zip:       string
+  city:      string
+  country:   string
+  email:     string
+  vatNumber: string
+  footer:    string
+}
+
+function buildPdf(order: InvoiceOrder, company: CompanyData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
     const doc = new PDFDocument({ size: 'A4', margin: 50 })
@@ -60,7 +71,7 @@ function buildPdf(order: InvoiceOrder): Promise<Buffer> {
 
     // ── Header bar ──────────────────────────────────────────────────────────
     doc.rect(0, 0, 595, 72).fill(red)
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(20).text(BRAND_NAME, 50, 24)
+    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(20).text(company.name, 50, 24)
     doc.fillColor('#ffcccc').font('Helvetica').fontSize(9)
       .text('Print & Production', 50, 48)
 
@@ -97,10 +108,20 @@ function buildPdf(order: InvoiceOrder): Promise<Buffer> {
       doc.font('Helvetica').fontSize(9).fillColor(mid).text(line, leftX, doc.y + 12, { width: 200 })
     })
 
-    // From (shop address)
-    doc.font('Helvetica-Bold').fontSize(10).fillColor(dark).text(BRAND_NAME, rightX, doc.y - (billingLines.length + 1) * 12, { width: 200 })
-    doc.font('Helvetica').fontSize(9).fillColor(mid)
-      .text('print@printshop.at', rightX, doc.y - (billingLines.length) * 12, { width: 200 })
+    // From (company address from settings)
+    const companyLines = [
+      company.email,
+      company.street ? `${company.street}` : null,
+      [company.zip, company.city].filter(Boolean).join(' ') || null,
+      company.country || null,
+      company.vatNumber ? `VAT: ${company.vatNumber}` : null,
+    ].filter(Boolean) as string[]
+
+    doc.font('Helvetica-Bold').fontSize(10).fillColor(dark).text(company.name, rightX, doc.y - (billingLines.length + 1) * 12, { width: 200 })
+    companyLines.forEach((line, i) => {
+      doc.font('Helvetica').fontSize(9).fillColor(mid)
+        .text(line, rightX, doc.y - (billingLines.length - i) * 12, { width: 200 })
+    })
 
     doc.y = Math.max(doc.y + 20, 220)
 
@@ -204,7 +225,7 @@ function buildPdf(order: InvoiceOrder): Promise<Buffer> {
 
     // ── Footer ────────────────────────────────────────────────────────────────
     doc.fontSize(8).fillColor(light).font('Helvetica')
-      .text(`${BRAND_NAME} · Thank you for your order`, leftX, 780, { align: 'center', width: 495 })
+      .text(`${company.name} · ${company.footer}`, leftX, 780, { align: 'center', width: 495 })
 
     doc.end()
   })
@@ -269,7 +290,23 @@ export async function generateInvoice(orderId: string): Promise<Buffer> {
     })),
   }
 
-  const buffer = await buildPdf(mapped)
+  // Fetch company settings (non-fatal — falls back to defaults)
+  const [cs, invoiceFooter] = await Promise.all([
+    getCompanySettings().catch(() => null),
+    getSetting('invoice.footer').catch(() => 'Thank you for your order'),
+  ])
+  const company: CompanyData = {
+    name:      cs?.name      ?? 'PRINTSHOP',
+    street:    cs?.street    ?? '',
+    zip:       cs?.zip       ?? '',
+    city:      cs?.city      ?? '',
+    country:   cs?.country   ?? '',
+    email:     cs?.email     ?? '',
+    vatNumber: cs?.vatNumber ?? '',
+    footer:    invoiceFooter || 'Thank you for your order',
+  }
+
+  const buffer = await buildPdf(mapped, company)
 
   // Save to disk (overwrites any cached version — ensures updated format)
   fs.mkdirSync(INVOICE_DIR, { recursive: true })

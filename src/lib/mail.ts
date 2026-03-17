@@ -1,11 +1,12 @@
 import nodemailer from 'nodemailer'
+import { getSetting } from '@/lib/settings/settingsService'
 
 const {
   SMTP_HOST,
   SMTP_PORT,
   SMTP_USER,
   SMTP_PASS,
-  SMTP_FROM = 'noreply@replica.printshop',
+  SMTP_FROM,
 } = process.env
 
 // If no SMTP config, log only — never crash (step 179)
@@ -32,12 +33,23 @@ export async function sendMail(
   html: string,
   attachments?: MailAttachment[],
 ): Promise<void> {
+  // Build from address from settings (with SMTP_FROM env as override)
+  let fromAddr = SMTP_FROM ?? ''
+  try {
+    const senderName  = await getSetting('email.senderName')
+    const senderEmail = await getSetting('email.senderEmail')
+    const addr = SMTP_FROM || senderEmail || 'no-reply@printshop.com'
+    fromAddr = senderName ? `"${senderName}" <${addr}>` : addr
+  } catch {
+    fromAddr = SMTP_FROM ?? 'no-reply@printshop.com'
+  }
+
   if (!transporter) {
     console.log(`[mail] ${subject} → ${to}${attachments?.length ? ` (+${attachments.length} attachment)` : ''}\n(SMTP not configured — log only)`)
     return
   }
   await transporter.sendMail({
-    from: SMTP_FROM,
+    from: fromAddr,
     to,
     subject,
     html,

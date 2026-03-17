@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit'
 import { db } from '@/lib/db'
-import { COMPANY } from '@/config/company'
+import { getSetting } from '@/lib/settings/settingsService'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,7 +39,7 @@ interface SheetOrder {
 
 // ── PDF builder ───────────────────────────────────────────────────────────────
 
-function buildPdf(order: SheetOrder, baseUrl: string): Promise<Buffer> {
+function buildPdf(order: SheetOrder, baseUrl: string, brandName: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
     const doc = new PDFDocument({ size: 'A4', margin: 50 })
@@ -70,7 +70,7 @@ function buildPdf(order: SheetOrder, baseUrl: string): Promise<Buffer> {
     doc.fillColor(RED).font('Helvetica-Bold').fontSize(22)
       .text('ORDER SHEET', L, 18)
     doc.fillColor('#cccccc').font('Helvetica').fontSize(9)
-      .text(`${COMPANY.brand} · Workshop copy`, L, 44)
+      .text(`${brandName} · Workshop copy`, L, 44)
 
     // Order ID + date on the right
     doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(28)
@@ -209,7 +209,7 @@ function buildPdf(order: SheetOrder, baseUrl: string): Promise<Buffer> {
     doc.moveTo(L, footerY - 8).lineTo(L + W, footerY - 8).strokeColor(RULE).lineWidth(1).stroke()
     doc.fillColor(LGRAY).font('Helvetica').fontSize(8)
       .text(
-        `${COMPANY.brand}  ·  Order #${short}  ·  ${dateStr}  ·  Workshop copy — do not send to customer`,
+        `${brandName}  ·  Order #${short}  ·  ${dateStr}  ·  Workshop copy — do not send to customer`,
         L, footerY, { width: W, align: 'center' }
       )
 
@@ -270,5 +270,6 @@ export async function generateOrderSheet(orderId: string, baseUrl: string): Prom
     })),
   }
 
-  return buildPdf(mapped, baseUrl)
+  const brandName = await getSetting('company.name').catch(() => 'PRINTSHOP')
+  return buildPdf(mapped, baseUrl, brandName || 'PRINTSHOP')
 }

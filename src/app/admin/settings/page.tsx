@@ -1,14 +1,15 @@
+import Link from 'next/link'
 import Container from '@/components/Container'
 import { COMPANY } from '@/config/company'
 
 // Read env vars server-side — never expose secrets to client
 const SMTP_VARS = [
-  { key: 'SMTP_HOST',  label: 'SMTP Host',     value: process.env.SMTP_HOST,  example: 'smtp.mailgun.org' },
-  { key: 'SMTP_PORT',  label: 'SMTP Port',     value: process.env.SMTP_PORT,  example: '587' },
-  { key: 'SMTP_USER',  label: 'SMTP User',     value: process.env.SMTP_USER,  secret: true },
-  { key: 'SMTP_PASS',  label: 'SMTP Password', value: process.env.SMTP_PASS,  secret: true },
-  { key: 'SMTP_FROM',  label: 'From address',  value: process.env.SMTP_FROM,  example: 'noreply@printshop.at' },
-  { key: 'ADMIN_EMAIL',label: 'Admin email',   value: process.env.ADMIN_EMAIL,example: COMPANY.email },
+  { key: 'SMTP_HOST',   label: 'SMTP Host',     value: process.env.SMTP_HOST,   example: 'smtp.mailgun.org' },
+  { key: 'SMTP_PORT',   label: 'SMTP Port',     value: process.env.SMTP_PORT,   example: '587' },
+  { key: 'SMTP_USER',   label: 'SMTP User',     value: process.env.SMTP_USER,   secret: true },
+  { key: 'SMTP_PASS',   label: 'SMTP Password', value: process.env.SMTP_PASS,   secret: true },
+  { key: 'SMTP_FROM',   label: 'From address',  value: process.env.SMTP_FROM,   example: 'noreply@printshop.com' },
+  { key: 'ADMIN_EMAIL', label: 'Admin email',   value: process.env.ADMIN_EMAIL, example: COMPANY.email },
 ]
 
 function mask(v: string): string {
@@ -24,10 +25,65 @@ function StatusDot({ ok }: { ok: boolean }) {
 
 const configured = SMTP_VARS.slice(0, 4).every((v) => Boolean(v.value))
 
+// ── Settings sections ──────────────────────────────────────────────────────
+
+const SECTIONS = [
+  {
+    href:        '/admin/settings/business',
+    title:       'Business',
+    description: 'Company name, address, phone, email, VAT number, currency',
+    icon:        '🏢',
+  },
+  {
+    href:        '/admin/settings/invoice',
+    title:       'Invoice',
+    description: 'Invoice prefix, number sequence, footer text',
+    icon:        '🧾',
+  },
+  {
+    href:        '/admin/settings/email',
+    title:       'Email sender',
+    description: 'Sender name and from-address for outgoing emails',
+    icon:        '✉️',
+  },
+  {
+    href:        '/admin/settings/tax',
+    title:       'Tax / VAT',
+    description: 'Manage tax rates by country',
+    icon:        '📊',
+  },
+  {
+    href:        '/admin/settings/shipping',
+    title:       'Shipping',
+    description: 'Shipping rules, methods and free-shipping thresholds',
+    icon:        '📦',
+  },
+]
+
 export default function SettingsPage() {
   return (
     <Container>
-      <h1 className="mb-6">Settings</h1>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+        <p className="text-xs text-gray-400 mt-0.5">Configure business, invoice, email, tax and shipping</p>
+      </div>
+
+      {/* Settings sections grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+        {SECTIONS.map(({ href, title, description, icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group rounded-xl border border-gray-200 bg-white px-5 py-4 hover:border-gray-400 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-lg">{icon}</span>
+              <p className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors">{title}</p>
+            </div>
+            <p className="text-xs text-gray-500">{description}</p>
+          </Link>
+        ))}
+      </div>
 
       {/* SMTP status */}
       <section className="mb-8">
@@ -76,7 +132,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm text-gray-600 space-y-2">
-          <p className="font-semibold text-gray-800">How to configure</p>
+          <p className="font-semibold text-gray-800">How to configure SMTP</p>
           <p>Set these environment variables in your hosting provider (Vercel → Project Settings → Environment Variables) or in your <code className="bg-white px-1 py-0.5 rounded border border-gray-200 text-xs">.env</code> file for local development.</p>
           <p>Changes take effect after redeployment. Emails gracefully fall back to console logging if SMTP is not configured.</p>
         </div>
@@ -117,20 +173,6 @@ export default function SettingsPage() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      {/* Company config reference */}
-      <section>
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Company</h2>
-        <div className="rounded-xl border border-gray-200 bg-white p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-          {Object.entries(COMPANY).map(([k, v]) => (
-            <div key={k}>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">{k}</p>
-              <p className="text-gray-800 break-all">{v}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 mt-2">Edit in <code className="bg-white px-1 py-0.5 rounded border border-gray-200">src/config/company.ts</code></p>
       </section>
     </Container>
   )

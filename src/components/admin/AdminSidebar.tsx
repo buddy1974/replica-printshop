@@ -4,19 +4,27 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV = [
-  { href: '/admin', label: 'Dashboard', exact: true },
-  { href: '/admin/orders', label: 'Orders' },
+  { href: '/admin',            label: 'Dashboard',  exact: true },
+  { href: '/admin/orders',     label: 'Orders' },
   { href: '/admin/production', label: 'Production' },
-  { href: '/admin/products', label: 'Products' },
-  { href: '/admin/customers', label: 'Customers' },
-  { href: '/admin/settings', label: 'Settings' },
-  { href: '/admin/backup', label: 'Backup' },
+  { href: '/admin/products',   label: 'Products' },
+  { href: '/admin/customers',  label: 'Customers' },
+  { href: '/admin/settings',   label: 'Settings' },
+  { href: '/admin/backup',     label: 'Backup' },
+]
+
+const SETTINGS_SUB = [
+  { href: '/admin/settings/business', label: 'Business' },
+  { href: '/admin/settings/invoice',  label: 'Invoice' },
+  { href: '/admin/settings/email',    label: 'Email sender' },
+  { href: '/admin/settings/tax',      label: 'Tax / VAT' },
+  { href: '/admin/settings/shipping', label: 'Shipping' },
 ]
 
 const MORE = [
   { href: '/admin/categories', label: 'Categories' },
-  { href: '/admin/shipping', label: 'Shipping' },
-  { href: '/admin/tax', label: 'Tax / VAT' },
+  { href: '/admin/shipping',   label: 'Shipping' },
+  { href: '/admin/tax',        label: 'Tax / VAT' },
 ]
 
 export default function AdminSidebar() {
@@ -25,23 +33,46 @@ export default function AdminSidebar() {
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + '/')
 
+  const onSettings = pathname.startsWith('/admin/settings')
+
   return (
     <aside className="w-48 shrink-0 border-r border-gray-200 bg-gray-50 min-h-screen flex flex-col py-6 px-3 gap-0.5">
       <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-2 mb-3">Admin</p>
 
       {NAV.map(({ href, label, exact }) => (
-        <Link
-          key={href}
-          href={href}
-          className={[
-            'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-            isActive(href, exact)
-              ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-              : 'text-gray-500 hover:text-gray-900 hover:bg-white',
-          ].join(' ')}
-        >
-          {label}
-        </Link>
+        <div key={href}>
+          <Link
+            href={href}
+            className={[
+              'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              isActive(href, exact)
+                ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-white',
+            ].join(' ')}
+          >
+            {label}
+          </Link>
+
+          {/* Settings sub-links — shown when inside /admin/settings */}
+          {href === '/admin/settings' && onSettings && (
+            <div className="ml-3 mt-0.5 flex flex-col gap-0.5">
+              {SETTINGS_SUB.map(({ href: sub, label: subLabel }) => (
+                <Link
+                  key={sub}
+                  href={sub}
+                  className={[
+                    'flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                    pathname === sub || pathname.startsWith(sub + '/')
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                      : 'text-gray-400 hover:text-gray-700 hover:bg-white',
+                  ].join(' ')}
+                >
+                  {subLabel}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       ))}
 
       <div className="mt-4 pt-4 border-t border-gray-200">
