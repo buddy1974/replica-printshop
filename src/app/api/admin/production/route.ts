@@ -4,15 +4,16 @@ import { AppError } from '@/lib/errors'
 import { requireAdmin } from '@/lib/adminAuth'
 import { OrderStatus } from '@/generated/prisma/client'
 
-// Statuses relevant to production workflow (excludes PENDING, CANCELLED)
+// Statuses relevant to production workflow (excludes PENDING, SHIPPED, DELIVERED, CANCELLED)
 const PRODUCTION_STATUSES: OrderStatus[] = ['CONFIRMED', 'UPLOADED', 'APPROVED', 'READY', 'IN_PRODUCTION', 'DONE']
 
 export async function GET(req: NextRequest) {
   try {
     await requireAdmin(req)
 
-    const includeDone = req.nextUrl.searchParams.get('done') === '1'
-    const statuses = includeDone ? PRODUCTION_STATUSES : PRODUCTION_STATUSES.filter((s) => s !== 'DONE')
+    // ?done=1 still accepted for backwards-compat but DONE is always included now
+    void req.nextUrl.searchParams.get('done')
+    const statuses = PRODUCTION_STATUSES
 
     const orders = await db.order.findMany({
       where: { status: { in: statuses } },

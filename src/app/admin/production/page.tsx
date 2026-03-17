@@ -43,63 +43,58 @@ interface Order {
   items: OrderItem[]
 }
 
-// ── Workshop status mapping ────────────────────────────────────────────────
+// ── Workshop status mapping ─────────────────────────────────────────────────
 //
-//  DB status          Workshop label
-//  ──────────────     ──────────────
-//  CONFIRMED/
-//  UPLOADED/
-//  APPROVED/
-//  READY         →   NEW   (queued, not yet started)
-//  IN_PRODUCTION →   IN_PRODUCTION
-//  DONE          →   DONE  (hidden by default)
+//  DB status                 Workshop label
+//  ──────────────────────    ─────────────────────────
+//  CONFIRMED/UPLOADED/
+//  APPROVED                → NEW  (awaiting file approval + queue)
+//  READY                   → IN QUEUE  (approved, waiting to start)
+//  IN_PRODUCTION           → IN PRODUCTION
+//  DONE                    → PRINTED  (production done, ready to pack)
+//  SHIPPED                 → SHIPPED  (hidden from active queue)
+//  DELIVERED               → DONE  (hidden from active queue)
 //
-// Button: START   → moves DB status to IN_PRODUCTION
-// Button: PRINTED → moves DB status to READY → means printed, ready to pack
-// Button: DONE    → moves DB status to DONE
 
 const NEW_STATUSES = new Set(['CONFIRMED', 'UPLOADED', 'APPROVED'])
-
-type WorkshopFilter = 'NEW' | 'IN_PRODUCTION' | 'PRINTED' | 'ALL'
+type WorkshopFilter = 'ALL' | 'NEW' | 'IN_QUEUE' | 'IN_PRODUCTION' | 'PRINTED'
 
 const FILTERS: { key: WorkshopFilter; label: string }[] = [
   { key: 'ALL',           label: 'All active'    },
   { key: 'NEW',           label: 'New'            },
+  { key: 'IN_QUEUE',      label: 'In queue'       },
   { key: 'IN_PRODUCTION', label: 'In production'  },
   { key: 'PRINTED',       label: 'Printed'        },
 ]
 
 function workshopFilter(o: Order, f: WorkshopFilter): boolean {
   if (f === 'NEW')           return NEW_STATUSES.has(o.status)
+  if (f === 'IN_QUEUE')      return o.status === 'READY'
   if (f === 'IN_PRODUCTION') return o.status === 'IN_PRODUCTION'
-  if (f === 'PRINTED')       return o.status === 'READY'
-  // ALL → hide DONE / SHIPPED / DELIVERED / CANCELLED
-  return !['DONE', 'SHIPPED', 'DELIVERED', 'CANCELLED'].includes(o.status)
+  if (f === 'PRINTED')       return o.status === 'DONE'
+  // ALL → show NEW, READY, IN_PRODUCTION, DONE; hide SHIPPED/DELIVERED/CANCELLED
+  return !['SHIPPED', 'DELIVERED', 'CANCELLED'].includes(o.status)
 }
 
-// DB status → workshop pill label + colour
 function statusBadge(dbStatus: string) {
   if (NEW_STATUSES.has(dbStatus))
     return { label: 'NEW',           cls: 'bg-yellow-100 text-yellow-700' }
-  if (dbStatus === 'IN_PRODUCTION')
-    return { label: 'IN PRODUCTION', cls: 'bg-orange-100 text-orange-700' }
-  if (dbStatus === 'READY')
-    return { label: 'PRINTED',       cls: 'bg-green-100 text-green-700'   }
-  if (dbStatus === 'DONE')
-    return { label: 'DONE',          cls: 'bg-gray-100 text-gray-500'     }
-  return { label: orderStatusLabel(dbStatus), cls: 'bg-gray-100 text-gray-500' }
+  const map: Record<string, { label: string; cls: string }> = {
+    READY:         { label: 'IN QUEUE',      cls: 'bg-blue-100 text-blue-700'   },
+    IN_PRODUCTION: { label: 'IN PRODUCTION', cls: 'bg-orange-100 text-orange-700' },
+    DONE:          { label: 'PRINTED',       cls: 'bg-green-100 text-green-700'  },
+  }
+  return map[dbStatus] ?? { label: orderStatusLabel(dbStatus), cls: 'bg-gray-100 text-gray-500' }
 }
 
-// DB status → next action buttons
+// DB status → next action buttons (only valid transitions)
 const ACTIONS: Record<string, { label: string; toStatus: string; color: string }[]> = {
-  CONFIRMED:     [{ label: 'START',   toStatus: 'IN_PRODUCTION', color: 'bg-orange-500 hover:bg-orange-600 text-white' }],
-  UPLOADED:      [{ label: 'START',   toStatus: 'IN_PRODUCTION', color: 'bg-orange-500 hover:bg-orange-600 text-white' }],
-  APPROVED:      [{ label: 'START',   toStatus: 'IN_PRODUCTION', color: 'bg-orange-500 hover:bg-orange-600 text-white' }],
-  IN_PRODUCTION: [{ label: 'PRINTED', toStatus: 'READY',         color: 'bg-green-600  hover:bg-green-700  text-white' }],
-  READY:         [{ label: 'DONE',    toStatus: 'DONE',          color: 'bg-gray-700   hover:bg-gray-800   text-white' }],
+  READY:         [{ label: 'START',        toStatus: 'IN_PRODUCTION', color: 'bg-orange-500 hover:bg-orange-600 text-white' }],
+  IN_PRODUCTION: [{ label: 'MARK PRINTED', toStatus: 'DONE',          color: 'bg-green-600  hover:bg-green-700  text-white' }],
+  DONE:          [{ label: 'MARK SHIPPED', toStatus: 'SHIPPED',        color: 'bg-purple-600 hover:bg-purple-700 text-white' }],
 }
 
-// ── File thumbnail ─────────────────────────────────────────────────────────
+// ── File thumbnail ──────────────────────────────────────────────────────────
 
 function Thumb({ item }: { item: OrderItem }) {
   const f = item.uploadFiles[0] ?? null
@@ -135,7 +130,7 @@ function Thumb({ item }: { item: OrderItem }) {
   )
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────
+// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function ProductionPage() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -146,11 +141,10 @@ export default function ProductionPage() {
 
   const load = () => {
     setLoading(true)
-    // Fetch all active + done so filter tabs can count them client-side
     fetch('/api/admin/production?done=1')
       .then((r) => r.json())
       .then((data: Order[]) => {
-        // Drop DONE / SHIPPED / DELIVERED / CANCELLED from default data
+        // Keep all except SHIPPED / DELIVERED / CANCELLED (those are out of production)
         setOrders(data.filter((o) => !['SHIPPED', 'DELIVERED', 'CANCELLED'].includes(o.status)))
         setLoading(false)
       })
@@ -169,8 +163,8 @@ export default function ProductionPage() {
     if (res.ok) {
       const updated = await res.json()
       setOrders((prev) =>
-        toStatus === 'DONE'
-          ? prev.filter((o) => o.id !== orderId) // remove DONE from list
+        toStatus === 'SHIPPED'
+          ? prev.filter((o) => o.id !== orderId) // shipped → remove from active queue
           : prev.map((o) => o.id === orderId ? { ...o, status: updated.status } : o)
       )
     } else {
@@ -185,6 +179,7 @@ export default function ProductionPage() {
   const counts: Record<WorkshopFilter, number> = {
     ALL:           orders.filter((o) => workshopFilter(o, 'ALL')).length,
     NEW:           orders.filter((o) => workshopFilter(o, 'NEW')).length,
+    IN_QUEUE:      orders.filter((o) => workshopFilter(o, 'IN_QUEUE')).length,
     IN_PRODUCTION: orders.filter((o) => workshopFilter(o, 'IN_PRODUCTION')).length,
     PRINTED:       orders.filter((o) => workshopFilter(o, 'PRINTED')).length,
   }
@@ -244,9 +239,10 @@ export default function ProductionPage() {
 
       {!loading && !error && visible.length === 0 && (
         <p className="text-sm text-gray-400 italic py-10 text-center">
-          {filter === 'NEW' ? 'No new orders.' :
+          {filter === 'NEW'           ? 'No new orders.' :
+           filter === 'IN_QUEUE'      ? 'Nothing queued for production.' :
            filter === 'IN_PRODUCTION' ? 'Nothing in production.' :
-           filter === 'PRINTED' ? 'Nothing printed yet.' :
+           filter === 'PRINTED'       ? 'Nothing printed yet.' :
            'No active orders.'}
         </p>
       )}
@@ -259,30 +255,28 @@ export default function ProductionPage() {
             const { label: statusLabel, cls: statusCls } = statusBadge(order.status)
             const customer = order.user?.name ?? order.user?.email ?? 'Guest'
 
+            const borderCls =
+              order.status === 'IN_PRODUCTION' ? 'border-orange-300' :
+              order.status === 'DONE'           ? 'border-green-300'  :
+              order.status === 'READY'          ? 'border-blue-200'   :
+              'border-gray-200'
+            const headerCls =
+              order.status === 'IN_PRODUCTION' ? 'bg-orange-50' :
+              order.status === 'DONE'           ? 'bg-green-50'  :
+              order.status === 'READY'          ? 'bg-blue-50'   :
+              'bg-gray-50'
+
             return (
-              <div
-                key={order.id}
-                className={[
-                  'rounded-xl border bg-white overflow-hidden',
-                  order.status === 'IN_PRODUCTION' ? 'border-orange-300' :
-                  order.status === 'READY'          ? 'border-green-300'  :
-                  'border-gray-200',
-                ].join(' ')}
-              >
+              <div key={order.id} className={`rounded-xl border bg-white overflow-hidden ${borderCls}`}>
                 {/* Order header bar */}
-                <div className={[
-                  'px-5 py-3 flex items-center justify-between gap-3 flex-wrap',
-                  order.status === 'IN_PRODUCTION' ? 'bg-orange-50' :
-                  order.status === 'READY'          ? 'bg-green-50'  :
-                  'bg-gray-50',
-                ].join(' ')}>
+                <div className={`px-5 py-3 flex items-center justify-between gap-3 flex-wrap ${headerCls}`}>
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide ${statusCls}`}>
                       {statusLabel}
                     </span>
                     <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="font-mono text-xs font-bold text-blue-600 hover:underline"
+                      href={`/admin/production/${order.id}`}
+                      className="font-mono text-xs font-bold text-red-600 hover:underline"
                     >
                       #{order.id.slice(0, 8).toUpperCase()}
                     </Link>
@@ -302,19 +296,13 @@ export default function ProductionPage() {
                 {/* Items */}
                 <div className="px-5 py-4 flex flex-col gap-4">
                   {order.items.map((item) => {
-                    const artFiles = item.uploadFiles.filter(
-                      (f) => f.filePath || item.designId
-                    )
                     const primaryFile = item.uploadFiles[0] ?? null
 
                     return (
                       <div key={item.id} className="flex gap-4 items-start">
-                        {/* Thumbnail */}
                         <Thumb item={item} />
 
-                        {/* Item details */}
                         <div className="flex-1 min-w-0">
-                          {/* Product + variant */}
                           <p className="text-sm font-semibold text-gray-900">
                             {item.productName}
                             {item.variantName && (
@@ -322,20 +310,17 @@ export default function ProductionPage() {
                             )}
                           </p>
 
-                          {/* Size + qty */}
                           <p className="text-xs text-gray-500 mt-0.5">
                             {Number(item.width)} × {Number(item.height)} cm &nbsp;·&nbsp; Qty <strong>{item.quantity}</strong>
                             {item.categoryName && <span className="text-gray-400"> · {item.categoryName}</span>}
                           </p>
 
-                          {/* Options (production type) */}
                           {item.productionTypeSnapshot && (
                             <p className="text-xs text-gray-600 mt-1 font-medium">
                               Options: <span className="font-normal">{item.productionTypeSnapshot}</span>
                             </p>
                           )}
 
-                          {/* File info + download */}
                           {primaryFile && (
                             <div className="mt-2 flex items-center gap-2 flex-wrap">
                               <span className="text-[11px] text-gray-400 font-mono truncate max-w-[200px]">
@@ -362,7 +347,6 @@ export default function ProductionPage() {
                                   Download design
                                 </a>
                               )}
-                              {/* DPI quality indicator */}
                               {primaryFile.dpi != null && (
                                 <span className={[
                                   'text-[10px] font-semibold px-1.5 py-0.5 rounded',
@@ -373,23 +357,6 @@ export default function ProductionPage() {
                                   {primaryFile.dpi >= 150 ? 'Good DPI' : primaryFile.dpi >= 72 ? 'Low DPI' : 'Poor DPI'}
                                 </span>
                               )}
-                            </div>
-                          )}
-
-                          {/* Extra art files (if >1) */}
-                          {artFiles.length > 1 && (
-                            <div className="mt-1 flex gap-1.5 flex-wrap">
-                              {artFiles.slice(1).map((f) => f.filePath && (
-                                <a
-                                  key={f.id}
-                                  href={`/api/admin/files/${f.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[11px] text-blue-600 hover:underline font-mono truncate max-w-[160px]"
-                                >
-                                  {f.filename}
-                                </a>
-                              ))}
                             </div>
                           )}
                         </div>
@@ -419,10 +386,10 @@ export default function ProductionPage() {
                     Print sheet
                   </a>
                   <Link
-                    href={`/admin/orders/${order.id}`}
-                    className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                    href={`/admin/production/${order.id}`}
+                    className="text-sm px-4 py-2 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 transition-colors font-medium"
                   >
-                    View order
+                    Detail →
                   </Link>
                 </div>
               </div>

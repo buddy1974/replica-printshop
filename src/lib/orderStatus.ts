@@ -9,8 +9,10 @@ const ORDER_TRANSITIONS: Record<string, string[]> = {
   APPROVED:      ['READY', 'CANCELLED'],
   READY:         ['IN_PRODUCTION', 'CANCELLED'],
   IN_PRODUCTION: ['DONE', 'CANCELLED'],
-  DONE:          [], // terminal
-  CANCELLED:     [], // terminal
+  DONE:          ['SHIPPED'],    // production done → ship it
+  SHIPPED:       ['DELIVERED'],  // shipped → mark delivered
+  DELIVERED:     [],             // terminal
+  CANCELLED:     [],             // terminal
 }
 
 export function assertValidOrderTransition(from: string, to: string) {
