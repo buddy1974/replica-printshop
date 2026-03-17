@@ -1,6 +1,7 @@
 import { type Metadata } from 'next'
 import Container from '@/components/Container'
 import { COMPANY } from '@/config/company'
+import ContactForm from '@/components/ContactForm'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -68,18 +69,32 @@ export default function ContactPage() {
           </ul>
         </div>
 
-        {/* CTA */}
+        {/* Contact form */}
+        <div className="rounded-xl border border-gray-200 bg-white p-6 mb-6">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Send a message</p>
+          <ContactForm />
+        </div>
+
+        {/* Fallback CTA */}
         <div className="rounded-xl bg-gray-900 text-white p-6">
-          <p className="font-semibold mb-1">Ready to order or have questions?</p>
+          <p className="font-semibold mb-1">Prefer email or phone?</p>
           <p className="text-gray-400 text-sm mb-4">
-            Send us an email or call — we respond within 1 business day.
+            We respond within 1 business day.
           </p>
-          <a
-            href={`mailto:${COMPANY.email}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
-          >
-            Send email →
-          </a>
+          <div className="flex flex-wrap gap-3">
+            <a
+              href={`mailto:${COMPANY.email}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-gray-900 text-sm font-semibold hover:bg-gray-100 transition-colors"
+            >
+              {COMPANY.email}
+            </a>
+            <a
+              href={`tel:${COMPANY.phone.replace(/\s/g, '')}`}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
+            >
+              {COMPANY.phone}
+            </a>
+          </div>
         </div>
 
       </div>

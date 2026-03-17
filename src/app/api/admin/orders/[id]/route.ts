@@ -5,7 +5,7 @@ import { assertExists } from '@/lib/assert'
 import { requireAdmin } from '@/lib/adminAuth'
 import { assertValidOrderTransition } from '@/lib/orderStatus'
 import { logAction } from '@/lib/log'
-import { sendOrderReady } from '@/lib/email'
+import { sendOrderReady, sendProductionStarted, sendDone } from '@/lib/email'
 
 interface Params {
   params: { id: string }
@@ -81,9 +81,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       include: { user: { select: { email: true } } },
     })
 
-    // Notify customer when order is marked ready
-    if (body.status === 'READY' && updated.user?.email) {
-      sendOrderReady(params.id, updated.user.email).catch(() => {})
+    // Notify customer on key status transitions
+    if (updated.user?.email) {
+      if (body.status === 'IN_PRODUCTION') {
+        sendProductionStarted(params.id, updated.user.email).catch(() => {})
+      } else if (body.status === 'READY') {
+        sendOrderReady(params.id, updated.user.email).catch(() => {})
+      } else if (body.status === 'DONE') {
+        sendDone(params.id, updated.user.email).catch(() => {})
+      }
     }
 
     return NextResponse.json(updated)
