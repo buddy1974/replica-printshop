@@ -23,6 +23,11 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   // Email sender
   'email.senderName':  'PRINTSHOP',
   'email.senderEmail': 'no-reply@printshop.com',
+  // Branding
+  'branding.logoUrl':      '',
+  'branding.faviconUrl':   '',
+  'branding.footerText':   '© PRINTSHOP. All rights reserved.',
+  'branding.primaryColor': '#dc2626',
 }
 
 // ── getSetting ───────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { COMPANY } from '@/config/company'
 import { SERVICES } from '@/config/services'
+import { getSetting } from '@/lib/settings/settingsService'
 
 const QUICK_LINKS = [
   { href: '/shop', label: 'Shop' },
@@ -11,7 +11,18 @@ const QUICK_LINKS = [
   { href: '/legal', label: 'Legal' },
 ]
 
-export default function Footer() {
+export default async function Footer() {
+  const [companyName, phone, email, website, footerText] = await Promise.all([
+    getSetting('company.name'),
+    getSetting('company.phone'),
+    getSetting('company.email'),
+    getSetting('company.website'),
+    getSetting('branding.footerText'),
+  ])
+
+  const domain = website ? website.replace(/^https?:\/\//, '').replace(/\/$/, '') : ''
+  const copyright = footerText || `© ${new Date().getFullYear()} ${companyName}. All rights reserved.`
+
   return (
     <footer className="bg-gray-950 text-gray-400 border-t border-gray-800">
       {/* Main grid */}
@@ -26,8 +37,7 @@ export default function Footer() {
               <span className="block w-3.5 h-0.5 bg-white rounded-full" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-sm font-black tracking-tighter uppercase text-white">{COMPANY.brand}</span>
-              <span className="text-[9px] font-semibold tracking-widest uppercase text-gray-500">by {COMPANY.name}</span>
+              <span className="text-sm font-black tracking-tighter uppercase text-white">{companyName}</span>
             </div>
           </div>
           <p className="text-xs leading-relaxed text-gray-500">
@@ -89,8 +99,8 @@ export default function Footer() {
           <div>
             <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-4">Contact</p>
             <div className="space-y-1.5 text-sm text-gray-400">
-              <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} className="block hover:text-white transition-colors">{COMPANY.phone}</a>
-              <a href={`mailto:${COMPANY.email}`} className="block hover:text-white transition-colors">{COMPANY.email}</a>
+              {phone && <a href={`tel:${phone.replace(/\s/g, '')}`} className="block hover:text-white transition-colors">{phone}</a>}
+              {email && <a href={`mailto:${email}`} className="block hover:text-white transition-colors">{email}</a>}
             </div>
           </div>
 
@@ -107,15 +117,17 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-gray-800">
         <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
-          <p>© 2026 {COMPANY.brand} by {COMPANY.name}. All rights reserved.</p>
-          <a
-            href={`https://${COMPANY.domain}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-gray-400 transition-colors"
-          >
-            {COMPANY.domain}
-          </a>
+          <p>{copyright}</p>
+          {domain && (
+            <a
+              href={website.startsWith('http') ? website : `https://${domain}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-400 transition-colors"
+            >
+              {domain}
+            </a>
+          )}
         </div>
       </div>
     </footer>

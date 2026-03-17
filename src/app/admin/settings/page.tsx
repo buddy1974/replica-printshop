@@ -58,6 +58,12 @@ const SECTIONS = [
     description: 'Shipping rules, methods and free-shipping thresholds',
     icon:        '📦',
   },
+  {
+    href:        '/admin/settings/branding',
+    title:       'Branding',
+    description: 'Logo URL, favicon URL, footer text, primary color',
+    icon:        '🎨',
+  },
 ]
 
 export default function SettingsPage() {
