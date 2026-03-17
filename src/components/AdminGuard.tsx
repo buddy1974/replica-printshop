@@ -1,11 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type Status = 'loading' | 'ok' | 'denied'
 
 export default function AdminGuard({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>('loading')
+  const router = useRouter()
 
   useEffect(() => {
     fetch('/api/user/me')
@@ -14,15 +16,14 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       .catch(() => setStatus('denied'))
   }, [])
 
-  if (status === 'loading') return null
+  useEffect(() => {
+    if (status === 'denied') {
+      router.replace('/login')
+    }
+  }, [status, router])
 
-  if (status === 'denied') {
-    return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#6b7280', fontSize: 14 }}>
-        Admin access required
-      </div>
-    )
-  }
+  // Show nothing while checking or redirecting
+  if (status !== 'ok') return null
 
   return <>{children}</>
 }

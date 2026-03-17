@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendMail } from '@/lib/mail'
 import { COMPANY } from '@/config/company'
+import { isSameOrigin } from '@/lib/csrf'
+import { logError } from '@/lib/log'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || COMPANY.email
 
 export async function POST(req: NextRequest) {
+  // CSRF: reject cross-origin submissions
+  if (!isSameOrigin(req)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   try {
     const body = await req.json() as {
       name?: string
@@ -54,7 +61,9 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logError(err.message, { stack: err.stack, path: '/api/contact' })
     return NextResponse.json({ error: 'Failed to send. Please try again.' }, { status: 500 })
   }
 }

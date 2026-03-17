@@ -1,7 +1,14 @@
+// Security middleware — admin guard, rate limiting, locale routing
 // Step 301 — Admin guard (first layer of defence)
 // Step 710 — URL language routing (/en, /de, /fr prefix)
+// Step 718 — Security: rate limit on auth + contact; env check at startup
 
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rateLimit'
+import { checkEnv } from '@/lib/envCheck'
+
+// Check env vars once at module load (startup warning only, never throws)
+checkEnv()
 
 const SUPPORTED_LOCALES = ['en', 'de', 'fr'] as const
 type SupportedLocale = typeof SUPPORTED_LOCALES[number]
@@ -16,10 +23,36 @@ function getLocaleFromPath(pathname: string): { locale: SupportedLocale | null; 
   return { locale: null, strippedPath: pathname }
 }
 
+function getIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  return `ip:${forwarded?.split(',')[0].trim() ?? '127.0.0.1'}`
+}
+
+// Routes with stricter rate limits (requests per 60 s per IP)
+const RATE_LIMITS: Array<{ prefix: string; limit: number }> = [
+  { prefix: '/api/auth/',    limit: 10 },  // OAuth initiation
+  { prefix: '/api/contact',  limit: 5  },  // Contact form
+  { prefix: '/api/checkout', limit: 15 },  // Checkout
+]
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Admin API routes — auth check only (no locale prefix on API routes)
+  // ── Rate limiting for sensitive API endpoints ────────────────────────────
+  if (pathname.startsWith('/api/')) {
+    const rule = RATE_LIMITS.find((r) => pathname.startsWith(r.prefix))
+    if (rule) {
+      const key = `${rule.prefix}:${getIp(req)}`
+      if (!checkRateLimit(key, rule.limit, 60_000)) {
+        return NextResponse.json(
+          { error: 'Too many requests. Please wait before trying again.' },
+          { status: 429 }
+        )
+      }
+    }
+  }
+
+  // ── Admin API routes — cookie presence check ─────────────────────────────
   if (pathname.startsWith('/api/admin/')) {
     const uid = req.cookies.get('replica_uid')?.value
     if (!uid) {
@@ -28,10 +61,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // All other API routes — pass through (no locale routing)
+  // ── All other API routes — pass through ──────────────────────────────────
   if (pathname.startsWith('/api/')) return NextResponse.next()
 
-  // --- Locale routing for pages ---
+  // ── Locale routing for pages ─────────────────────────────────────────────
   const { locale, strippedPath } = getLocaleFromPath(pathname)
 
   // Admin page auth check (handles /admin and /en/admin, /de/admin, etc.)
