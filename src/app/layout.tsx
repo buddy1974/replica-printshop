@@ -11,7 +11,7 @@ import CartDrawer from '@/components/CartDrawer'
 const SITE_DESCRIPTION = 'Professional print, textile, banners and advertising technology. Fast turnaround, in-house production.'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://replica.print'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://replica.print'),
   title: {
     default: BRANDING.name,
     template: `%s | ${BRANDING.name}`,

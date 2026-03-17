@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-const BASE = 'https://replica.print'
+const BASE = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://replica.print').replace(/\/$/, '')
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: `${BASE}/`, changeFrequency: 'weekly', priority: 1.0 },

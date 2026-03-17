@@ -11,6 +11,7 @@ const NAV = [
   { href: '/admin/customers',  label: 'Customers' },
   { href: '/admin/settings',   label: 'Settings' },
   { href: '/admin/backup',     label: 'Backup' },
+  { href: '/admin/logs',       label: 'Logs' },
 ]
 
 const SETTINGS_SUB = [
