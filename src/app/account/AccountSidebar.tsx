@@ -11,9 +11,10 @@ interface Props {
 const NAV = [
   { href: '/account', label: 'Overview' },
   { href: '/account/orders', label: 'Orders' },
+  { href: '/account/profile', label: 'Profile' },
+  { href: '/account/addresses', label: 'Addresses' },
   { href: '/account/designs', label: 'Designs' },
   { href: '/account/uploads', label: 'Uploads' },
-  { href: '/account/addresses', label: 'Addresses' },
 ]
 
 export default function AccountSidebar({ name, email }: Props) {
