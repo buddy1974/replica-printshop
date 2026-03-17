@@ -51,7 +51,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
           name="q"
           defaultValue={q}
           placeholder="Search by name…"
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-64"
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 w-64"
         />
         <button type="submit" className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:border-gray-500">Search</button>
         {q && (

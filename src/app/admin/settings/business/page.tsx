@@ -94,7 +94,7 @@ export default function BusinessSettingsPage() {
           <Link href="/admin/settings" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
             ← Settings
           </Link>
-          <h1 className="text-xl font-bold text-gray-900 mt-1">Business</h1>
+          <h1 className="mt-1">Business</h1>
           <p className="text-xs text-gray-400 mt-0.5">Company info, currency</p>
         </div>
       </div>

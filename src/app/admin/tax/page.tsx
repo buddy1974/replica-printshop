@@ -32,7 +32,7 @@ const FALLBACK_RATES: Record<string, { rate: number; label: string }> = {
   GB: { rate: 20, label: 'United Kingdom' },
 }
 
-const IC = 'rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-full'
+const IC = 'rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 w-full'
 const EMPTY = { country: '', rate: '', label: '' }
 
 export default function TaxPage() {

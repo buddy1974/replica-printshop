@@ -64,7 +64,7 @@ export default function SettingsPage() {
   return (
     <Container>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+        <h1>Settings</h1>
         <p className="text-xs text-gray-400 mt-0.5">Configure business, invoice, email, tax and shipping</p>
       </div>
 

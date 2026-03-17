@@ -202,7 +202,7 @@ export default function UploadForm({ orderItemId, initialPreviewUrl }: Props) {
           <select
             value={uploadType}
             onChange={(e) => setUploadType(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
           >
             <option value="ARTWORK">Artwork</option>
             <option value="FRONT">Front</option>

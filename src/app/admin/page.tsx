@@ -137,7 +137,7 @@ export default async function AdminPage() {
       <Section title="Manage">
         <div className="grid gap-3">
           {navLinks.map(({ href, label, desc }) => (
-            <Link key={href} href={href} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-300 transition-colors">
+            <Link key={href} href={href} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:border-red-300 transition-colors">
               <div>
                 <p className="font-medium text-sm">{label}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{desc}</p>

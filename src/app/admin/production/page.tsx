@@ -191,7 +191,7 @@ export default function ProductionPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Production</h1>
+          <h1>Production</h1>
           <p className="text-xs text-gray-400 mt-0.5">Workshop queue — print / cut / pack</p>
         </div>
         <button

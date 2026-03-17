@@ -57,7 +57,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
           name="q"
           defaultValue={q}
           placeholder="Search by name or email…"
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 w-64"
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 w-64"
         />
         <button type="submit" className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:border-gray-500">
           Search
@@ -87,13 +87,13 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
                   <td className="px-4 py-3 text-gray-800">{u.email}</td>
                   <td className="px-4 py-3 text-gray-600">{u.name ?? <span className="text-gray-300">—</span>}</td>
                   <td className="px-4 py-3">
-                    <Link href={`/admin/orders?q=${encodeURIComponent(u.email)}`} className="text-blue-600 hover:underline">
+                    <Link href={`/admin/orders?q=${encodeURIComponent(u.email)}`} className="text-gray-800 hover:text-red-600 underline underline-offset-2">
                       {u._count.orders}
                     </Link>
                   </td>
                   <td className="px-4 py-3">
                     {u.isAdmin ? (
-                      <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700">Admin</span>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700">Admin</span>
                     ) : (
                       <span className="text-gray-400 text-xs">Customer</span>
                     )}

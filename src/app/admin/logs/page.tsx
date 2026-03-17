@@ -45,7 +45,7 @@ export default function LogsPage() {
 
   return (
     <div className="p-6 max-w-5xl">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Logs</h1>
+      <h1 className="mb-4">Logs</h1>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4 border-b border-gray-200">

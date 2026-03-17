@@ -62,7 +62,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
           name="q"
           defaultValue={q}
           placeholder="Search by order ID or email…"
-          className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 flex-1 sm:flex-none sm:w-64"
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 flex-1 sm:flex-none sm:w-64"
         />
         <button type="submit" className="rounded border border-gray-300 px-3 py-1.5 text-sm hover:border-gray-500">Search</button>
         {q && (
@@ -86,7 +86,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
               {orders.map((o) => (
                 <tr key={o.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-blue-600 hover:underline">{o.id.slice(0, 8)}</Link>
+                    <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-gray-800 hover:text-red-600 underline underline-offset-2">{o.id.slice(0, 8)}</Link>
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600">
                     {o.user ? (
