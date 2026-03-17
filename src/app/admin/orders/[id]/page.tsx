@@ -288,20 +288,39 @@ export default function AdminOrderDetailPage() {
         </div>
       </div>
 
-      {/* Invoice download */}
-      <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Invoice</p>
-          <p className="text-xs text-gray-400">Generated on demand · includes all order details</p>
+      {/* Documents */}
+      <div className="rounded-xl border border-gray-200 bg-white px-5 py-4 mb-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Documents</p>
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center justify-between gap-4 flex-1 min-w-[200px] rounded-lg border border-gray-200 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-gray-800">Invoice</p>
+              <p className="text-xs text-gray-400">Customer copy · includes prices</p>
+            </div>
+            <a
+              href={`/api/admin/orders/${order.id}/invoice`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium shrink-0"
+            >
+              Download
+            </a>
+          </div>
+          <div className="flex items-center justify-between gap-4 flex-1 min-w-[200px] rounded-lg border border-gray-200 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-gray-800">Order sheet</p>
+              <p className="text-xs text-gray-400">Workshop copy · no prices</p>
+            </div>
+            <a
+              href={`/api/admin/orders/${order.id}/order-sheet`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium shrink-0"
+            >
+              Print sheet
+            </a>
+          </div>
         </div>
-        <a
-          href={`/api/admin/orders/${order.id}/invoice`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium shrink-0"
-        >
-          Download PDF
-        </a>
       </div>
 
       {/* Tracking number */}

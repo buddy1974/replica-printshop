@@ -399,26 +399,32 @@ export default function ProductionPage() {
                 </div>
 
                 {/* Action buttons */}
-                {actions.length > 0 && (
-                  <div className="px-5 pb-4 flex items-center gap-2 flex-wrap">
-                    {actions.map(({ label, toStatus, color }) => (
-                      <button
-                        key={toStatus}
-                        onClick={() => advance(order.id, toStatus)}
-                        disabled={isActioning}
-                        className={`text-sm px-5 py-2 rounded-lg font-bold transition-colors disabled:opacity-50 ${color}`}
-                      >
-                        {isActioning ? '…' : label}
-                      </button>
-                    ))}
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                <div className="px-5 pb-4 flex items-center gap-2 flex-wrap">
+                  {actions.map(({ label, toStatus, color }) => (
+                    <button
+                      key={toStatus}
+                      onClick={() => advance(order.id, toStatus)}
+                      disabled={isActioning}
+                      className={`text-sm px-5 py-2 rounded-lg font-bold transition-colors disabled:opacity-50 ${color}`}
                     >
-                      View order
-                    </Link>
-                  </div>
-                )}
+                      {isActioning ? '…' : label}
+                    </button>
+                  ))}
+                  <a
+                    href={`/api/admin/orders/${order.id}/order-sheet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm px-4 py-2 rounded-lg border border-gray-900 bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium"
+                  >
+                    Print sheet
+                  </a>
+                  <Link
+                    href={`/admin/orders/${order.id}`}
+                    className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    View order
+                  </Link>
+                </div>
               </div>
             )
           })}
