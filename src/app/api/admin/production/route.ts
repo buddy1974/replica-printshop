@@ -23,12 +23,17 @@ export async function GET(req: NextRequest) {
         deliveryType: true,
         total: true,
         createdAt: true,
+        shippingName: true,
+        shippingCity: true,
+        shippingCountry: true,
         user: { select: { email: true, name: true } },
         items: {
           select: {
             id: true,
             productName: true,
             variantName: true,
+            categoryName: true,
+            productionTypeSnapshot: true,
             width: true,
             height: true,
             quantity: true,
@@ -36,7 +41,6 @@ export async function GET(req: NextRequest) {
             uploadFiles: {
               where: { NOT: { uploadType: 'PREVIEW' } },
               select: { id: true, filename: true, mime: true, dpi: true, status: true, filePath: true },
-              take: 1,
               orderBy: { uploadType: 'asc' },
             },
           },

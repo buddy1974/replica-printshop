@@ -6,13 +6,13 @@ import { usePathname } from 'next/navigation'
 const NAV = [
   { href: '/admin', label: 'Dashboard', exact: true },
   { href: '/admin/orders', label: 'Orders' },
+  { href: '/admin/production', label: 'Production' },
   { href: '/admin/products', label: 'Products' },
   { href: '/admin/customers', label: 'Customers' },
   { href: '/admin/settings', label: 'Settings' },
 ]
 
 const MORE = [
-  { href: '/admin/production', label: 'Production' },
   { href: '/admin/categories', label: 'Categories' },
   { href: '/admin/shipping', label: 'Shipping' },
   { href: '/admin/tax', label: 'Tax / VAT' },
