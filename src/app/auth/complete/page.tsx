@@ -17,7 +17,7 @@ export default function AuthCompletePage() {
     // Read returnTo from URL without useSearchParams (avoids Suspense requirement)
     const params = new URLSearchParams(window.location.search)
     const returnTo = params.get('returnTo') ?? ''
-    const dest = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/account'
+    const explicitDest = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : ''
 
     fetch('/api/user/me')
       .then((r) => (r.ok ? r.json() : null))
@@ -27,9 +27,16 @@ export default function AuthCompletePage() {
           setUserEmail(user.email)
         }
         refreshCart()
-        router.replace(dest)
+        // Use explicit returnTo if present; otherwise role-based redirect
+        if (explicitDest) {
+          router.replace(explicitDest)
+        } else if (user?.role === 'ADMIN' || user?.role === 'SUPERADMIN') {
+          router.replace('/admin')
+        } else {
+          router.replace('/account')
+        }
       })
-      .catch(() => router.replace(dest))
+      .catch(() => router.replace(explicitDest || '/account'))
   }, [router, refreshCart])
 
   return (
