@@ -73,7 +73,7 @@ export function middleware(req: NextRequest) {
     if (!uid) {
       const loginLocale = locale ?? 'en'
       const loginUrl = new URL(`/${loginLocale}/login`, req.url)
-      loginUrl.searchParams.set('redirect', pathname)
+      loginUrl.searchParams.set('returnTo', pathname)
       return NextResponse.redirect(loginUrl)
     }
   }
@@ -90,7 +90,7 @@ export function middleware(req: NextRequest) {
       preferred && (SUPPORTED_LOCALES as readonly string[]).includes(preferred)
         ? (preferred as SupportedLocale)
         : 'en'
-    return NextResponse.redirect(new URL(`/${targetLocale}${pathname}`, req.url))
+    return NextResponse.redirect(new URL(`/${targetLocale}${pathname}${req.nextUrl.search}`, req.url))
   }
 }
 

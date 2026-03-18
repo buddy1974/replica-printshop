@@ -18,7 +18,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (status === 'denied') {
-      router.replace('/login')
+      router.replace(`/login?returnTo=${encodeURIComponent(window.location.pathname)}`)
     }
   }, [status, router])
 
