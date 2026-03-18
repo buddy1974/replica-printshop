@@ -17,9 +17,9 @@ export async function requireOwner(req: NextRequest, ownerId: string | null): Pr
   // No owner set (guest order) — allow the requester
   if (!ownerId) return userId
 
-  // Mismatch — check if admin
-  const user = await db.user.findUnique({ where: { id: userId }, select: { isAdmin: true } })
-  if (user?.isAdmin) return userId
+  // Mismatch — check if admin or superadmin
+  const user = await db.user.findUnique({ where: { id: userId }, select: { role: true } })
+  if (user?.role === 'ADMIN' || user?.role === 'SUPERADMIN') return userId
 
   throw new UnauthorizedError('Access denied')
 }

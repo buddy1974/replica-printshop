@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
         }
         if (cookieUserId !== orderOwnerId) {
           // Allow admin override
-          const user = await db.user.findUnique({ where: { id: cookieUserId }, select: { isAdmin: true } })
-          if (!user?.isAdmin) {
+          const user = await db.user.findUnique({ where: { id: cookieUserId }, select: { role: true } })
+          if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
             return NextResponse.json({ error: 'Access denied' }, { status: 403 })
           }
         }

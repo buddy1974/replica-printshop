@@ -48,10 +48,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Admins can query any userId; customers are locked to their own
-    const requester = await db.user.findUnique({ where: { id: cookieUserId }, select: { isAdmin: true } })
+    const requester = await db.user.findUnique({ where: { id: cookieUserId }, select: { role: true } })
     let whereUserId: string | undefined
 
-    if (requester?.isAdmin) {
+    if (requester?.role === 'ADMIN' || requester?.role === 'SUPERADMIN') {
       const param = req.nextUrl.searchParams.get('userId')
       whereUserId = param ?? undefined
     } else {

@@ -27,7 +27,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
         id: true,
         email: true,
         name: true,
-        isAdmin: true,
+        role: true,
         createdAt: true,
         _count: { select: { orders: true } },
       },
@@ -92,7 +92,9 @@ export default async function CustomersPage({ searchParams }: { searchParams: { 
                     </Link>
                   </td>
                   <td className="px-4 py-3">
-                    {u.isAdmin ? (
+                    {u.role === 'SUPERADMIN' ? (
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-black text-white">Superadmin</span>
+                    ) : u.role === 'ADMIN' ? (
                       <span className="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700">Admin</span>
                     ) : (
                       <span className="text-gray-400 text-xs">Customer</span>

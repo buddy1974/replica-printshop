@@ -12,7 +12,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     fetch('/api/user/me')
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setStatus(data?.isAdmin ? 'ok' : 'denied'))
+      .then((data) => setStatus(data?.role === 'ADMIN' || data?.role === 'SUPERADMIN' ? 'ok' : 'denied'))
       .catch(() => setStatus('denied'))
   }, [])
 

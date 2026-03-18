@@ -24,9 +24,10 @@ export async function GET(req: NextRequest, { params }: Params) {
 
     // Step 358 — ownership check: user can only load their own designs
     const cookieUserId = req.cookies.get('replica_uid')?.value ?? null
-    const isAdmin = cookieUserId
-      ? (await db.user.findUnique({ where: { id: cookieUserId }, select: { isAdmin: true } }))?.isAdmin
-      : false
+    const role = cookieUserId
+      ? (await db.user.findUnique({ where: { id: cookieUserId }, select: { role: true } }))?.role
+      : undefined
+    const isAdmin = role === 'ADMIN' || role === 'SUPERADMIN'
 
     if (design.userId && !isAdmin && design.userId !== cookieUserId) {
       throw new UnauthorizedError('Access denied')

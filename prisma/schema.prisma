@@ -53,6 +53,12 @@ enum JobStatus {
   FAILED
 }
 
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPERADMIN
+}
+
 // ---------------------------------------------------------------------------
 // User
 // ---------------------------------------------------------------------------
@@ -61,7 +67,7 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  isAdmin   Boolean  @default(false)
+  role      UserRole @default(CUSTOMER)
   createdAt DateTime @default(now())
 
   cart      Cart?
