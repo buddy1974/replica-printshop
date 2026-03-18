@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../src/generated/prisma/client'
+import bcrypt from 'bcryptjs'
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
@@ -3397,7 +3398,36 @@ async function main() {
   // Banner — new specialty banner products
   await seedBannerProducts()
 
+  // Demo superadmin account
+  await seedDemoAdmin()
+
   console.log('\nAll seeds complete.')
+}
+
+// ---------------------------------------------------------------------------
+// Demo superadmin — for presentations / client demos
+// ---------------------------------------------------------------------------
+
+async function seedDemoAdmin() {
+  const email = 'demo@printshop.local'
+  const password = 'PrintshopDemo123'
+  const existing = await db.user.findUnique({ where: { email } })
+  if (!existing) {
+    const passwordHash = await bcrypt.hash(password, 12)
+    await db.user.create({
+      data: { email, name: 'Demo Admin', role: 'SUPERADMIN', passwordHash },
+    })
+    console.log('  ✓ Demo superadmin created: demo@printshop.local')
+  } else {
+    // Ensure role is correct; never downgrade
+    const updates: { role?: 'SUPERADMIN'; passwordHash?: string } = {}
+    if (existing.role !== 'SUPERADMIN') updates.role = 'SUPERADMIN'
+    if (!existing.passwordHash) updates.passwordHash = await bcrypt.hash(password, 12)
+    if (Object.keys(updates).length > 0) {
+      await db.user.update({ where: { id: existing.id }, data: updates })
+    }
+    console.log('  ✓ Demo superadmin verified: demo@printshop.local')
+  }
 }
 
 // ---------------------------------------------------------------------------

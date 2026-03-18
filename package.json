@@ -20,6 +20,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/pdfkit": "^0.17.5",
     "@vercel/blob": "^2.3.1",
+    "bcryptjs": "^3.0.3",
     "canvas": "^3.2.1",
     "fabric": "^7.2.0",
     "lucide-react": "^0.577.0",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/pg": "^8.18.0",
     "@types/react": "^18",

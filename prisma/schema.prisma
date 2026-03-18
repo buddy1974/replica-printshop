@@ -64,11 +64,12 @@ enum UserRole {
 // ---------------------------------------------------------------------------
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      UserRole @default(CUSTOMER)
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  role         UserRole @default(CUSTOMER)
+  passwordHash String?
+  createdAt    DateTime @default(now())
 
   cart      Cart?
   orders    Order[]
