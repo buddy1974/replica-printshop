@@ -12,7 +12,8 @@
       "Bash(sed:*)",
       "Bash(grep:*)",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(ls:*)"
     ]
   }
 }
