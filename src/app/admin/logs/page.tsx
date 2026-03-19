@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from '@/context/LocaleContext'
 
 interface ErrorEntry {
   id: string
@@ -21,6 +22,8 @@ interface AuditEntry {
 type Tab = 'errors' | 'audit'
 
 export default function LogsPage() {
+  const { t, locale } = useLocale()
+  const td = t.admin
   const [tab, setTab] = useState<Tab>('errors')
   const [errors, setErrors] = useState<ErrorEntry[]>([])
   const [audits, setAudits] = useState<AuditEntry[]>([])
@@ -38,49 +41,49 @@ export default function LogsPage() {
   }, [])
 
   const fmt = (iso: string) =>
-    new Date(iso).toLocaleString('en-GB', {
+    new Date(iso).toLocaleString(locale, {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     })
 
   return (
     <div className="p-6 max-w-5xl">
-      <h1 className="mb-4">Logs</h1>
+      <h1 className="mb-4">{td.logsTitle}</h1>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4 border-b border-gray-200">
-        {(['errors', 'audit'] as Tab[]).map((t) => (
+        {(['errors', 'audit'] as Tab[]).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={[
               'px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors',
-              tab === t
+              tab === tabKey
                 ? 'border-red-600 text-red-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700',
             ].join(' ')}
           >
-            {t === 'errors' ? 'Errors' : 'Audit'}
+            {tabKey === 'errors' ? td.errorsTab : td.auditTab}
             <span className="ml-1.5 text-xs text-gray-400">
-              {t === 'errors' ? errors.length : audits.length}
+              {tabKey === 'errors' ? errors.length : audits.length}
             </span>
           </button>
         ))}
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <p className="text-sm text-gray-400">{td.loading}</p>
       ) : tab === 'errors' ? (
         errors.length === 0 ? (
-          <p className="text-sm text-gray-400">No errors logged.</p>
+          <p className="text-sm text-gray-400">{td.noErrors}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b border-gray-200 text-left text-xs text-gray-400 uppercase tracking-wider">
-                  <th className="pb-2 pr-4 font-semibold w-40">Date</th>
-                  <th className="pb-2 pr-4 font-semibold">Message</th>
-                  <th className="pb-2 font-semibold w-40">Path</th>
+                  <th className="pb-2 pr-4 font-semibold w-40">{td.dateCol}</th>
+                  <th className="pb-2 pr-4 font-semibold">{td.messageCol}</th>
+                  <th className="pb-2 font-semibold w-40">{td.pathCol}</th>
                 </tr>
               </thead>
               <tbody>
@@ -96,17 +99,17 @@ export default function LogsPage() {
           </div>
         )
       ) : audits.length === 0 ? (
-        <p className="text-sm text-gray-400">No audit events logged.</p>
+        <p className="text-sm text-gray-400">{td.noAuditEvents}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-gray-200 text-left text-xs text-gray-400 uppercase tracking-wider">
-                <th className="pb-2 pr-4 font-semibold w-40">Date</th>
-                <th className="pb-2 pr-4 font-semibold w-28">Action</th>
-                <th className="pb-2 pr-4 font-semibold w-28">Entity</th>
-                <th className="pb-2 pr-4 font-semibold">Entity ID</th>
-                <th className="pb-2 font-semibold">User ID</th>
+                <th className="pb-2 pr-4 font-semibold w-40">{td.dateCol}</th>
+                <th className="pb-2 pr-4 font-semibold w-28">{td.actionCol}</th>
+                <th className="pb-2 pr-4 font-semibold w-28">{td.entityCol}</th>
+                <th className="pb-2 pr-4 font-semibold">{td.entityIdCol}</th>
+                <th className="pb-2 font-semibold">{td.userIdCol}</th>
               </tr>
             </thead>
             <tbody>

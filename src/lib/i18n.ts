@@ -105,6 +105,33 @@ export interface AccountDictionary {
   noOrders: string
   item: string
   items: string
+  // Order detail
+  order: string
+  placed: string
+  deliveryLabel: string
+  trackingLabel: string
+  billingAddress: string
+  shippingAddress: string
+  itemsSection: string
+  previewLabel: string
+  uploadFiles: string
+  uploadNow: string
+  downloadInvoice: string
+  fixResubmit: string
+  resubmit: string
+  backToOrders: string
+  vatIncl: string
+  qty: string
+  statusConfirmed: string
+  statusUploaded: string
+  statusApproved: string
+  statusReady: string
+  statusInProduction: string
+  statusShipped: string
+  statusDelivered: string
+  statusDone: string
+  statusCancelled: string
+  uploadNowLink: string
 }
 
 export interface AdminDictionary {
@@ -168,6 +195,165 @@ export interface AdminDictionary {
   category: string
   page: string
   of: string
+  // Production
+  inQueue: string
+  inProduction: string
+  new: string
+  printed: string
+  allActive: string
+  workshopQueue: string
+  refresh: string
+  noNewOrders: string
+  nothingQueued: string
+  nothingInProduction: string
+  nothingPrinted: string
+  noActiveOrders: string
+  download: string
+  downloadDesign: string
+  goodDpi: string
+  lowDpi: string
+  poorDpi: string
+  optionsLabel: string
+  printSheet: string
+  detail: string
+  start: string
+  markPrinted: string
+  markShipped: string
+  qty: string
+  loadError: string
+  updateError: string
+  // Backup
+  backupTitle: string
+  backupSubtitle: string
+  exportSection: string
+  fullBackup: string
+  fullBackupDesc: string
+  ordersExport: string
+  ordersExportDesc: string
+  invoicesExport: string
+  invoicesExportDesc: string
+  uploadsExport: string
+  uploadsExportDesc: string
+  preparing: string
+  downloaded: string
+  errorRetry: string
+  downloadJson: string
+  restoreSection: string
+  restoreFromBackup: string
+  restoreDesc: string
+  restoring: string
+  chooseBackupFile: string
+  restoreComplete: string
+  ordersInFile: string
+  restoredNew: string
+  skippedExist: string
+  autoBackupSection: string
+  autoBackupNote: string
+  filesExportedNote: string
+  // AI
+  aiTitle: string
+  aiSubtitle: string
+  knowledgeBase: string
+  knowledgeBaseDesc: string
+  systemPromptOverride: string
+  systemPromptDesc: string
+  conversationLogs: string
+  conversationLogsDesc: string
+  fileAnalysisRules: string
+  fileAnalysisDesc: string
+  comingSoon: string
+  currentlyActive: string
+  currentlyActiveDesc: string
+  // Logs
+  logsTitle: string
+  errorsTab: string
+  auditTab: string
+  loading: string
+  noErrors: string
+  noAuditEvents: string
+  dateCol: string
+  messageCol: string
+  pathCol: string
+  actionCol: string
+  entityCol: string
+  entityIdCol: string
+  userIdCol: string
+  // Categories
+  noCategories: string
+  sortOrder: string
+  defaultPriceMode: string
+  descriptionLabel: string
+  descriptionPlaceholder: string
+  metaTitleLabel: string
+  metaDescriptionLabel: string
+  metaDescPlaceholder: string
+  noneOption: string
+  save: string
+  savedLabel: string
+  // Settings
+  settingsTitle: string
+  settingsSubtitle: string
+  smtpSection: string
+  configured: string
+  notConfigured: string
+  variableCol: string
+  statusCol: string
+  valueCol: string
+  setStatus: string
+  notSet: string
+  smtpHowTo: string
+  settingsBusiness: string
+  settingsBusinessDesc: string
+  settingsInvoice: string
+  settingsInvoiceDesc: string
+  settingsEmail: string
+  settingsEmailDesc: string
+  settingsTax: string
+  settingsTaxDesc: string
+  settingsShipping: string
+  settingsShippingDesc: string
+  settingsBranding: string
+  settingsBrandingDesc: string
+  emailTriggers: string
+  eventCol: string
+  recipientCol: string
+  includesCol: string
+  triggerOrderPlaced: string
+  triggerPaymentConfirmed: string
+  triggerUploadNeeded: string
+  triggerFileRejected: string
+  triggerFileApproved: string
+  triggerAllFilesApproved: string
+  triggerInProduction: string
+  triggerOrderReady: string
+  triggerOrderDone: string
+  triggerNewOrder: string
+  triggerContactForm: string
+  triggerCustomer: string
+  triggerAdminEmail: string
+  triggerInclOrderSummary: string
+  triggerInclPaymentConf: string
+  triggerInclUploadLink: string
+  triggerInclFilenameNote: string
+  triggerInclFileName: string
+  triggerInclProdNotice: string
+  triggerInclStatusUpdate: string
+  triggerInclPickupNotice: string
+  triggerInclCompletionNotice: string
+  triggerInclOrderIdTotal: string
+  triggerInclFormContents: string
+}
+
+export interface CommonDictionary {
+  notFound: string
+  notFoundDesc: string
+  goToShop: string
+  homepage: string
+  errorTitle: string
+  errorDesc: string
+  tryAgain: string
+  goHome: string
+  cart: string
 }
 
 export interface HomeDictionary {
@@ -244,6 +430,7 @@ export interface Dictionary {
   home: HomeDictionary
   account: AccountDictionary
   admin: AdminDictionary
+  common: CommonDictionary
 }
 
 const dictionaries: Record<Locale, Dictionary> = {

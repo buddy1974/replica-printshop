@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import Container from '@/components/Container'
 import { COMPANY } from '@/config/company'
+import { cookies } from 'next/headers'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
 // Read env vars server-side — never expose secrets to client
 const SMTP_VARS = [
@@ -25,53 +27,39 @@ function StatusDot({ ok }: { ok: boolean }) {
 
 const configured = SMTP_VARS.slice(0, 4).every((v) => Boolean(v.value))
 
-// ── Settings sections ──────────────────────────────────────────────────────
+export default async function SettingsPage() {
+  const cookieLocale = cookies().get('replica_locale')?.value
+  const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
+  const td = getDictionary(locale).admin
 
-const SECTIONS = [
-  {
-    href:        '/admin/settings/business',
-    title:       'Business',
-    description: 'Company name, address, phone, email, VAT number, currency',
-    icon:        '🏢',
-  },
-  {
-    href:        '/admin/settings/invoice',
-    title:       'Invoice',
-    description: 'Invoice prefix, number sequence, footer text',
-    icon:        '🧾',
-  },
-  {
-    href:        '/admin/settings/email',
-    title:       'Email sender',
-    description: 'Sender name and from-address for outgoing emails',
-    icon:        '✉️',
-  },
-  {
-    href:        '/admin/settings/tax',
-    title:       'Tax / VAT',
-    description: 'Manage tax rates by country',
-    icon:        '📊',
-  },
-  {
-    href:        '/admin/settings/shipping',
-    title:       'Shipping',
-    description: 'Shipping rules, methods and free-shipping thresholds',
-    icon:        '📦',
-  },
-  {
-    href:        '/admin/settings/branding',
-    title:       'Branding',
-    description: 'Logo URL, favicon URL, footer text, primary color',
-    icon:        '🎨',
-  },
-]
+  const SECTIONS = [
+    { href: '/admin/settings/business',  title: td.settingsBusiness,  description: td.settingsBusinessDesc,  icon: '🏢' },
+    { href: '/admin/settings/invoice',   title: td.settingsInvoice,   description: td.settingsInvoiceDesc,   icon: '🧾' },
+    { href: '/admin/settings/email',     title: td.settingsEmail,     description: td.settingsEmailDesc,     icon: '✉️' },
+    { href: '/admin/settings/tax',       title: td.settingsTax,       description: td.settingsTaxDesc,       icon: '📊' },
+    { href: '/admin/settings/shipping',  title: td.settingsShipping,  description: td.settingsShippingDesc,  icon: '📦' },
+    { href: '/admin/settings/branding',  title: td.settingsBranding,  description: td.settingsBrandingDesc,  icon: '🎨' },
+  ]
 
-export default function SettingsPage() {
+  const EMAIL_TRIGGERS: [string, string, string][] = [
+    [td.triggerOrderPlaced,        td.triggerCustomer,    td.triggerInclOrderSummary],
+    [td.triggerPaymentConfirmed,   td.triggerCustomer,    td.triggerInclPaymentConf],
+    [td.triggerUploadNeeded,       td.triggerCustomer,    td.triggerInclUploadLink],
+    [td.triggerFileRejected,       td.triggerCustomer,    td.triggerInclFilenameNote],
+    [td.triggerFileApproved,       td.triggerCustomer,    td.triggerInclFileName],
+    [td.triggerAllFilesApproved,   td.triggerCustomer,    td.triggerInclProdNotice],
+    [td.triggerInProduction,       td.triggerCustomer,    td.triggerInclStatusUpdate],
+    [td.triggerOrderReady,         td.triggerCustomer,    td.triggerInclPickupNotice],
+    [td.triggerOrderDone,          td.triggerCustomer,    td.triggerInclCompletionNotice],
+    [td.triggerNewOrder,           td.triggerAdminEmail,  td.triggerInclOrderIdTotal],
+    [td.triggerContactForm,        td.triggerAdminEmail,  td.triggerInclFormContents],
+  ]
+
   return (
     <Container>
       <div className="mb-6">
-        <h1>Settings</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Configure business, invoice, email, tax and shipping</p>
+        <h1>{td.settingsTitle}</h1>
+        <p className="text-xs text-gray-400 mt-0.5">{td.settingsSubtitle}</p>
       </div>
 
       {/* Settings sections grid */}
@@ -94,9 +82,9 @@ export default function SettingsPage() {
       {/* SMTP status */}
       <section className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-sm font-semibold text-gray-700">Email / SMTP</h2>
+          <h2 className="text-sm font-semibold text-gray-700">{td.smtpSection}</h2>
           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${configured ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-            {configured ? 'Configured' : 'Not configured'}
+            {configured ? td.configured : td.notConfigured}
           </span>
         </div>
 
@@ -104,9 +92,9 @@ export default function SettingsPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variable</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{td.variableCol}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{td.statusCol}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{td.valueCol}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -121,7 +109,7 @@ export default function SettingsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <StatusDot ok={set} />
-                        <span className="text-xs text-gray-500">{set ? 'Set' : 'Not set'}</span>
+                        <span className="text-xs text-gray-500">{set ? td.setStatus : td.notSet}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-600">
@@ -138,7 +126,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm text-gray-600 space-y-2">
-          <p className="font-semibold text-gray-800">How to configure SMTP</p>
+          <p className="font-semibold text-gray-800">{td.smtpHowTo}</p>
           <p>Set these environment variables in your hosting provider (Vercel → Project Settings → Environment Variables) or in your <code className="bg-white px-1 py-0.5 rounded border border-gray-200 text-xs">.env</code> file for local development.</p>
           <p>Changes take effect after redeployment. Emails gracefully fall back to console logging if SMTP is not configured.</p>
         </div>
@@ -146,30 +134,18 @@ export default function SettingsPage() {
 
       {/* Email triggers reference */}
       <section className="mb-8">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Email triggers</h2>
+        <h2 className="text-sm font-semibold text-gray-700 mb-4">{td.emailTriggers}</h2>
         <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Includes</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{td.eventCol}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{td.recipientCol}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{td.includesCol}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs text-gray-700">
-              {[
-                ['Order placed',          'Customer',    'Order summary + invoice PDF'],
-                ['Payment confirmed',      'Customer',    'Payment confirmation + invoice PDF'],
-                ['Upload needed',          'Customer',    'Upload link'],
-                ['File rejected/needs fix','Customer',    'Filename + admin note'],
-                ['File approved',          'Customer',    'File name'],
-                ['All files approved',     'Customer',    'Production queue notice'],
-                ['In production',          'Customer',    'Status update'],
-                ['Order ready',            'Customer',    'Pickup / shipping notice'],
-                ['Order done',             'Customer',    'Completion notice'],
-                ['New order',              'Admin email', 'Order ID + total'],
-                ['Contact form submitted', 'Admin email', 'Form contents + auto-reply to sender'],
-              ].map(([event, recipient, includes]) => (
+              {EMAIL_TRIGGERS.map(([event, recipient, includes]) => (
                 <tr key={event} className="hover:bg-gray-50">
                   <td className="px-4 py-2.5 font-medium text-gray-800">{event}</td>
                   <td className="px-4 py-2.5 text-gray-500">{recipient}</td>

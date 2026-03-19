@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Container from '@/components/Container'
+import { useLocale } from '@/context/LocaleContext'
 
 type ExportType = 'orders' | 'invoices' | 'uploads' | 'all'
 type Status = 'idle' | 'loading' | 'done' | 'error'
@@ -22,6 +23,8 @@ function ExportCard({
   description: string
   type: ExportType
 }) {
+  const { t } = useLocale()
+  const td = t.admin
   const [status, setStatus] = useState<Status>('idle')
 
   const urlMap: Record<ExportType, string> = {
@@ -69,16 +72,18 @@ function ExportCard({
             : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500',
         ].join(' ')}
       >
-        {status === 'loading' ? 'Preparing…' :
-         status === 'done'    ? '✓ Downloaded' :
-         status === 'error'   ? 'Error — retry' :
-         'Download JSON'}
+        {status === 'loading' ? td.preparing :
+         status === 'done'    ? td.downloaded :
+         status === 'error'   ? td.errorRetry :
+         td.downloadJson}
       </button>
     </div>
   )
 }
 
 export default function BackupPage() {
+  const { t } = useLocale()
+  const td = t.admin
   const [restoreStatus, setRestoreStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [restoreResult, setRestoreResult] = useState<RestoreResult | null>(null)
   const [restoreError, setRestoreError] = useState('')
@@ -103,18 +108,17 @@ export default function BackupPage() {
 
       const data = await res.json()
       if (!res.ok) {
-        setRestoreError(data.error ?? 'Restore failed')
+        setRestoreError(data.error ?? td.updateError)
         setRestoreStatus('error')
       } else {
         setRestoreResult(data)
         setRestoreStatus('done')
       }
     } catch (err) {
-      setRestoreError(err instanceof Error ? err.message : 'Invalid backup file')
+      setRestoreError(err instanceof Error ? err.message : td.errorRetry)
       setRestoreStatus('error')
     }
 
-    // Reset file input
     if (fileRef.current) fileRef.current.value = ''
   }
 
@@ -122,46 +126,29 @@ export default function BackupPage() {
     <Container>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1>Backup & Export</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Download a snapshot of all shop data</p>
+          <h1>{td.backupTitle}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{td.backupSubtitle}</p>
         </div>
       </div>
 
       {/* Export section */}
       <section className="mb-8">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Export</h2>
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{td.exportSection}</h2>
         <div className="flex flex-col gap-3">
-          <ExportCard
-            title="Full backup"
-            description="All orders, invoices and upload metadata in one file"
-            type="all"
-          />
-          <ExportCard
-            title="Orders"
-            description="All orders with items, addresses, status and payment info"
-            type="orders"
-          />
-          <ExportCard
-            title="Invoices"
-            description="List of generated invoices with order references"
-            type="invoices"
-          />
-          <ExportCard
-            title="Uploads"
-            description="Upload file metadata and storage paths"
-            type="uploads"
-          />
+          <ExportCard title={td.fullBackup}     description={td.fullBackupDesc}     type="all"      />
+          <ExportCard title={td.ordersExport}   description={td.ordersExportDesc}   type="orders"   />
+          <ExportCard title={td.invoicesExport} description={td.invoicesExportDesc} type="invoices" />
+          <ExportCard title={td.uploadsExport}  description={td.uploadsExportDesc}  type="uploads"  />
         </div>
       </section>
 
       {/* Restore section */}
       <section className="mb-8">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Restore</h2>
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{td.restoreSection}</h2>
         <div className="rounded-xl border border-gray-200 bg-white px-5 py-5">
-          <p className="text-sm font-medium text-gray-800 mb-1">Restore from backup</p>
+          <p className="text-sm font-medium text-gray-800 mb-1">{td.restoreFromBackup}</p>
           <p className="text-xs text-gray-400 mb-4">
-            Upload a <code className="bg-gray-100 px-1 rounded">backup-*.json</code> file.
-            Only missing orders are inserted — existing records are never overwritten.
+            {td.restoreDesc}
           </p>
 
           <input
@@ -177,7 +164,7 @@ export default function BackupPage() {
             disabled={restoreStatus === 'loading'}
             className="text-sm px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors font-medium"
           >
-            {restoreStatus === 'loading' ? 'Restoring…' : 'Choose backup file'}
+            {restoreStatus === 'loading' ? td.restoring : td.chooseBackupFile}
           </button>
 
           {restoreStatus === 'error' && (
@@ -188,10 +175,10 @@ export default function BackupPage() {
 
           {restoreStatus === 'done' && restoreResult && (
             <div className="mt-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-              <p className="font-semibold mb-1">Restore complete</p>
-              <p>Orders in file: <strong>{restoreResult.ordersTotal}</strong></p>
-              <p>Restored (new): <strong>{restoreResult.ordersRestored}</strong></p>
-              <p>Skipped (already exist): <strong>{restoreResult.ordersSkipped}</strong></p>
+              <p className="font-semibold mb-1">{td.restoreComplete}</p>
+              <p>{td.ordersInFile} <strong>{restoreResult.ordersTotal}</strong></p>
+              <p>{td.restoredNew} <strong>{restoreResult.ordersRestored}</strong></p>
+              <p>{td.skippedExist} <strong>{restoreResult.ordersSkipped}</strong></p>
               {restoreResult.errors.length > 0 && (
                 <details className="mt-2">
                   <summary className="cursor-pointer text-xs text-red-600">{restoreResult.errors.length} error(s)</summary>
@@ -207,7 +194,7 @@ export default function BackupPage() {
 
       {/* Cron info */}
       <section>
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Auto backup</h2>
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{td.autoBackupSection}</h2>
         <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-600 space-y-2">
           <p>
             Vercel Cron is configured to call{' '}
@@ -219,17 +206,12 @@ export default function BackupPage() {
             Vercel environment variables to protect the cron endpoint.
             Each run is logged to the audit trail.
           </p>
-          <p className="text-gray-400 text-xs">
-            Note: Vercel Cron logs the backup event only — it does not store the file.
-            Use the Download buttons above to save a copy locally.
-          </p>
+          <p className="text-gray-400 text-xs">{td.autoBackupNote}</p>
         </div>
       </section>
 
-      {/* Quick link */}
       <div className="mt-6 text-xs text-gray-400">
-        Files are exported as JSON. To restore the database completely, use your database
-        provider&apos;s point-in-time restore (Neon → Branches).
+        {td.filesExportedNote}
       </div>
     </Container>
   )

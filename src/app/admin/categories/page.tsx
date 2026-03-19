@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Container from '@/components/Container'
 import Button from '@/components/Button'
 import Link from 'next/link'
+import { useLocale } from '@/context/LocaleContext'
 
 interface Category {
   id: string
@@ -20,6 +21,8 @@ const inputCls = 'rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:ou
 const labelCls = 'block text-xs font-medium text-gray-600 mb-0.5'
 
 export default function AdminCategoriesPage() {
+  const { t } = useLocale()
+  const td = t.admin
   const [categories, setCategories] = useState<Category[]>([])
   const [saved, setSaved] = useState<Record<string, boolean>>({})
 
@@ -55,18 +58,18 @@ export default function AdminCategoriesPage() {
   return (
     <Container>
       <div className="flex items-center justify-between mb-6">
-        <h1>Categories</h1>
+        <h1>{td.categories}</h1>
       </div>
 
       {categories.length === 0 ? (
-        <p className="text-sm text-gray-500">No categories.</p>
+        <p className="text-sm text-gray-500">{td.noCategories}</p>
       ) : (
         <div className="flex flex-col gap-4">
           {categories.map((cat) => (
             <div key={cat.id} className="rounded-xl border border-gray-200 bg-white p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className={labelCls}>Name</label>
+                  <label className={labelCls}>{td.name}</label>
                   <input
                     className={inputCls}
                     value={cat.name}
@@ -74,11 +77,11 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Slug</label>
+                  <label className={labelCls}>{td.slug}</label>
                   <input className={`${inputCls} bg-gray-50 text-gray-400`} value={cat.slug} readOnly />
                 </div>
                 <div>
-                  <label className={labelCls}>Sort order</label>
+                  <label className={labelCls}>{td.sortOrder}</label>
                   <input
                     type="number"
                     className={inputCls}
@@ -87,13 +90,13 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Default price mode</label>
+                  <label className={labelCls}>{td.defaultPriceMode}</label>
                   <select
                     className={inputCls}
                     value={cat.defaultPriceMode ?? ''}
                     onChange={(e) => handleChange(cat.id, 'defaultPriceMode', e.target.value)}
                   >
-                    <option value="">— none —</option>
+                    <option value="">{td.noneOption}</option>
                     <option value="PIECE">PIECE</option>
                     <option value="METER">METER</option>
                     <option value="AREA">AREA</option>
@@ -103,17 +106,17 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
               <div className="mb-3">
-                <label className={labelCls}>Description (shown on shop page)</label>
+                <label className={labelCls}>{td.descriptionLabel}</label>
                 <textarea
                   className={inputCls}
                   rows={2}
                   value={cat.description ?? ''}
                   onChange={(e) => handleChange(cat.id, 'description', e.target.value)}
-                  placeholder="Short description shown above products in this category…"
+                  placeholder={td.descriptionPlaceholder}
                 />
               </div>
               <div className="mb-3">
-                <label className={labelCls}>Meta title</label>
+                <label className={labelCls}>{td.metaTitleLabel}</label>
                 <input
                   className={inputCls}
                   value={cat.metaTitle ?? ''}
@@ -122,17 +125,17 @@ export default function AdminCategoriesPage() {
                 />
               </div>
               <div className="mb-3">
-                <label className={labelCls}>Meta description</label>
+                <label className={labelCls}>{td.metaDescriptionLabel}</label>
                 <textarea
                   className={inputCls}
                   rows={2}
                   value={cat.metaDescription ?? ''}
                   onChange={(e) => handleChange(cat.id, 'metaDescription', e.target.value)}
-                  placeholder="Shown in search engine results…"
+                  placeholder={td.metaDescPlaceholder}
                 />
               </div>
               <Button variant="secondary" onClick={() => handleSave(cat)}>
-                {saved[cat.id] ? 'Saved!' : 'Save'}
+                {saved[cat.id] ? td.savedLabel : td.save}
               </Button>
             </div>
           ))}
@@ -140,7 +143,7 @@ export default function AdminCategoriesPage() {
       )}
 
       <div className="mt-6">
-        <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900">← Back to admin</Link>
+        <Link href="/admin" className="text-sm text-gray-500 hover:text-gray-900">{td.backToAdmin}</Link>
       </div>
     </Container>
   )

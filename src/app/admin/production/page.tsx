@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Container from '@/components/Container'
 import { orderStatusLabel } from '@/lib/statusLabel'
 import ImagePlaceholder from '@/components/ImagePlaceholder'
+import { useLocale } from '@/context/LocaleContext'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -45,54 +46,16 @@ interface Order {
 }
 
 // ── Workshop status mapping ─────────────────────────────────────────────────
-//
-//  DB status                 Workshop label
-//  ──────────────────────    ─────────────────────────
-//  CONFIRMED/UPLOADED/
-//  APPROVED                → NEW  (awaiting file approval + queue)
-//  READY                   → IN QUEUE  (approved, waiting to start)
-//  IN_PRODUCTION           → IN PRODUCTION
-//  DONE                    → PRINTED  (production done, ready to pack)
-//  SHIPPED                 → SHIPPED  (hidden from active queue)
-//  DELIVERED               → DONE  (hidden from active queue)
-//
 
 const NEW_STATUSES = new Set(['CONFIRMED', 'UPLOADED', 'APPROVED'])
 type WorkshopFilter = 'ALL' | 'NEW' | 'IN_QUEUE' | 'IN_PRODUCTION' | 'PRINTED'
-
-const FILTERS: { key: WorkshopFilter; label: string }[] = [
-  { key: 'ALL',           label: 'All active'    },
-  { key: 'NEW',           label: 'New'            },
-  { key: 'IN_QUEUE',      label: 'In queue'       },
-  { key: 'IN_PRODUCTION', label: 'In production'  },
-  { key: 'PRINTED',       label: 'Printed'        },
-]
 
 function workshopFilter(o: Order, f: WorkshopFilter): boolean {
   if (f === 'NEW')           return NEW_STATUSES.has(o.status)
   if (f === 'IN_QUEUE')      return o.status === 'READY'
   if (f === 'IN_PRODUCTION') return o.status === 'IN_PRODUCTION'
   if (f === 'PRINTED')       return o.status === 'DONE'
-  // ALL → show NEW, READY, IN_PRODUCTION, DONE; hide SHIPPED/DELIVERED/CANCELLED
   return !['SHIPPED', 'DELIVERED', 'CANCELLED'].includes(o.status)
-}
-
-function statusBadge(dbStatus: string) {
-  if (NEW_STATUSES.has(dbStatus))
-    return { label: 'NEW',           cls: 'bg-yellow-100 text-yellow-700' }
-  const map: Record<string, { label: string; cls: string }> = {
-    READY:         { label: 'IN QUEUE',      cls: 'bg-blue-100 text-blue-700'   },
-    IN_PRODUCTION: { label: 'IN PRODUCTION', cls: 'bg-orange-100 text-orange-700' },
-    DONE:          { label: 'PRINTED',       cls: 'bg-green-100 text-green-700'  },
-  }
-  return map[dbStatus] ?? { label: orderStatusLabel(dbStatus), cls: 'bg-gray-100 text-gray-500' }
-}
-
-// DB status → next action buttons (only valid transitions)
-const ACTIONS: Record<string, { label: string; toStatus: string; color: string }[]> = {
-  READY:         [{ label: 'START',        toStatus: 'IN_PRODUCTION', color: 'bg-orange-500 hover:bg-orange-600 text-white' }],
-  IN_PRODUCTION: [{ label: 'MARK PRINTED', toStatus: 'DONE',          color: 'bg-green-600  hover:bg-green-700  text-white' }],
-  DONE:          [{ label: 'MARK SHIPPED', toStatus: 'SHIPPED',        color: 'bg-purple-600 hover:bg-purple-700 text-white' }],
 }
 
 // ── File thumbnail ──────────────────────────────────────────────────────────
@@ -135,6 +98,34 @@ function Thumb({ item }: { item: OrderItem }) {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function ProductionPage() {
+  const { t } = useLocale()
+  const td = t.admin
+
+  const FILTERS: { key: WorkshopFilter; label: string }[] = [
+    { key: 'ALL',           label: td.allActive     },
+    { key: 'NEW',           label: td.new           },
+    { key: 'IN_QUEUE',      label: td.inQueue       },
+    { key: 'IN_PRODUCTION', label: td.inProduction  },
+    { key: 'PRINTED',       label: td.printed       },
+  ]
+
+  const statusBadge = (dbStatus: string) => {
+    if (NEW_STATUSES.has(dbStatus))
+      return { label: td.new,           cls: 'bg-yellow-100 text-yellow-700' }
+    const map: Record<string, { label: string; cls: string }> = {
+      READY:         { label: td.inQueue,      cls: 'bg-blue-100 text-blue-700'     },
+      IN_PRODUCTION: { label: td.inProduction, cls: 'bg-orange-100 text-orange-700' },
+      DONE:          { label: td.printed,      cls: 'bg-green-100 text-green-700'   },
+    }
+    return map[dbStatus] ?? { label: orderStatusLabel(dbStatus), cls: 'bg-gray-100 text-gray-500' }
+  }
+
+  const ACTIONS_MAP: Record<string, { label: string; toStatus: string; color: string }[]> = {
+    READY:         [{ label: td.start,       toStatus: 'IN_PRODUCTION', color: 'bg-orange-500 hover:bg-orange-600 text-white' }],
+    IN_PRODUCTION: [{ label: td.markPrinted, toStatus: 'DONE',          color: 'bg-green-600  hover:bg-green-700  text-white' }],
+    DONE:          [{ label: td.markShipped, toStatus: 'SHIPPED',        color: 'bg-purple-600 hover:bg-purple-700 text-white' }],
+  }
+
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -146,11 +137,10 @@ export default function ProductionPage() {
     fetch('/api/admin/production?done=1')
       .then((r) => r.json())
       .then((data: Order[]) => {
-        // Keep all except SHIPPED / DELIVERED / CANCELLED (those are out of production)
         setOrders(data.filter((o) => !['SHIPPED', 'DELIVERED', 'CANCELLED'].includes(o.status)))
         setLoading(false)
       })
-      .catch(() => { setError('Failed to load production queue'); setLoading(false) })
+      .catch(() => { setError(td.loadError); setLoading(false) })
   }
 
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -166,12 +156,12 @@ export default function ProductionPage() {
       const updated = await res.json()
       setOrders((prev) =>
         toStatus === 'SHIPPED'
-          ? prev.filter((o) => o.id !== orderId) // shipped → remove from active queue
+          ? prev.filter((o) => o.id !== orderId)
           : prev.map((o) => o.id === orderId ? { ...o, status: updated.status } : o)
       )
     } else {
       const d = await res.json()
-      alert(d.error ?? 'Failed to update status')
+      alert(d.error ?? td.updateError)
     }
     setActioning(null)
   }
@@ -191,14 +181,14 @@ export default function ProductionPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1>Production</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Workshop queue — print / cut / pack</p>
+          <h1>{td.production}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{td.workshopQueue}</p>
         </div>
         <button
           onClick={load}
           className="text-xs px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
         >
-          Refresh
+          {td.refresh}
         </button>
       </div>
 
@@ -241,21 +231,21 @@ export default function ProductionPage() {
 
       {!loading && !error && visible.length === 0 && (
         <p className="text-sm text-gray-400 italic py-10 text-center">
-          {filter === 'NEW'           ? 'No new orders.' :
-           filter === 'IN_QUEUE'      ? 'Nothing queued for production.' :
-           filter === 'IN_PRODUCTION' ? 'Nothing in production.' :
-           filter === 'PRINTED'       ? 'Nothing printed yet.' :
-           'No active orders.'}
+          {filter === 'NEW'           ? td.noNewOrders :
+           filter === 'IN_QUEUE'      ? td.nothingQueued :
+           filter === 'IN_PRODUCTION' ? td.nothingInProduction :
+           filter === 'PRINTED'       ? td.nothingPrinted :
+           td.noActiveOrders}
         </p>
       )}
 
       {!loading && !error && visible.length > 0 && (
         <div className="flex flex-col gap-4">
           {visible.map((order) => {
-            const actions = ACTIONS[order.status] ?? []
+            const actions = ACTIONS_MAP[order.status] ?? []
             const isActioning = actioning === order.id
             const { label: statusLabel, cls: statusCls } = statusBadge(order.status)
-            const customer = order.user?.name ?? order.user?.email ?? 'Guest'
+            const customer = order.user?.name ?? order.user?.email ?? td.guest
 
             const borderCls =
               order.status === 'IN_PRODUCTION' ? 'border-orange-300' :
@@ -313,13 +303,13 @@ export default function ProductionPage() {
                           </p>
 
                           <p className="text-xs text-gray-500 mt-0.5">
-                            {Number(item.width)} × {Number(item.height)} cm &nbsp;·&nbsp; Qty <strong>{item.quantity}</strong>
+                            {Number(item.width)} × {Number(item.height)} cm &nbsp;·&nbsp; {td.qty} <strong>{item.quantity}</strong>
                             {item.categoryName && <span className="text-gray-400"> · {item.categoryName}</span>}
                           </p>
 
                           {item.productionTypeSnapshot && (
                             <p className="text-xs text-gray-600 mt-1 font-medium">
-                              Options: <span className="font-normal">{item.productionTypeSnapshot}</span>
+                              {td.optionsLabel} <span className="font-normal">{item.productionTypeSnapshot}</span>
                             </p>
                           )}
 
@@ -336,7 +326,7 @@ export default function ProductionPage() {
                                   rel="noopener noreferrer"
                                   className="text-[11px] px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium whitespace-nowrap"
                                 >
-                                  Download
+                                  {td.download}
                                 </a>
                               )}
                               {item.designId && (
@@ -346,7 +336,7 @@ export default function ProductionPage() {
                                   rel="noopener noreferrer"
                                   className="text-[11px] px-2 py-0.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors font-medium whitespace-nowrap"
                                 >
-                                  Download design
+                                  {td.downloadDesign}
                                 </a>
                               )}
                               {primaryFile.dpi != null && (
@@ -356,7 +346,7 @@ export default function ProductionPage() {
                                   primaryFile.dpi >= 72  ? 'bg-yellow-100 text-yellow-700' :
                                   'bg-red-100 text-red-700',
                                 ].join(' ')}>
-                                  {primaryFile.dpi >= 150 ? 'Good DPI' : primaryFile.dpi >= 72 ? 'Low DPI' : 'Poor DPI'}
+                                  {primaryFile.dpi >= 150 ? td.goodDpi : primaryFile.dpi >= 72 ? td.lowDpi : td.poorDpi}
                                 </span>
                               )}
                             </div>
@@ -385,13 +375,13 @@ export default function ProductionPage() {
                     rel="noopener noreferrer"
                     className="text-sm px-4 py-2 rounded-lg border border-gray-900 bg-gray-900 text-white hover:bg-gray-700 transition-colors font-medium"
                   >
-                    Print sheet
+                    {td.printSheet}
                   </a>
                   <Link
                     href={`/admin/production/${order.id}`}
                     className="text-sm px-4 py-2 rounded-lg border border-red-600 text-red-600 hover:bg-red-50 transition-colors font-medium"
                   >
-                    Detail →
+                    {td.detail}
                   </Link>
                 </div>
               </div>

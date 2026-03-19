@@ -2,11 +2,15 @@ import { cookies } from 'next/headers'
 import Container from '@/components/Container'
 import CartUI from '@/components/cart/CartUI'
 import { db } from '@/lib/db'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CartPage() {
   const userId = cookies().get('replica_uid')?.value ?? null
+  const cookieLocale = cookies().get('replica_locale')?.value
+  const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
+  const tc = getDictionary(locale).common
 
   const cart = userId
     ? await db.cart.findUnique({
@@ -51,7 +55,7 @@ export default async function CartPage() {
 
   return (
     <Container>
-      <h1 className="mb-6">Cart</h1>
+      <h1 className="mb-6">{tc.cart}</h1>
       <CartUI items={items} subtotal={subtotal} />
     </Container>
   )
