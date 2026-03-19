@@ -342,6 +342,29 @@ export interface AdminDictionary {
   triggerInclCompletionNotice: string
   triggerInclOrderIdTotal: string
   triggerInclFormContents: string
+  // Demo mode
+  settingsDemo: string
+  settingsDemoDesc: string
+  demoTitle: string
+  demoSubtitle: string
+  demoEnabled: string
+  demoDisabled: string
+  demoToggle: string
+  demoSeedData: string
+  demoSeedDesc: string
+  demoSeedBtn: string
+  demoSeeded: string
+  demoSnapshotSection: string
+  demoSnapshotBtn: string
+  demoSnapshotTaken: string
+  demoSnapshotDate: string
+  demoSnapshotOrders: string
+  demoNoSnapshot: string
+  demoRestoreSection: string
+  demoRestoreBtn: string
+  demoRestoreConfirm: string
+  demoRestored: string
+  demoRestoreError: string
 }
 
 export interface CommonDictionary {

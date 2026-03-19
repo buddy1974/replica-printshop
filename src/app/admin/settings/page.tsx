@@ -39,6 +39,7 @@ export default async function SettingsPage() {
     { href: '/admin/settings/tax',       title: td.settingsTax,       description: td.settingsTaxDesc,       icon: '📊' },
     { href: '/admin/settings/shipping',  title: td.settingsShipping,  description: td.settingsShippingDesc,  icon: '📦' },
     { href: '/admin/settings/branding',  title: td.settingsBranding,  description: td.settingsBrandingDesc,  icon: '🎨' },
+    { href: '/admin/settings/demo',      title: td.settingsDemo,      description: td.settingsDemoDesc,      icon: '🎭' },
   ]
 
   const EMAIL_TRIGGERS: [string, string, string][] = [

@@ -8,6 +8,7 @@ import { LocaleProvider } from '@/context/LocaleContext'
 import { BrandingProvider, type BrandingData } from '@/context/BrandingContext'
 import { getSetting } from '@/lib/settings/settingsService'
 import CartDrawer from '@/components/CartDrawer'
+import DemoBanner from '@/components/DemoBanner'
 
 export const revalidate = 300
 
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <BrandingProvider initial={branding}>
           <LocaleProvider>
           <CartProvider>
+            <DemoBanner />
             <Header />
             <main>{children}</main>
             <Footer />
