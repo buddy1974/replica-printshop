@@ -81,36 +81,36 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
       {orders.length === 0 ? (
         <p className="text-sm text-gray-500">{q ? td.noMatchOrders : td.noOrders}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50">
+        <div className="overflow-x-auto card">
+          <table className="table-base">
+            <thead>
               <tr>
                 {tableHeaders.map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                  <th key={i}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {orders.map((o) => (
-                <tr key={o.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
+                <tr key={o.id}>
+                  <td>
                     <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-gray-800 hover:text-red-600 underline underline-offset-2">{o.id.slice(0, 8)}</Link>
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600">
+                  <td className="text-xs text-gray-600">
                     {o.user ? (
                       <span title={o.user.email}>{o.user.name ?? o.user.email}</span>
                     ) : (
                       <span className="text-gray-400">{td.guest}</span>
                     )}
                   </td>
-                  <td className="px-4 py-3"><Badge label={o.status} /></td>
-                  <td className="px-4 py-3"><Badge label={o.paymentStatus} /></td>
-                  <td className="px-4 py-3 text-gray-600">{o.deliveryType}</td>
-                  <td className="px-4 py-3 text-gray-600">{o.shippingMethod?.name ?? '—'}</td>
-                  <td className="px-4 py-3 font-medium">€{Number(o.total).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-gray-600">{o._count.items}</td>
-                  <td className="px-4 py-3 text-gray-500">{new Date(o.createdAt).toLocaleDateString(locale)}</td>
-                  <td className="px-4 py-3">
+                  <td><Badge label={o.status} /></td>
+                  <td><Badge label={o.paymentStatus} /></td>
+                  <td className="text-gray-600 text-xs">{o.deliveryType}</td>
+                  <td className="text-gray-600 text-xs">{o.shippingMethod?.name ?? '—'}</td>
+                  <td className="font-medium tabular-nums">€{Number(o.total).toFixed(2)}</td>
+                  <td className="text-gray-600">{o._count.items}</td>
+                  <td className="text-gray-500 text-xs tabular-nums">{new Date(o.createdAt).toLocaleDateString(locale)}</td>
+                  <td>
                     {o.status === 'UPLOADED' && <ApproveButton orderId={o.id} />}
                   </td>
                 </tr>

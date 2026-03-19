@@ -37,13 +37,13 @@ export default async function DesignsPage() {
       <h1 className="text-lg font-semibold text-gray-900">{ta.savedDesigns}</h1>
 
       {designs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
+        <div className="card p-6 text-sm text-gray-400 text-center">
           {ta.noDesigns}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {designs.map((design) => (
-            <div key={design.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div key={design.id} className="card overflow-hidden">
               {/* Preview */}
               <div className="aspect-video bg-gray-50 flex items-center justify-center overflow-hidden">
                 {design.preview ? (

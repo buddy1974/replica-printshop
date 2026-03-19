@@ -70,34 +70,34 @@ export default async function ProductsPage({ searchParams }: { searchParams: { p
       {products.length === 0 ? (
         <p className="text-sm text-gray-500">{q ? td.noMatchProducts : td.noProducts}</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50">
+        <div className="overflow-x-auto card">
+          <table className="table-base">
+            <thead>
               <tr>
                 {tableHeaders.map((h, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</th>
+                  <th key={i}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {products.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 w-10">
+                <tr key={p.id}>
+                  <td className="w-10">
                     {p.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.imageUrl} alt="" loading="lazy" className="w-8 h-8 object-cover rounded border border-gray-200" />
+                      <img src={p.imageUrl} alt="" loading="lazy" className="w-7 h-7 object-cover rounded border border-gray-200" />
                     ) : (
-                      <div className="w-8 h-8 rounded border border-gray-200 bg-gray-100" />
+                      <div className="w-7 h-7 rounded border border-gray-200 bg-gray-100" />
                     )}
                   </td>
-                  <td className="px-4 py-3 font-medium">{p.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{p.slug}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.category}</td>
-                  <td className="px-4 py-3">
+                  <td className="font-medium">{p.name}</td>
+                  <td className="font-mono text-xs text-gray-400">{p.slug}</td>
+                  <td className="text-gray-600 text-xs">{p.category}</td>
+                  <td>
                     <Badge label={p.active ? td.active : td.inactive} color={p.active ? 'green' : 'gray'} />
                   </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/admin/products/${p.id}`} className="text-sm text-gray-500 hover:text-gray-900">{td.edit}</Link>
+                  <td>
+                    <Link href={`/admin/products/${p.id}`} className="text-xs text-gray-500 hover:text-red-600 font-medium">{td.edit}</Link>
                   </td>
                 </tr>
               ))}

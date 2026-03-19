@@ -24,13 +24,13 @@ export default async function AddressesPage() {
       <h1 className="text-lg font-semibold text-gray-900">{ta.savedAddresses}</h1>
 
       {addresses.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
+        <div className="card p-6 text-sm text-gray-400 text-center">
           {ta.noAddresses}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {addresses.map((a) => (
-            <div key={a.id} className="bg-white border border-gray-200 rounded-xl p-4 flex justify-between items-start gap-4">
+            <div key={a.id} className="card p-4 flex justify-between items-start gap-4">
               <div className="text-sm text-gray-700 leading-relaxed">
                 {a.company && <p className="font-medium">{a.company}</p>}
                 <p>{a.name}</p>

@@ -20,27 +20,58 @@
     text-decoration: none;
   }
 
-  h1 { @apply text-2xl font-bold; }
+  h1 { @apply text-2xl font-bold tracking-tight; }
   h2 { @apply text-xl font-semibold; }
   h3 { @apply text-base font-semibold; }
 }
 
 @layer components {
-  /* Reusable button styles — use className="btn-primary" etc. */
+  /* ── Buttons ──────────────────────────────────────────────────── */
+  /* h-9 (36px), px-4, rounded-lg — consistent across the whole platform */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-700 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 active:bg-gray-800 transition-colors;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 active:bg-red-800 transition-colors;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors;
   }
+  /* Ghost: h-8 — for secondary inline actions and sidebar nav items */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 h-8 px-3 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors;
   }
-  /* Standard form input — use className="input" */
+
+  /* ── Inputs ───────────────────────────────────────────────────── */
   .input {
-    @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400;
+    @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent;
+  }
+
+  /* ── Cards ────────────────────────────────────────────────────── */
+  .card {
+    @apply rounded-xl border border-gray-200 shadow-sm bg-white;
+  }
+  .card-pad {
+    @apply rounded-xl border border-gray-200 shadow-sm bg-white p-5;
+  }
+
+  /* ── Tables ───────────────────────────────────────────────────── */
+  .table-base {
+    @apply w-full text-sm;
+  }
+  .table-base thead {
+    @apply border-b border-gray-200 bg-gray-50;
+  }
+  .table-base thead th {
+    @apply px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+  .table-base tbody {
+    @apply divide-y divide-gray-100;
+  }
+  .table-base tbody td {
+    @apply px-3 py-2;
+  }
+  .table-base tbody tr {
+    @apply hover:bg-gray-50;
   }
 }

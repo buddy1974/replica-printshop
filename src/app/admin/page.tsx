@@ -11,9 +11,9 @@ const fmt = (n: number) => `€${n.toFixed(2)}`
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-semibold text-gray-900">{value}</p>
+    <div className="card p-4">
+      <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-2xl font-bold text-gray-900 tabular-nums">{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   )
@@ -95,8 +95,8 @@ export default async function AdminPage() {
           </Section>
 
           <div className="grid gap-4 mb-6 sm:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">{td.topProducts}</p>
+            <div className="card overflow-hidden">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">{td.topProducts}</p>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
                   {a.topProducts.length === 0 && (
@@ -112,8 +112,8 @@ export default async function AdminPage() {
               </table>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">{td.topCategories}</p>
+            <div className="card overflow-hidden">
+              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">{td.topCategories}</p>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
                   {a.topCategories.length === 0 && (
@@ -137,7 +137,7 @@ export default async function AdminPage() {
       <Section title={td.manage}>
         <div className="grid gap-3">
           {navLinks.map(({ href, label, desc }) => (
-            <Link key={href} href={href} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:border-red-300 transition-colors">
+            <Link key={href} href={href} className="card flex items-center justify-between p-4 hover:border-red-200 hover:shadow-md transition-all">
               <div>
                 <p className="font-medium text-sm">{label}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{desc}</p>

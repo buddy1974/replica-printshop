@@ -29,8 +29,8 @@ export default async function AccountPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Profile card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">{ta.profile}</h2>
+      <div className="card-pad">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">{ta.profile}</h2>
         <div className="mb-4 text-sm">
           <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">{ta.email}</p>
           <p className="text-gray-800">{user.email}</p>
@@ -42,16 +42,16 @@ export default async function AccountPage() {
       <div className="grid grid-cols-2 gap-4">
         <Link
           href="/account/orders"
-          className="bg-white border border-gray-200 rounded-xl p-5 hover:border-gray-400 transition-colors"
+          className="card p-5 hover:border-red-200 hover:shadow-md transition-all"
         >
-          <p className="text-2xl font-bold text-gray-900">{orderCount}</p>
+          <p className="text-3xl font-bold text-gray-900 tabular-nums">{orderCount}</p>
           <p className="text-sm text-gray-500 mt-1">{orderCount !== 1 ? ta.items : ta.item}</p>
         </Link>
         <Link
           href="/account/addresses"
-          className="bg-white border border-gray-200 rounded-xl p-5 hover:border-gray-400 transition-colors"
+          className="card p-5 hover:border-red-200 hover:shadow-md transition-all"
         >
-          <p className="text-2xl font-bold text-gray-900">{addressCount}</p>
+          <p className="text-3xl font-bold text-gray-900 tabular-nums">{addressCount}</p>
           <p className="text-sm text-gray-500 mt-1">{ta.addresses}</p>
         </Link>
       </div>

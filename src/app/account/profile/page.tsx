@@ -26,7 +26,7 @@ export default async function ProfilePage() {
     <div className="flex flex-col gap-5">
       <h1 className="text-lg font-semibold text-gray-900">{ta.profile}</h1>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-4">
+      <div className="card-pad flex flex-col gap-5">
         {/* Email — read-only (set by Google OAuth) */}
         <div>
           <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{ta.email}</p>
