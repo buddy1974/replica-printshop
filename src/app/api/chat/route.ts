@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import type { ValidationResult } from '@/lib/fileValidation'
 import { matchProduct, type MatchResult } from '@/lib/productMatcher'
+import { evaluatePrepress, buildPrepressSection } from '@/lib/prepressRules'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -34,7 +35,7 @@ async function getActiveProducts(): Promise<{ name: string; slug: string }[]> {
   }
 }
 
-function buildSystemPrompt(catalog: string, language: string, match: MatchResult | null): string {
+function buildSystemPrompt(catalog: string, language: string, match: MatchResult | null, prepressSection: string): string {
   const langName = language === 'de' ? 'German' : language === 'fr' ? 'French' : 'English'
 
   return `You are Print Expert, the AI assistant for Printshop (printshop.maxpromo.digital).
@@ -91,7 +92,7 @@ Stickers & labels, large format print, display systems
 Based on the customer message and/or uploaded file, the system identified this product as the best fit:
 - **[${match.productName}](${match.link})** — ${match.reason}
 
-Lead your answer toward this product. Include the markdown link in your response. If the customer's actual need turns out to be different, recommend the correct product instead.` : ''}`
+Lead your answer toward this product. Include the markdown link in your response. If the customer's actual need turns out to be different, recommend the correct product instead.` : ''}${prepressSection}`
 }
 
 type Lang = 'user' | 'assistant'
@@ -166,7 +167,9 @@ export async function POST(req: NextRequest) {
 
   const [catalog, products] = await Promise.all([getProductCatalog(), getActiveProducts()])
   const match = matchProduct(file?.validation ?? null, lastUserMsg, products)
-  const systemPrompt = buildSystemPrompt(catalog, language, match)
+  const prepress = evaluatePrepress(file?.validation ?? null, match, lastUserMsg)
+  const prepressSection = buildPrepressSection(prepress)
+  const systemPrompt = buildSystemPrompt(catalog, language, match, prepressSection)
 
   // Build Anthropic message params
   const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
