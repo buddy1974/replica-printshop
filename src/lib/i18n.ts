@@ -84,6 +84,92 @@ export interface CheckoutDictionary {
   fileUploaded: string
 }
 
+export interface AccountDictionary {
+  overview: string
+  orders: string
+  profile: string
+  addresses: string
+  designs: string
+  uploads: string
+  email: string
+  emailReadOnly: string
+  displayName: string
+  memberSince: string
+  savedAddresses: string
+  noAddresses: string
+  savedDesigns: string
+  noDesigns: string
+  designPreview: string
+  unknownProduct: string
+  openEditor: string
+  noOrders: string
+  item: string
+  items: string
+}
+
+export interface AdminDictionary {
+  title: string
+  revenue: string
+  total: string
+  today: string
+  thisMonth: string
+  avgOrder: string
+  orders: string
+  production: string
+  uploads: string
+  pending: string
+  approved: string
+  rejected: string
+  queued: string
+  inProgress: string
+  done: string
+  failed: string
+  topProducts: string
+  topCategories: string
+  noData: string
+  analyticsUnavailable: string
+  manage: string
+  products: string
+  manageProducts: string
+  viewAllOrders: string
+  productionQueue: string
+  shippingRules: string
+  configShipping: string
+  taxVat: string
+  configVat: string
+  categories: string
+  editCategories: string
+  search: string
+  clear: string
+  backToAdmin: string
+  active: string
+  inactive: string
+  edit: string
+  newProduct: string
+  searchProducts: string
+  searchOrders: string
+  noProducts: string
+  noMatchProducts: string
+  noMatchOrders: string
+  noOrders: string
+  guest: string
+  standard: string
+  express: string
+  pickup: string
+  customer: string
+  status: string
+  payment: string
+  delivery: string
+  shipping: string
+  items: string
+  created: string
+  name: string
+  slug: string
+  category: string
+  page: string
+  of: string
+}
+
 export interface HomeDictionary {
   hero: { title: string; subtitle: string; shop: string; contact: string }
   categories: { title: string }
@@ -156,12 +242,14 @@ export interface Dictionary {
   }
   checkout: CheckoutDictionary
   home: HomeDictionary
+  account: AccountDictionary
+  admin: AdminDictionary
 }
 
 const dictionaries: Record<Locale, Dictionary> = {
-  en: { ...(enRaw as Omit<Dictionary, 'checkout' | 'home'>), checkout: checkoutEn, home: homeEn },
-  de: { ...(deRaw as Omit<Dictionary, 'checkout' | 'home'>), checkout: checkoutDe, home: homeDe },
-  fr: { ...(frRaw as Omit<Dictionary, 'checkout' | 'home'>), checkout: checkoutFr, home: homeFr },
+  en: { ...(enRaw as unknown as Dictionary), checkout: checkoutEn, home: homeEn },
+  de: { ...(deRaw as unknown as Dictionary), checkout: checkoutDe, home: homeDe },
+  fr: { ...(frRaw as unknown as Dictionary), checkout: checkoutFr, home: homeFr },
 }
 
 export function getDictionary(locale: Locale): Dictionary {

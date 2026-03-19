@@ -2,12 +2,17 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import DeleteAddressButton from './DeleteAddressButton'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AddressesPage() {
   const userId = cookies().get('replica_uid')?.value
   if (!userId) notFound()
+
+  const cookieLocale = cookies().get('replica_locale')?.value
+  const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
+  const ta = getDictionary(locale).account
 
   const addresses = await db.address.findMany({
     where: { userId },
@@ -16,11 +21,11 @@ export default async function AddressesPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold text-gray-900">Saved addresses</h1>
+      <h1 className="text-lg font-semibold text-gray-900">{ta.savedAddresses}</h1>
 
       {addresses.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
-          No saved addresses yet. Addresses are saved automatically when you complete an order.
+          {ta.noAddresses}
         </div>
       ) : (
         <div className="flex flex-col gap-3">

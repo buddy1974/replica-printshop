@@ -4,12 +4,17 @@ import Badge from '@/components/Badge'
 import { db } from '@/lib/db'
 import { orderStatusLabel } from '@/lib/statusLabel'
 import { cookies } from 'next/headers'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AccountOrdersPage() {
   const userId = cookies().get('replica_uid')?.value
   if (!userId) notFound()
+
+  const cookieLocale = cookies().get('replica_locale')?.value
+  const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
+  const ta = getDictionary(locale).account
 
   const orders = await db.order.findMany({
     where: { userId },
@@ -19,11 +24,11 @@ export default async function AccountOrdersPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
+      <h1 className="text-lg font-semibold text-gray-900">{ta.orders}</h1>
 
       {orders.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
-          No orders yet.
+          {ta.noOrders}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -36,13 +41,13 @@ export default async function AccountOrdersPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
                   <p className="font-mono text-sm text-gray-700">{o.id.slice(0, 8)}</p>
-                  <p className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString(locale)}</p>
                   {o.shippingMethod && <p className="text-xs text-gray-500">{o.shippingMethod.name}</p>}
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <Badge label={orderStatusLabel(o.status)} statusKey={o.status} />
                   <p className="text-sm font-medium">€{Number(o.total).toFixed(2)}</p>
-                  <p className="text-xs text-gray-400">{o.items.length} item{o.items.length !== 1 ? 's' : ''}</p>
+                  <p className="text-xs text-gray-400">{o.items.length} {o.items.length !== 1 ? ta.items : ta.item}</p>
                 </div>
               </div>
             </Link>

@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import Container from '@/components/Container'
 import { getAnalytics } from '@/lib/analytics'
+import { cookies } from 'next/headers'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,16 +28,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-const navLinks = [
-  { href: '/admin/products', label: 'Products', desc: 'Manage product catalogue' },
-  { href: '/admin/orders', label: 'Orders', desc: 'View all orders' },
-  { href: '/admin/production', label: 'Production', desc: 'Production queue' },
-  { href: '/admin/shipping', label: 'Shipping rules', desc: 'Configure shipping prices' },
-  { href: '/admin/tax', label: 'Tax / VAT', desc: 'Configure VAT rates per country' },
-  { href: '/admin/categories', label: 'Categories', desc: 'Edit category names and descriptions' },
-]
-
 export default async function AdminPage() {
+  const cookieLocale = cookies().get('replica_locale')?.value
+  const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
+  const td = getDictionary(locale).admin
+
+  const navLinks = [
+    { href: '/admin/products', label: td.products, desc: td.manageProducts },
+    { href: '/admin/orders', label: td.orders, desc: td.viewAllOrders },
+    { href: '/admin/production', label: td.production, desc: td.productionQueue },
+    { href: '/admin/shipping', label: td.shippingRules, desc: td.configShipping },
+    { href: '/admin/tax', label: td.taxVat, desc: td.configVat },
+    { href: '/admin/categories', label: td.categories, desc: td.editCategories },
+  ]
+
   let analytics
   try {
     analytics = await getAnalytics()
@@ -47,59 +53,54 @@ export default async function AdminPage() {
 
   return (
     <Container>
-      <h1 className="mb-6">Admin</h1>
+      <h1 className="mb-6">{td.title}</h1>
 
       {a ? (
         <>
-          {/* Revenue — steps 281, 287 */}
-          <Section title="Revenue (paid orders)">
+          <Section title={td.revenue}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard label="Total" value={fmt(a.revenue.total)} />
-              <StatCard label="Today" value={fmt(a.revenue.today)} />
-              <StatCard label="This month" value={fmt(a.revenue.month)} />
-              <StatCard label="Avg order" value={fmt(a.revenue.avg)} />
+              <StatCard label={td.total} value={fmt(a.revenue.total)} />
+              <StatCard label={td.today} value={fmt(a.revenue.today)} />
+              <StatCard label={td.thisMonth} value={fmt(a.revenue.month)} />
+              <StatCard label={td.avgOrder} value={fmt(a.revenue.avg)} />
             </div>
           </Section>
 
-          {/* Orders — steps 282, 288 */}
-          <Section title="Orders">
+          <Section title={td.orders}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-3">
-              <StatCard label="Total" value={a.orders.total} />
-              <StatCard label="Today" value={a.orders.today} />
-              <StatCard label="This month" value={a.orders.month} />
-              <StatCard label="Standard" value={a.orders.byDelivery.STANDARD} />
-              <StatCard label="Express" value={a.orders.byDelivery.EXPRESS} />
-              <StatCard label="Pickup" value={a.orders.byDelivery.PICKUP} />
+              <StatCard label={td.total} value={a.orders.total} />
+              <StatCard label={td.today} value={a.orders.today} />
+              <StatCard label={td.thisMonth} value={a.orders.month} />
+              <StatCard label={td.standard} value={a.orders.byDelivery.STANDARD} />
+              <StatCard label={td.express} value={a.orders.byDelivery.EXPRESS} />
+              <StatCard label={td.pickup} value={a.orders.byDelivery.PICKUP} />
             </div>
           </Section>
 
-          {/* Production — step 283 */}
-          <Section title="Production">
+          <Section title={td.production}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatCard label="Queued" value={a.production.queued} />
-              <StatCard label="In progress" value={a.production.inProgress} />
-              <StatCard label="Done" value={a.production.done} />
-              <StatCard label="Failed" value={a.production.failed} />
+              <StatCard label={td.queued} value={a.production.queued} />
+              <StatCard label={td.inProgress} value={a.production.inProgress} />
+              <StatCard label={td.done} value={a.production.done} />
+              <StatCard label={td.failed} value={a.production.failed} />
             </div>
           </Section>
 
-          {/* Uploads — step 284 */}
-          <Section title="Uploads">
+          <Section title={td.uploads}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <StatCard label="Pending" value={a.uploads.pending} />
-              <StatCard label="Approved" value={a.uploads.approved} />
-              <StatCard label="Rejected" value={a.uploads.rejected} />
+              <StatCard label={td.pending} value={a.uploads.pending} />
+              <StatCard label={td.approved} value={a.uploads.approved} />
+              <StatCard label={td.rejected} value={a.uploads.rejected} />
             </div>
           </Section>
 
-          {/* Top products + categories — steps 285, 286 */}
           <div className="grid gap-4 mb-6 sm:grid-cols-2">
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">Top products</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">{td.topProducts}</p>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
                   {a.topProducts.length === 0 && (
-                    <tr><td className="px-4 py-3 text-gray-400 text-xs">No data yet</td></tr>
+                    <tr><td className="px-4 py-3 text-gray-400 text-xs">{td.noData}</td></tr>
                   )}
                   {a.topProducts.map((p) => (
                     <tr key={p.name}>
@@ -112,11 +113,11 @@ export default async function AdminPage() {
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">Top categories</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 pt-4 pb-2">{td.topCategories}</p>
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
                   {a.topCategories.length === 0 && (
-                    <tr><td className="px-4 py-3 text-gray-400 text-xs">No data yet</td></tr>
+                    <tr><td className="px-4 py-3 text-gray-400 text-xs">{td.noData}</td></tr>
                   )}
                   {a.topCategories.map((c) => (
                     <tr key={c.name}>
@@ -130,11 +131,10 @@ export default async function AdminPage() {
           </div>
         </>
       ) : (
-        <p className="text-sm text-gray-400 mb-6">Analytics unavailable.</p>
+        <p className="text-sm text-gray-400 mb-6">{td.analyticsUnavailable}</p>
       )}
 
-      {/* Navigation */}
-      <Section title="Manage">
+      <Section title={td.manage}>
         <div className="grid gap-3">
           {navLinks.map(({ href, label, desc }) => (
             <Link key={href} href={href} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:border-red-300 transition-colors">

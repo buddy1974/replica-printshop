@@ -4,12 +4,17 @@ import { db } from '@/lib/db'
 import DeleteDesignButton from './DeleteDesignButton'
 import AddToCartForm from './AddToCartForm'
 import ImagePlaceholder from '@/components/ImagePlaceholder'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DesignsPage() {
   const userId = cookies().get('replica_uid')?.value
   if (!userId) notFound()
+
+  const cookieLocale = cookies().get('replica_locale')?.value
+  const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
+  const ta = getDictionary(locale).account
 
   const designs = await db.design.findMany({
     where: { userId },
@@ -29,11 +34,11 @@ export default async function DesignsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold text-gray-900">Saved designs</h1>
+      <h1 className="text-lg font-semibold text-gray-900">{ta.savedDesigns}</h1>
 
       {designs.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-6 text-sm text-gray-500">
-          No saved designs yet. Use the editor to create and save designs.
+          {ta.noDesigns}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -45,7 +50,7 @@ export default async function DesignsPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={`/api/design/${design.id}/preview`}
-                    alt="Design preview"
+                    alt={ta.designPreview}
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -56,10 +61,10 @@ export default async function DesignsPage() {
               {/* Info + actions */}
               <div className="p-4">
                 <p className="text-sm font-medium text-gray-800 mb-0.5">
-                  {productMap[design.productId] ?? 'Unknown product'}
+                  {productMap[design.productId] ?? ta.unknownProduct}
                 </p>
                 <p className="text-xs text-gray-400 mb-3">
-                  {new Date(design.createdAt).toLocaleDateString()}
+                  {new Date(design.createdAt).toLocaleDateString(locale)}
                 </p>
 
                 <AddToCartForm designId={design.id} productId={design.productId} />
@@ -69,7 +74,7 @@ export default async function DesignsPage() {
                     href={`/editor/${design.productId}`}
                     className="text-xs text-gray-500 hover:text-gray-800 underline"
                   >
-                    Open editor
+                    {ta.openEditor}
                   </a>
                   <DeleteDesignButton id={design.id} />
                 </div>

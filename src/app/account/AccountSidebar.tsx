@@ -2,23 +2,26 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useLocale } from '@/context/LocaleContext'
 
 interface Props {
   name: string | null
   email: string
 }
 
-const NAV = [
-  { href: '/account', label: 'Overview' },
-  { href: '/account/orders', label: 'Orders' },
-  { href: '/account/profile', label: 'Profile' },
-  { href: '/account/addresses', label: 'Addresses' },
-  { href: '/account/designs', label: 'Designs' },
-  { href: '/account/uploads', label: 'Uploads' },
-]
-
 export default function AccountSidebar({ name, email }: Props) {
   const pathname = usePathname()
+  const { t } = useLocale()
+  const ta = t.account
+
+  const NAV = [
+    { href: '/account', label: ta.overview },
+    { href: '/account/orders', label: ta.orders },
+    { href: '/account/profile', label: ta.profile },
+    { href: '/account/addresses', label: ta.addresses },
+    { href: '/account/designs', label: ta.designs },
+    { href: '/account/uploads', label: ta.uploads },
+  ]
 
   return (
     <nav className="md:col-span-1 bg-white border border-gray-200 rounded-xl p-4 sticky top-4">
