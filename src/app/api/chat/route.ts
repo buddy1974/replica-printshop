@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest } from 'next/server'
 import { db } from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import type { ValidationResult } from '@/lib/fileValidation'
+import { matchProduct, type MatchResult } from '@/lib/productMatcher'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -20,7 +22,19 @@ async function getProductCatalog(): Promise<string> {
   }
 }
 
-function buildSystemPrompt(catalog: string, language: string): string {
+async function getActiveProducts(): Promise<{ name: string; slug: string }[]> {
+  try {
+    return await db.product.findMany({
+      select: { name: true, slug: true },
+      where: { active: true },
+      orderBy: { slug: 'asc' },
+    })
+  } catch {
+    return []
+  }
+}
+
+function buildSystemPrompt(catalog: string, language: string, match: MatchResult | null): string {
   const langName = language === 'de' ? 'German' : language === 'fr' ? 'French' : 'English'
 
   return `You are Print Expert, the AI assistant for Printshop (printshop.maxpromo.digital).
@@ -71,12 +85,57 @@ Stickers & labels, large format print, display systems
 5. If truly unsure: say "I'll connect you with our technician — please use [Contact](/contact)"
 6. NEVER say DTG, screen print, or textile sublimation — they are not offered
 7. ALWAYS say "vehicle graphics" — never "car wrap" or "vehicle wrap" or "full wrap"
-8. Keep responses focused; use short paragraphs or bullet points`
+8. Keep responses focused; use short paragraphs or bullet points${match ? `
+
+## Product recommendation (pre-matched for this request)
+Based on the customer message and/or uploaded file, the system identified this product as the best fit:
+- **[${match.productName}](${match.link})** — ${match.reason}
+
+Lead your answer toward this product. Include the markdown link in your response. If the customer's actual need turns out to be different, recommend the correct product instead.` : ''}`
 }
 
 type Lang = 'user' | 'assistant'
 interface ChatMessage { role: Lang; content: string }
-interface FileData { name: string; type: string; size: number; base64?: string }
+interface FileData {
+  name: string
+  type: string
+  size: number
+  base64?: string
+  validation?: ValidationResult
+}
+
+function buildValidationContext(file: FileData): string {
+  const v = file.validation
+  if (!v) return ''
+
+  const lines: string[] = [
+    `[Technical file report: ${file.name}]`,
+    `Format: ${v.format.toUpperCase()}  |  Size: ${v.sizeMB} MB`,
+  ]
+
+  if (v.width > 0 && v.height > 0) {
+    const unit = v.format === 'pdf' ? 'mm' : 'px'
+    lines.push(`Dimensions: ${v.width}×${v.height} ${unit}  |  Ratio: ${v.ratio}`)
+  }
+
+  if (v.dpi !== null) {
+    lines.push(`Resolution: ${v.dpi} DPI`)
+  } else {
+    lines.push('Resolution: unknown (no DPI metadata in file)')
+  }
+
+  if (v.warnings.length > 0) {
+    lines.push('Issues: ' + v.warnings.join('; '))
+  }
+
+  if (v.recommendations.length > 0) {
+    lines.push('Notes: ' + v.recommendations.join('; '))
+  }
+
+  lines.push('Use this data to give precise, expert print advice about this specific file.')
+
+  return '\n\n' + lines.join('\n')
+}
 
 export async function POST(req: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -103,8 +162,11 @@ export async function POST(req: NextRequest) {
   // Keep last 20 messages to limit context size
   const history = messages.slice(-20)
 
-  const catalog = await getProductCatalog()
-  const systemPrompt = buildSystemPrompt(catalog, language)
+  const lastUserMsg = [...history].reverse().find((m) => m.role === 'user')?.content ?? ''
+
+  const [catalog, products] = await Promise.all([getProductCatalog(), getActiveProducts()])
+  const match = matchProduct(file?.validation ?? null, lastUserMsg, products)
+  const systemPrompt = buildSystemPrompt(catalog, language, match)
 
   // Build Anthropic message params
   const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
@@ -114,27 +176,26 @@ export async function POST(req: NextRequest) {
 
     if (isLastUser && file?.base64 && IMAGE_TYPES.includes(file.type)) {
       const mediaType = file.type as 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'
+      const validationCtx = buildValidationContext(file)
+      const baseText =
+        msg.content ||
+        `I've attached a file: ${file.name} (${Math.round(file.size / 1024)}KB). Please analyze it as a prepress technician — check resolution, color mode, quality, bleed, and print suitability.`
       return {
         role: 'user',
         content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: file.base64 },
-          },
-          {
-            type: 'text',
-            text: msg.content || `I've attached a file: ${file.name} (${Math.round(file.size / 1024)}KB). Please analyze it as a print technician — check resolution, color, quality, and whether it's suitable for printing.`,
-          },
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: file.base64 } },
+          { type: 'text', text: baseText + validationCtx },
         ],
       }
     }
 
     if (isLastUser && file && !file.base64) {
-      // Non-image file — mention it in text
-      const sizekb = Math.round(file.size / 1024)
+      // Non-image file (PDF, SVG, AI, PSD) — provide validation context in text
+      const validationCtx = buildValidationContext(file)
+      const fallback = `[Attached: ${file.name} (${file.type}, ${Math.round(file.size / 1024)}KB)]`
       return {
         role: 'user',
-        content: `${msg.content ? msg.content + '\n\n' : ''}[Attached file: ${file.name} (${file.type}, ${sizekb}KB)]`,
+        content: (msg.content ? msg.content + '\n\n' : '') + (validationCtx || fallback),
       }
     }
 
@@ -144,7 +205,7 @@ export async function POST(req: NextRequest) {
   try {
     const stream = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 1500,
       system: systemPrompt,
       messages: anthropicMessages,
       stream: true,
