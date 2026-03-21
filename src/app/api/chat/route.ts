@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import type { ValidationResult } from '@/lib/fileValidation'
 import { matchProduct, type MatchResult } from '@/lib/productMatcher'
-import { evaluatePrepress, buildPrepressSection } from '@/lib/prepressRules'
+import { evaluatePrepress, buildPrepressSection, getFileRules } from '@/lib/prepressRules'
 import { getSetting } from '@/lib/settings/settingsService'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -167,11 +167,11 @@ export async function POST(req: NextRequest) {
 
   const lastUserMsg = [...history].reverse().find((m) => m.role === 'user')?.content ?? ''
 
-  const [catalog, products, promptOverride] = await Promise.all([
-    getProductCatalog(), getActiveProducts(), getSetting('ai.systemPrompt'),
+  const [catalog, products, promptOverride, fileRules] = await Promise.all([
+    getProductCatalog(), getActiveProducts(), getSetting('ai.systemPrompt'), getFileRules(),
   ])
   const match = matchProduct(file?.validation ?? null, lastUserMsg, products)
-  const prepress = evaluatePrepress(file?.validation ?? null, match, lastUserMsg)
+  const prepress = evaluatePrepress(file?.validation ?? null, match, lastUserMsg, fileRules)
   const prepressSection = buildPrepressSection(prepress)
   const systemPrompt = buildSystemPrompt(catalog, language, match, prepressSection, promptOverride)
 

@@ -10,7 +10,6 @@ export default async function AdminAIPage() {
   const stubItems = [
     { title: td.knowledgeBase,       desc: td.knowledgeBaseDesc    },
     { title: td.conversationLogs,    desc: td.conversationLogsDesc },
-    { title: td.fileAnalysisRules,   desc: td.fileAnalysisDesc     },
   ]
 
   return (
@@ -27,6 +26,20 @@ export default async function AdminAIPage() {
           </div>
           <Link
             href="/admin/ai/system-prompt"
+            className="shrink-0 text-xs font-semibold text-gray-900 hover:text-gray-600 transition-colors"
+          >
+            Configure →
+          </Link>
+        </div>
+
+        {/* File Analysis Rules — active */}
+        <div className="border border-gray-200 rounded-xl p-5 flex items-start justify-between gap-4 bg-white">
+          <div>
+            <h2 className="font-semibold text-gray-900 text-sm mb-1">{td.fileAnalysisRules}</h2>
+            <p className="text-xs text-gray-500 leading-relaxed">{td.fileAnalysisDesc}</p>
+          </div>
+          <Link
+            href="/admin/ai/rules"
             className="shrink-0 text-xs font-semibold text-gray-900 hover:text-gray-600 transition-colors"
           >
             Configure →

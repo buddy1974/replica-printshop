@@ -3,11 +3,48 @@
 
 import type { ValidationResult } from '@/lib/fileValidation'
 import type { MatchResult } from '@/lib/productMatcher'
+import { getSetting } from '@/lib/settings/settingsService'
 
 export interface PrepressResult {
   warnings: string[]
   recommendations: string[]
   productionNotes: string[]
+}
+
+// ---------------------------------------------------------------------------
+// FileRule — admin-configurable DPI + bleed per product group
+// ---------------------------------------------------------------------------
+
+export interface FileRule {
+  slug: string      // group key: "banner", "sticker", "textile", etc.
+  label: string     // human label shown in admin UI
+  minDpi: number    // minimum acceptable DPI
+  bleedMm: number   // required bleed in mm (0 = none)
+}
+
+export const FILE_RULE_DEFAULTS: FileRule[] = [
+  { slug: 'banner',        label: 'Banner',               minDpi: 100, bleedMm: 30 },
+  { slug: 'display',       label: 'Roll-up / Display',    minDpi: 100, bleedMm: 30 },
+  { slug: 'sticker',       label: 'Sticker / Label',      minDpi: 200, bleedMm: 2  },
+  { slug: 'floor-sticker', label: 'Floor Sticker',        minDpi: 200, bleedMm: 2  },
+  { slug: 'textile',       label: 'Textile / DTF',        minDpi: 100, bleedMm: 0  },
+  { slug: 'vinyl',         label: 'Vinyl / Vehicle',      minDpi: 100, bleedMm: 0  },
+  { slug: 'sublimation',   label: 'Sublimation',          minDpi: 150, bleedMm: 0  },
+  { slug: 'sign',          label: 'Rigid Sign',           minDpi: 150, bleedMm: 3  },
+  { slug: 'large-format',  label: 'Large Format Print',   minDpi: 100, bleedMm: 3  },
+  { slug: 'embroidery',    label: 'Embroidery / Patches', minDpi: 300, bleedMm: 0  },
+]
+
+export async function getFileRules(): Promise<FileRule[]> {
+  try {
+    const raw = await getSetting('ai.fileRules')
+    if (!raw) return FILE_RULE_DEFAULTS
+    const parsed = JSON.parse(raw) as FileRule[]
+    if (!Array.isArray(parsed) || parsed.length === 0) return FILE_RULE_DEFAULTS
+    return parsed
+  } catch {
+    return FILE_RULE_DEFAULTS
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -99,6 +136,24 @@ const LARGE_FORMAT_SLUGS = new Set([
 ])
 
 // ---------------------------------------------------------------------------
+// Map product slug to FileRule group key
+// ---------------------------------------------------------------------------
+
+function getProductGroup(slug: string): string | null {
+  if (FLOOR_STICKER_SLUGS.has(slug)) return 'floor-sticker'
+  if (STICKER_SLUGS.has(slug)) return 'sticker'
+  if (SIGN_SLUGS.has(slug)) return 'sign'
+  if (SUBLIMATION_SLUGS.has(slug)) return 'sublimation'
+  if (DISPLAY_SLUGS.has(slug)) return 'display'
+  if (BANNER_SLUGS.has(slug)) return 'banner'
+  if (TEXTILE_SLUGS.has(slug)) return 'textile'
+  if (VINYL_VEHICLE_SLUGS.has(slug) || VEHICLE_SLUGS.has(slug) || WINDOW_FILM_SLUGS.has(slug)) return 'vinyl'
+  if (LARGE_FORMAT_SLUGS.has(slug)) return 'large-format'
+  if (EMBROIDERY_SLUGS.has(slug)) return 'embroidery'
+  return null
+}
+
+// ---------------------------------------------------------------------------
 // DPI thresholds per product group
 // ---------------------------------------------------------------------------
 
@@ -109,42 +164,66 @@ interface DpiThreshold {
   label: string
 }
 
-function getDpiThreshold(slug: string): DpiThreshold | null {
+function getDpiThreshold(slug: string, rules?: FileRule[]): DpiThreshold | null {
+  // Hardcoded defaults
+  let thresh: DpiThreshold | null = null
+
   if (FLOOR_STICKER_SLUGS.has(slug)) {
-    return { critical: 150, minimum: 200, recommended: 300, label: 'floor sticker' }
+    thresh = { critical: 150, minimum: 200, recommended: 300, label: 'floor sticker' }
+  } else if (STICKER_SLUGS.has(slug)) {
+    thresh = { critical: 150, minimum: 200, recommended: 300, label: 'sticker' }
+  } else if (SIGN_SLUGS.has(slug)) {
+    thresh = { critical: 72, minimum: 150, recommended: 300, label: 'rigid sign' }
+  } else if (SUBLIMATION_SLUGS.has(slug)) {
+    thresh = { critical: 72, minimum: 150, recommended: 200, label: 'sublimation' }
+  } else if (DISPLAY_SLUGS.has(slug)) {
+    thresh = { critical: 72, minimum: 100, recommended: 150, label: 'roll-up / display' }
+  } else if (BANNER_SLUGS.has(slug)) {
+    thresh = { critical: 50, minimum: 100, recommended: 150, label: 'banner' }
+  } else if (TEXTILE_SLUGS.has(slug)) {
+    thresh = { critical: 72, minimum: 100, recommended: 150, label: 'DTF transfer' }
+  } else if (VINYL_VEHICLE_SLUGS.has(slug) || VEHICLE_SLUGS.has(slug) || WINDOW_FILM_SLUGS.has(slug)) {
+    thresh = { critical: 72, minimum: 100, recommended: 150, label: 'vinyl / vehicle graphics' }
+  } else if (LARGE_FORMAT_SLUGS.has(slug)) {
+    thresh = { critical: 72, minimum: 100, recommended: 150, label: 'large format print' }
   }
-  if (STICKER_SLUGS.has(slug)) {
-    return { critical: 150, minimum: 200, recommended: 300, label: 'sticker' }
+
+  // Apply admin rule override if provided
+  if (thresh && rules?.length) {
+    const group = getProductGroup(slug)
+    const rule = group ? rules.find((r) => r.slug === group) : undefined
+    if (rule) {
+      const min = rule.minDpi
+      thresh = {
+        ...thresh,
+        critical: Math.round(min * 0.6),
+        minimum: min,
+        recommended: Math.round(min * 1.5),
+      }
+    }
   }
-  if (SIGN_SLUGS.has(slug)) {
-    return { critical: 72, minimum: 150, recommended: 300, label: 'rigid sign' }
-  }
-  if (SUBLIMATION_SLUGS.has(slug)) {
-    return { critical: 72, minimum: 150, recommended: 200, label: 'sublimation' }
-  }
-  if (DISPLAY_SLUGS.has(slug)) {
-    return { critical: 72, minimum: 100, recommended: 150, label: 'roll-up / display' }
-  }
-  if (BANNER_SLUGS.has(slug)) {
-    return { critical: 50, minimum: 100, recommended: 150, label: 'banner' }
-  }
-  if (TEXTILE_SLUGS.has(slug)) {
-    return { critical: 72, minimum: 100, recommended: 150, label: 'DTF transfer' }
-  }
-  if (VINYL_VEHICLE_SLUGS.has(slug) || VEHICLE_SLUGS.has(slug) || WINDOW_FILM_SLUGS.has(slug)) {
-    return { critical: 72, minimum: 100, recommended: 150, label: 'vinyl / vehicle graphics' }
-  }
-  if (LARGE_FORMAT_SLUGS.has(slug)) {
-    return { critical: 72, minimum: 100, recommended: 150, label: 'large format print' }
-  }
-  return null
+
+  return thresh
 }
 
 // ---------------------------------------------------------------------------
 // Bleed / safe margin by product
 // ---------------------------------------------------------------------------
 
-function getBleedSpec(slug: string): string | null {
+function getBleedSpec(slug: string, rules?: FileRule[]): string | null {
+  // Apply admin rule override if provided
+  if (rules?.length) {
+    const group = getProductGroup(slug)
+    const rule = group ? rules.find((r) => r.slug === group) : undefined
+    if (rule !== undefined) {
+      if (rule.bleedMm <= 0) return null
+      const mm = rule.bleedMm
+      const display = mm >= 10 ? `${mm / 10}cm` : `${mm}mm`
+      return `${display} bleed on all sides`
+    }
+  }
+
+  // Hardcoded defaults
   if (BANNER_SLUGS.has(slug)) return '3cm bleed on all sides'
   if (DISPLAY_SLUGS.has(slug)) return '3–5cm bleed on all sides (protect all text/logos within safe margin)'
   if (STICKER_SLUGS.has(slug) || FLOOR_STICKER_SLUGS.has(slug)) return '2–3mm bleed + 2mm safe margin inside the cut line'
@@ -160,7 +239,8 @@ function getBleedSpec(slug: string): string | null {
 export function evaluatePrepress(
   fileInfo: ValidationResult | null,
   match: MatchResult | null,
-  message: string
+  message: string,
+  rules?: FileRule[]
 ): PrepressResult {
   const warnings: string[] = []
   const recommendations: string[] = []
@@ -172,7 +252,7 @@ export function evaluatePrepress(
   // ---- 1. DPI check — product-aware ----
   if (fileInfo && fileInfo.dpi !== null && slug) {
     const dpi = fileInfo.dpi
-    const thresh = getDpiThreshold(slug)
+    const thresh = getDpiThreshold(slug, rules)
 
     if (thresh) {
       if (dpi < thresh.critical) {
@@ -209,7 +289,7 @@ export function evaluatePrepress(
 
   // ---- 3. Bleed / safe margin ----
   if (slug) {
-    const bleed = getBleedSpec(slug)
+    const bleed = getBleedSpec(slug, rules)
     if (bleed) {
       recommendations.push(
         `Bleed: ${bleed}. Extend background and edge elements to the bleed line; keep text and logos within the safe margin.`
