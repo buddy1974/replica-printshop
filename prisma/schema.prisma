@@ -592,3 +592,20 @@ model ProductionJob {
   @@index([status])
   @@index([machineType])
 }
+
+// ---------------------------------------------------------------------------
+// AI conversation logs
+// ---------------------------------------------------------------------------
+
+model ChatLog {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String   // "user" | "assistant"
+  content   String   @db.Text
+  language  String   @default("en")
+  hasFile   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}

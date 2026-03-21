@@ -209,6 +209,10 @@ export async function POST(req: NextRequest) {
     return { role: msg.role, content: msg.content }
   })
 
+  // Session ID for conversation logging
+  const existingSession = req.cookies.get('replica_chat_session')?.value
+  const sessionId = existingSession ?? crypto.randomUUID()
+
   try {
     const stream = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -219,27 +223,40 @@ export async function POST(req: NextRequest) {
     })
 
     const encoder = new TextEncoder()
+    let assistantReply = ''
+
     const readable = new ReadableStream({
       async start(controller) {
         try {
           for await (const chunk of stream) {
             if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+              assistantReply += chunk.delta.text
               controller.enqueue(encoder.encode(chunk.delta.text))
             }
           }
         } finally {
           controller.close()
+          // Fire and forget — do not block the response
+          void db.chatLog.createMany({
+            data: [
+              { sessionId, role: 'user', content: lastUserMsg, language, hasFile: !!file },
+              { sessionId, role: 'assistant', content: assistantReply, language, hasFile: false },
+            ],
+          }).catch((err: unknown) => console.error('[chat] log write failed:', err))
         }
       },
     })
 
-    return new Response(readable, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    })
+    const headers: Record<string, string> = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'X-Content-Type-Options': 'nosniff',
+    }
+    if (!existingSession) {
+      headers['Set-Cookie'] = `replica_chat_session=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`
+    }
+
+    return new Response(readable, { headers })
   } catch (e) {
     console.error('[chat] Claude API error:', e)
     return new Response('AI unavailable', { status: 503 })

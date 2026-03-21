@@ -8,8 +8,7 @@ export default async function AdminAIPage() {
   const td = getDictionary(locale).admin
 
   const stubItems = [
-    { title: td.knowledgeBase,       desc: td.knowledgeBaseDesc    },
-    { title: td.conversationLogs,    desc: td.conversationLogsDesc },
+    { title: td.knowledgeBase, desc: td.knowledgeBaseDesc },
   ]
 
   return (
@@ -43,6 +42,20 @@ export default async function AdminAIPage() {
             className="shrink-0 text-xs font-semibold text-gray-900 hover:text-gray-600 transition-colors"
           >
             Configure →
+          </Link>
+        </div>
+
+        {/* Conversation Logs — active */}
+        <div className="border border-gray-200 rounded-xl p-5 flex items-start justify-between gap-4 bg-white">
+          <div>
+            <h2 className="font-semibold text-gray-900 text-sm mb-1">{td.conversationLogs}</h2>
+            <p className="text-xs text-gray-500 leading-relaxed">{td.conversationLogsDesc}</p>
+          </div>
+          <Link
+            href="/admin/ai/logs"
+            className="shrink-0 text-xs font-semibold text-gray-900 hover:text-gray-600 transition-colors"
+          >
+            View →
           </Link>
         </div>
 
