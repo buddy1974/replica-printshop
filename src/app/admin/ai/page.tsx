@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
 
@@ -6,11 +7,10 @@ export default async function AdminAIPage() {
   const locale: Locale = cookieLocale && LOCALES.includes(cookieLocale as Locale) ? cookieLocale as Locale : DEFAULT_LOCALE
   const td = getDictionary(locale).admin
 
-  const items = [
-    { title: td.knowledgeBase,        desc: td.knowledgeBaseDesc     },
-    { title: td.systemPromptOverride, desc: td.systemPromptDesc      },
-    { title: td.conversationLogs,     desc: td.conversationLogsDesc  },
-    { title: td.fileAnalysisRules,    desc: td.fileAnalysisDesc      },
+  const stubItems = [
+    { title: td.knowledgeBase,       desc: td.knowledgeBaseDesc    },
+    { title: td.conversationLogs,    desc: td.conversationLogsDesc },
+    { title: td.fileAnalysisRules,   desc: td.fileAnalysisDesc     },
   ]
 
   return (
@@ -19,7 +19,22 @@ export default async function AdminAIPage() {
       <p className="text-gray-500 mb-8">{td.aiSubtitle}</p>
 
       <div className="space-y-4">
-        {items.map((item) => (
+        {/* System Prompt Override — active */}
+        <div className="border border-gray-200 rounded-xl p-5 flex items-start justify-between gap-4 bg-white">
+          <div>
+            <h2 className="font-semibold text-gray-900 text-sm mb-1">{td.systemPromptOverride}</h2>
+            <p className="text-xs text-gray-500 leading-relaxed">{td.systemPromptDesc}</p>
+          </div>
+          <Link
+            href="/admin/ai/system-prompt"
+            className="shrink-0 text-xs font-semibold text-gray-900 hover:text-gray-600 transition-colors"
+          >
+            Configure →
+          </Link>
+        </div>
+
+        {/* Remaining stubs */}
+        {stubItems.map((item) => (
           <div key={item.title} className="border border-gray-200 rounded-xl p-5 flex items-start justify-between gap-4 bg-white">
             <div>
               <h2 className="font-semibold text-gray-900 text-sm mb-1">{item.title}</h2>
