@@ -1,11 +1,10 @@
 import Container from '@/components/Container'
-import Badge from '@/components/Badge'
-import ApproveButton from '@/components/ApproveButton'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { type Prisma } from '@/generated/prisma/client'
 import { cookies } from 'next/headers'
 import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
+import OrdersBatchTable from './OrdersBatchTable'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +58,12 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
     return `/admin/orders${s ? `?${s}` : ''}`
   }
 
-  const tableHeaders = ['ID', td.customer, td.status, td.payment, td.delivery, td.shipping, td.total, td.items, td.created, '']
+  // Serialize Prisma Decimal + Date for client component
+  const serializedOrders = orders.map((o) => ({
+    ...o,
+    total: Number(o.total),
+    createdAt: o.createdAt.toISOString(),
+  }))
 
   return (
     <Container>
@@ -81,43 +85,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { pag
       {orders.length === 0 ? (
         <p className="text-sm text-gray-500">{q ? td.noMatchOrders : td.noOrders}</p>
       ) : (
-        <div className="overflow-x-auto card">
-          <table className="table-base">
-            <thead>
-              <tr>
-                {tableHeaders.map((h, i) => (
-                  <th key={i}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((o) => (
-                <tr key={o.id}>
-                  <td>
-                    <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs text-gray-800 hover:text-red-600 underline underline-offset-2">{o.id.slice(0, 8)}</Link>
-                  </td>
-                  <td className="text-xs text-gray-600">
-                    {o.user ? (
-                      <span title={o.user.email}>{o.user.name ?? o.user.email}</span>
-                    ) : (
-                      <span className="text-gray-400">{td.guest}</span>
-                    )}
-                  </td>
-                  <td><Badge label={o.status} /></td>
-                  <td><Badge label={o.paymentStatus} /></td>
-                  <td className="text-gray-600 text-xs">{o.deliveryType}</td>
-                  <td className="text-gray-600 text-xs">{o.shippingMethod?.name ?? '—'}</td>
-                  <td className="font-medium tabular-nums">€{Number(o.total).toFixed(2)}</td>
-                  <td className="text-gray-600">{o._count.items}</td>
-                  <td className="text-gray-500 text-xs tabular-nums">{new Date(o.createdAt).toLocaleDateString(locale)}</td>
-                  <td>
-                    {o.status === 'UPLOADED' && <ApproveButton orderId={o.id} />}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <OrdersBatchTable orders={serializedOrders} locale={locale} td={td} />
       )}
 
       {totalPages > 1 && (

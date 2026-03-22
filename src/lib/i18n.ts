@@ -386,6 +386,12 @@ export interface AdminDictionary {
   exportCsv: string
   logDateFrom: string
   logDateTo: string
+  // Batch order operations
+  batchSelected: string
+  batchChangeStatus: string
+  batchApply: string
+  batchDeselectAll: string
+  batchUpdated: string
   // Email preview
   emailPreviewSection: string
   emailPreviewTemplate: string
