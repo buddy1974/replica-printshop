@@ -342,6 +342,46 @@ export interface AdminDictionary {
   triggerInclCompletionNotice: string
   triggerInclOrderIdTotal: string
   triggerInclFormContents: string
+  // AI admin pages
+  backToAiConfig: string
+  saving: string
+  saveSettings: string
+  saveFailed: string
+  customInstructions: string
+  systemPromptPlaceholder: string
+  systemPromptHint: string
+  colProductCategory: string
+  colMinDpi: string
+  colBleedMm: string
+  rulesHint: string
+  messagesTotal: string
+  filterBySessionId: string
+  failedToLoadLogs: string
+  noLogsFound: string
+  colTime: string
+  colSession: string
+  colRole: string
+  colMessage: string
+  colFile: string
+  roleUser: string
+  roleAssistant: string
+  prevPage: string
+  nextPage: string
+  knowledgeSubtitle: string
+  addEntry: string
+  adding: string
+  labelTitle: string
+  titlePlaceholder: string
+  labelContent: string
+  contentPlaceholder: string
+  titleContentRequired: string
+  failedToAddEntry: string
+  failedToLoadEntries: string
+  noEntriesYet: string
+  colActions: string
+  cancelBtn: string
+  deleteEntry: string
+  deleteConfirm: string
   // Demo mode
   settingsDemo: string
   settingsDemoDesc: string

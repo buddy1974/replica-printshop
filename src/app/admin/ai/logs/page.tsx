@@ -3,6 +3,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import Container from '@/components/Container'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
+
+function getClientLocale(): Locale {
+  if (typeof document === 'undefined') return DEFAULT_LOCALE
+  const m = document.cookie.match(/(?:^|;\s*)replica_locale=([^;]*)/)
+  const v = m?.[1]
+  return v && LOCALES.includes(v as Locale) ? (v as Locale) : DEFAULT_LOCALE
+}
 
 interface ChatLogRow {
   id: string
@@ -21,6 +29,7 @@ interface LogsResponse {
 }
 
 export default function ConversationLogsPage() {
+  const [td, setTd] = useState(() => getDictionary(DEFAULT_LOCALE).admin)
   const [logs, setLogs] = useState<ChatLogRow[]>([])
   const [total, setTotal] = useState(0)
   const [pages, setPages] = useState(1)
@@ -29,6 +38,10 @@ export default function ConversationLogsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    setTd(getDictionary(getClientLocale()).admin)
+  }, [])
+
   const load = useCallback(async (p: number, session: string) => {
     setLoading(true)
     setError(null)
@@ -36,17 +49,17 @@ export default function ConversationLogsPage() {
       const params = new URLSearchParams({ page: String(p), pageSize: '20' })
       if (session.trim()) params.set('sessionId', session.trim())
       const res = await fetch(`/api/admin/ai/logs?${params}`)
-      if (!res.ok) throw new Error('Failed to load logs')
+      if (!res.ok) throw new Error('fetch failed')
       const data = await res.json() as LogsResponse
       setLogs(data.logs)
       setTotal(data.total)
       setPages(data.pages)
     } catch {
-      setError('Failed to load conversation logs')
+      setError(td.failedToLoadLogs)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [td.failedToLoadLogs])
 
   useEffect(() => { void load(page, sessionFilter) }, [load, page, sessionFilter])
 
@@ -68,10 +81,10 @@ export default function ConversationLogsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <Link href="/admin/ai" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
-            ← AI Configuration
+            {td.backToAiConfig}
           </Link>
-          <h1 className="mt-1">Conversation Logs</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{total} messages total</p>
+          <h1 className="mt-1">{td.conversationLogs}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{total} {td.messagesTotal}</p>
         </div>
       </div>
 
@@ -79,7 +92,7 @@ export default function ConversationLogsPage() {
       <div className="mb-4 flex gap-2">
         <input
           type="text"
-          placeholder="Filter by session ID…"
+          placeholder={td.filterBySessionId}
           value={sessionFilter}
           onChange={(e) => applyFilter(e.target.value)}
           className="w-72 h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -89,7 +102,7 @@ export default function ConversationLogsPage() {
             onClick={() => applyFilter('')}
             className="px-3 h-9 rounded-lg border border-gray-300 text-xs text-gray-500 hover:bg-gray-50"
           >
-            Clear
+            {td.clear}
           </button>
         )}
       </div>
@@ -104,16 +117,16 @@ export default function ConversationLogsPage() {
             <div className="w-6 h-6 border-2 border-gray-200 border-t-red-600 rounded-full animate-spin" />
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-16 text-center text-sm text-gray-400">No logs found</div>
+          <div className="py-16 text-center text-sm text-gray-400">{td.noLogsFound}</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3">Time</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">Session</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">Role</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">Message</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">File</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3">{td.colTime}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.colSession}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.colRole}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.colMessage}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.colFile}</th>
               </tr>
             </thead>
             <tbody>
@@ -123,9 +136,9 @@ export default function ConversationLogsPage() {
                   <td className="px-3 py-3 text-xs text-gray-400 font-mono">{log.sessionId.slice(0, 12)}…</td>
                   <td className="px-3 py-3">
                     {log.role === 'user' ? (
-                      <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">user</span>
+                      <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{td.roleUser}</span>
                     ) : (
-                      <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">assistant</span>
+                      <span className="text-[10px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{td.roleAssistant}</span>
                     )}
                   </td>
                   <td className="px-3 py-3 text-xs text-gray-700 max-w-xs">{truncate(log.content, 80)}</td>
@@ -145,15 +158,15 @@ export default function ConversationLogsPage() {
             disabled={page <= 1}
             className="px-4 h-9 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
-            ← Prev
+            {td.prevPage}
           </button>
-          <span className="text-xs text-gray-500">Page {page} of {pages}</span>
+          <span className="text-xs text-gray-500">{td.page} {page} {td.of} {pages}</span>
           <button
             onClick={() => setPage((p) => Math.min(pages, p + 1))}
             disabled={page >= pages}
             className="px-4 h-9 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
-            Next →
+            {td.nextPage}
           </button>
         </div>
       )}

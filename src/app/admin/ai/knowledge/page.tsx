@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Container from '@/components/Container'
+import { getDictionary, type Locale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n'
+
+function getClientLocale(): Locale {
+  if (typeof document === 'undefined') return DEFAULT_LOCALE
+  const m = document.cookie.match(/(?:^|;\s*)replica_locale=([^;]*)/)
+  const v = m?.[1]
+  return v && LOCALES.includes(v as Locale) ? (v as Locale) : DEFAULT_LOCALE
+}
 
 interface Entry {
   id: string
@@ -20,6 +28,7 @@ interface EditState {
 }
 
 export default function KnowledgeBasePage() {
+  const [td, setTd] = useState(() => getDictionary(DEFAULT_LOCALE).admin)
   const [entries, setEntries] = useState<Entry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +46,9 @@ export default function KnowledgeBasePage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    setTd(getDictionary(getClientLocale()).admin)
     void load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function load() {
@@ -47,7 +58,7 @@ export default function KnowledgeBasePage() {
       const data = await res.json() as Entry[]
       setEntries(data)
     } catch {
-      setError('Failed to load entries')
+      setError(td.failedToLoadEntries)
     } finally {
       setLoading(false)
     }
@@ -55,7 +66,7 @@ export default function KnowledgeBasePage() {
 
   async function add() {
     if (!addTitle.trim() || !addContent.trim()) {
-      setAddError('Title and content are required')
+      setAddError(td.titleContentRequired)
       return
     }
     setAdding(true)
@@ -74,7 +85,7 @@ export default function KnowledgeBasePage() {
       setAddCategory('general')
     } else {
       const d = await res.json()
-      setAddError(d.error ?? 'Failed to add entry')
+      setAddError(d.error ?? td.failedToAddEntry)
     }
   }
 
@@ -111,7 +122,7 @@ export default function KnowledgeBasePage() {
   }
 
   async function remove(id: string) {
-    if (!window.confirm('Delete this knowledge entry? This cannot be undone.')) return
+    if (!window.confirm(td.deleteConfirm)) return
     const res = await fetch(`/api/admin/ai/knowledge/${id}`, { method: 'DELETE' })
     if (res.ok || res.status === 204) {
       setEntries((prev) => prev.filter((e) => e.id !== id))
@@ -122,27 +133,27 @@ export default function KnowledgeBasePage() {
     <Container>
       <div className="mb-6">
         <Link href="/admin/ai" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">
-          ← AI Configuration
+          {td.backToAiConfig}
         </Link>
-        <h1 className="mt-1">Knowledge Base</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Custom entries injected into the AI system prompt</p>
+        <h1 className="mt-1">{td.knowledgeBase}</h1>
+        <p className="text-xs text-gray-400 mt-0.5">{td.knowledgeSubtitle}</p>
       </div>
 
       {/* Add form */}
       <div className="rounded-xl border border-gray-200 bg-white px-6 py-5 mb-6">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Add entry</p>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">{td.addEntry}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Title</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">{td.labelTitle}</label>
             <input
               value={addTitle}
               onChange={(e) => setAddTitle(e.target.value)}
-              placeholder="e.g. Express turnaround policy"
+              placeholder={td.titlePlaceholder}
               className="w-full h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">{td.category}</label>
             <input
               value={addCategory}
               onChange={(e) => setAddCategory(e.target.value)}
@@ -152,12 +163,12 @@ export default function KnowledgeBasePage() {
           </div>
         </div>
         <div className="mb-3">
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Content</label>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">{td.labelContent}</label>
           <textarea
             value={addContent}
             onChange={(e) => setAddContent(e.target.value)}
             rows={4}
-            placeholder="Enter the knowledge content to inject into the AI prompt…"
+            placeholder={td.contentPlaceholder}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-y"
           />
         </div>
@@ -169,7 +180,7 @@ export default function KnowledgeBasePage() {
           disabled={adding}
           className="px-5 py-2 rounded-lg bg-gray-900 text-white text-sm font-bold hover:bg-gray-700 transition-colors disabled:opacity-50"
         >
-          {adding ? 'Adding…' : 'Add entry'}
+          {adding ? td.adding : td.addEntry}
         </button>
       </div>
 
@@ -184,15 +195,15 @@ export default function KnowledgeBasePage() {
             <div className="w-6 h-6 border-2 border-gray-200 border-t-red-600 rounded-full animate-spin" />
           </div>
         ) : entries.length === 0 ? (
-          <div className="py-16 text-center text-sm text-gray-400">No entries yet — add one above</div>
+          <div className="py-16 text-center text-sm text-gray-400">{td.noEntriesYet}</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3">Title</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">Category</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">Status</th>
-                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">Actions</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3">{td.labelTitle}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.category}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.status}</th>
+                <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-3">{td.colActions}</th>
               </tr>
             </thead>
             <tbody>
@@ -202,7 +213,7 @@ export default function KnowledgeBasePage() {
                     <td className="px-5 py-3" colSpan={4}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Title</label>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">{td.labelTitle}</label>
                           <input
                             value={editState.title}
                             onChange={(e) => setEditState((s) => ({ ...s, title: e.target.value }))}
@@ -210,7 +221,7 @@ export default function KnowledgeBasePage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">{td.category}</label>
                           <input
                             value={editState.category}
                             onChange={(e) => setEditState((s) => ({ ...s, category: e.target.value }))}
@@ -219,7 +230,7 @@ export default function KnowledgeBasePage() {
                         </div>
                       </div>
                       <div className="mb-3">
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Content</label>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">{td.labelContent}</label>
                         <textarea
                           value={editState.content}
                           onChange={(e) => setEditState((s) => ({ ...s, content: e.target.value }))}
@@ -233,13 +244,13 @@ export default function KnowledgeBasePage() {
                           disabled={saving}
                           className="px-4 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-bold hover:bg-gray-700 disabled:opacity-50"
                         >
-                          {saving ? 'Saving…' : 'Save'}
+                          {saving ? td.saving : td.save}
                         </button>
                         <button
                           onClick={() => setEditId(null)}
                           className="px-4 py-1.5 rounded-lg border border-gray-300 text-xs text-gray-600 hover:bg-gray-50"
                         >
-                          Cancel
+                          {td.cancelBtn}
                         </button>
                       </div>
                     </td>
@@ -257,7 +268,7 @@ export default function KnowledgeBasePage() {
                             : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
                         }`}
                       >
-                        {entry.active ? 'Active' : 'Inactive'}
+                        {entry.active ? td.active : td.inactive}
                       </button>
                     </td>
                     <td className="px-3 py-3">
@@ -266,13 +277,13 @@ export default function KnowledgeBasePage() {
                           onClick={() => startEdit(entry)}
                           className="text-xs text-gray-600 hover:text-gray-900 font-medium"
                         >
-                          Edit
+                          {td.edit.replace(' →', '')}
                         </button>
                         <button
                           onClick={() => void remove(entry.id)}
                           className="text-xs text-red-500 hover:text-red-700 font-medium"
                         >
-                          Delete
+                          {td.deleteEntry}
                         </button>
                       </div>
                     </td>
