@@ -384,6 +384,12 @@
     "applyFilters": "Anwenden",
     "exportCsv": "CSV exportieren",
     "logDateFrom": "Von",
-    "logDateTo": "Bis"
+    "logDateTo": "Bis",
+    "emailPreviewSection": "Vorschau",
+    "emailPreviewTemplate": "Vorlage",
+    "emailPreviewLanguage": "Sprache",
+    "emailPreviewBtn": "Vorschau",
+    "emailPreviewSubject": "Betreff",
+    "emailPreviewError": "Vorschau konnte nicht geladen werden"
   }
 }

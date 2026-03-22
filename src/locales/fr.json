@@ -384,6 +384,12 @@
     "applyFilters": "Appliquer",
     "exportCsv": "Exporter CSV",
     "logDateFrom": "Du",
-    "logDateTo": "Au"
+    "logDateTo": "Au",
+    "emailPreviewSection": "Aperçu du modèle",
+    "emailPreviewTemplate": "Modèle",
+    "emailPreviewLanguage": "Langue",
+    "emailPreviewBtn": "Aperçu",
+    "emailPreviewSubject": "Objet",
+    "emailPreviewError": "Impossible de charger l'aperçu"
   }
 }

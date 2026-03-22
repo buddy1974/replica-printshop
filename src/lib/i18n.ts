@@ -386,6 +386,13 @@ export interface AdminDictionary {
   exportCsv: string
   logDateFrom: string
   logDateTo: string
+  // Email preview
+  emailPreviewSection: string
+  emailPreviewTemplate: string
+  emailPreviewLanguage: string
+  emailPreviewBtn: string
+  emailPreviewSubject: string
+  emailPreviewError: string
   // Demo mode
   settingsDemo: string
   settingsDemoDesc: string

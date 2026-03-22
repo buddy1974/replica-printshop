@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Container from '@/components/Container'
+import { useLocale } from '@/context/LocaleContext'
 
 interface Fields {
   'email.senderName':  string
@@ -14,12 +15,37 @@ const DEFAULTS: Fields = {
   'email.senderEmail': 'no-reply@printshop.com',
 }
 
+const TEMPLATES = [
+  { value: 'orderCreated',    label: 'Order Created' },
+  { value: 'paymentSuccess',  label: 'Payment Confirmed' },
+  { value: 'uploadNeeded',    label: 'Upload Needed' },
+  { value: 'fileFixRequest',  label: 'File Needs Fix' },
+  { value: 'fileRejected',    label: 'File Rejected' },
+  { value: 'fileApproved',    label: 'File Approved' },
+  { value: 'approved',        label: 'All Files Approved' },
+  { value: 'orderReady',      label: 'Order Ready' },
+  { value: 'done',            label: 'Order Done' },
+]
+
+const LANGS = ['en', 'de', 'fr'] as const
+
 export default function EmailSettingsPage() {
+  const { t } = useLocale()
+  const td = t.admin
+
   const [fields, setFields] = useState<Fields>(DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Preview state
+  const [previewTemplate, setPreviewTemplate] = useState(TEMPLATES[0].value)
+  const [previewLang, setPreviewLang] = useState<typeof LANGS[number]>('en')
+  const [previewing, setPreviewing] = useState(false)
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null)
+  const [previewSubject, setPreviewSubject] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -56,6 +82,24 @@ export default function EmailSettingsPage() {
     } else {
       const d = await res.json()
       setError(d.error ?? 'Save failed')
+    }
+  }
+
+  const loadPreview = async () => {
+    setPreviewing(true)
+    setPreviewError(null)
+    setPreviewHtml(null)
+    setPreviewSubject(null)
+    try {
+      const res = await fetch(`/api/admin/email/preview?template=${previewTemplate}&lang=${previewLang}`)
+      if (!res.ok) throw new Error()
+      const data: { html: string; subject: string } = await res.json()
+      setPreviewHtml(data.html)
+      setPreviewSubject(data.subject)
+    } catch {
+      setPreviewError(td.emailPreviewError)
+    } finally {
+      setPreviewing(false)
     }
   }
 
@@ -125,7 +169,7 @@ export default function EmailSettingsPage() {
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">{error}</p>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mb-10">
         <button
           onClick={save}
           disabled={saving}
@@ -134,6 +178,78 @@ export default function EmailSettingsPage() {
           {saving ? 'Saving…' : 'Save settings'}
         </button>
         {saved && <span className="text-sm text-green-700">Saved.</span>}
+      </div>
+
+      {/* ── Template preview ──────────────────────────────────────────── */}
+      <div className="rounded-xl border border-gray-200 bg-white px-6 py-5">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-5">
+          {td.emailPreviewSection}
+        </p>
+
+        <div className="flex flex-wrap items-end gap-3 mb-4">
+          <div className="flex-1 min-w-48">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">{td.emailPreviewTemplate}</label>
+            <select
+              value={previewTemplate}
+              onChange={(e) => { setPreviewTemplate(e.target.value); setPreviewHtml(null); setPreviewSubject(null) }}
+              className="w-full h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+            >
+              {TEMPLATES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">{td.emailPreviewLanguage}</label>
+            <div className="flex gap-1">
+              {LANGS.map((l) => (
+                <button
+                  key={l}
+                  onClick={() => { setPreviewLang(l); setPreviewHtml(null); setPreviewSubject(null) }}
+                  className={[
+                    'px-3 h-9 rounded-lg text-xs font-bold transition-colors',
+                    previewLang === l
+                      ? 'bg-gray-900 text-white'
+                      : 'border border-gray-300 text-gray-600 hover:bg-gray-50',
+                  ].join(' ')}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={loadPreview}
+            disabled={previewing}
+            className="px-5 h-9 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {previewing ? '…' : td.emailPreviewBtn}
+          </button>
+        </div>
+
+        {previewError && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+            {previewError}
+          </p>
+        )}
+
+        {previewSubject && (
+          <p className="text-xs text-gray-500 mb-2">
+            <span className="font-semibold text-gray-700">{td.emailPreviewSubject}:</span> {previewSubject}
+          </p>
+        )}
+
+        {previewHtml && (
+          <iframe
+            srcDoc={previewHtml}
+            className="w-full rounded-xl border border-gray-200"
+            style={{ height: 500 }}
+            title="Email preview"
+            sandbox="allow-same-origin"
+          />
+        )}
       </div>
     </Container>
   )

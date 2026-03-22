@@ -384,6 +384,12 @@
     "applyFilters": "Apply",
     "exportCsv": "Export CSV",
     "logDateFrom": "From",
-    "logDateTo": "To"
+    "logDateTo": "To",
+    "emailPreviewSection": "Template preview",
+    "emailPreviewTemplate": "Template",
+    "emailPreviewLanguage": "Language",
+    "emailPreviewBtn": "Preview",
+    "emailPreviewSubject": "Subject",
+    "emailPreviewError": "Failed to load preview"
   }
 }
