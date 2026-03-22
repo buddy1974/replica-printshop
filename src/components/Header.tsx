@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import Logo from '@/components/Logo'
 import { useCart } from '@/context/CartContext'
 import { useLocale } from '@/context/LocaleContext'
-import { LOCALES, type Locale, type Dictionary } from '@/lib/i18n'
+import { type Dictionary } from '@/lib/i18n'
 
 type NavKey = keyof Dictionary['menu']
 
@@ -30,7 +30,7 @@ function CartIcon() {
 export default function Header() {
   const pathname = usePathname()
   const { count, openDrawer } = useCart()
-  const { t, locale, setLocale } = useLocale()
+  const { t, locale } = useLocale()
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-red-600 bg-white">
@@ -80,23 +80,7 @@ export default function Header() {
             )}
           </a>
 
-          {/* Language switcher */}
-          <div className="hidden sm:flex items-center gap-0 border-l border-gray-200 ml-2 pl-2">
-            {LOCALES.map((l: Locale, i) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLocale(l)}
-                className={[
-                  'text-[10px] font-black uppercase px-1 py-0.5 transition-colors tracking-wider',
-                  locale === l ? 'text-red-600' : 'text-gray-400 hover:text-gray-900',
-                ].join(' ')}
-              >
-                {l === 'en' ? 'EN' : l === 'de' ? 'DE' : 'FR'}
-                {i < LOCALES.length - 1 && <span className="text-gray-200 ml-1">·</span>}
-              </button>
-            ))}
-          </div>
+
         </nav>
       </div>
     </header>
