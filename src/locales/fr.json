@@ -380,6 +380,10 @@
     "colActions": "Actions",
     "cancelBtn": "Annuler",
     "deleteEntry": "Supprimer",
-    "deleteConfirm": "Supprimer cette entrée ? Cette action est irréversible."
+    "deleteConfirm": "Supprimer cette entrée ? Cette action est irréversible.",
+    "applyFilters": "Appliquer",
+    "exportCsv": "Exporter CSV",
+    "logDateFrom": "Du",
+    "logDateTo": "Au"
   }
 }

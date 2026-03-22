@@ -382,6 +382,10 @@ export interface AdminDictionary {
   cancelBtn: string
   deleteEntry: string
   deleteConfirm: string
+  applyFilters: string
+  exportCsv: string
+  logDateFrom: string
+  logDateTo: string
   // Demo mode
   settingsDemo: string
   settingsDemoDesc: string

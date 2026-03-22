@@ -380,6 +380,10 @@
     "colActions": "Aktionen",
     "cancelBtn": "Abbrechen",
     "deleteEntry": "Löschen",
-    "deleteConfirm": "Diesen Wissenseintrag löschen? Dies kann nicht rückgängig gemacht werden."
+    "deleteConfirm": "Diesen Wissenseintrag löschen? Dies kann nicht rückgängig gemacht werden.",
+    "applyFilters": "Anwenden",
+    "exportCsv": "CSV exportieren",
+    "logDateFrom": "Von",
+    "logDateTo": "Bis"
   }
 }

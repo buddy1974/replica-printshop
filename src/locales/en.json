@@ -380,6 +380,10 @@
     "colActions": "Actions",
     "cancelBtn": "Cancel",
     "deleteEntry": "Delete",
-    "deleteConfirm": "Delete this knowledge entry? This cannot be undone."
+    "deleteConfirm": "Delete this knowledge entry? This cannot be undone.",
+    "applyFilters": "Apply",
+    "exportCsv": "Export CSV",
+    "logDateFrom": "From",
+    "logDateTo": "To"
   }
 }
