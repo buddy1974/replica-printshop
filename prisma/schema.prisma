@@ -594,6 +594,23 @@ model ProductionJob {
 }
 
 // ---------------------------------------------------------------------------
+// AI knowledge base
+// ---------------------------------------------------------------------------
+
+model KnowledgeEntry {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  category  String   @default("general")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([category])
+}
+
+// ---------------------------------------------------------------------------
 // AI conversation logs
 // ---------------------------------------------------------------------------
 

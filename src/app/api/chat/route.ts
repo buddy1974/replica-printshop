@@ -36,9 +36,14 @@ async function getActiveProducts(): Promise<{ name: string; slug: string }[]> {
   }
 }
 
-function buildSystemPrompt(catalog: string, language: string, match: MatchResult | null, prepressSection: string, override = ''): string {
+interface KnowledgeEntry { title: string; content: string }
+
+function buildSystemPrompt(catalog: string, language: string, match: MatchResult | null, prepressSection: string, override = '', knowledge: KnowledgeEntry[] = []): string {
   const langName = language === 'de' ? 'German' : language === 'fr' ? 'French' : 'English'
   const overridePrefix = override.trim() ? `${override.trim()}\n\n` : ''
+  const knowledgeSection = knowledge.length > 0
+    ? '\n\n## Knowledge Base\n' + knowledge.map((e) => `### ${e.title}\n${e.content}`).join('\n\n')
+    : ''
 
   return `${overridePrefix}You are Print Expert, the AI assistant for Printshop (printshop.maxpromo.digital).
 
@@ -48,7 +53,7 @@ You are a senior print technician, prepress expert, and sales advisor. You help 
 Always respond in ${langName}. Do not switch languages.
 
 ## Products in shop
-${catalog}
+${catalog}${knowledgeSection}
 
 ## Print file requirements by product type
 - Textile / DTF transfers: min 150 DPI at final size, transparent PNG or PDF preferred, RGB or CMYK
@@ -167,13 +172,14 @@ export async function POST(req: NextRequest) {
 
   const lastUserMsg = [...history].reverse().find((m) => m.role === 'user')?.content ?? ''
 
-  const [catalog, products, promptOverride, fileRules] = await Promise.all([
+  const [catalog, products, promptOverride, fileRules, knowledgeEntries] = await Promise.all([
     getProductCatalog(), getActiveProducts(), getSetting('ai.systemPrompt'), getFileRules(),
+    db.knowledgeEntry.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } }).catch(() => []),
   ])
   const match = matchProduct(file?.validation ?? null, lastUserMsg, products)
   const prepress = evaluatePrepress(file?.validation ?? null, match, lastUserMsg, fileRules)
   const prepressSection = buildPrepressSection(prepress)
-  const systemPrompt = buildSystemPrompt(catalog, language, match, prepressSection, promptOverride)
+  const systemPrompt = buildSystemPrompt(catalog, language, match, prepressSection, promptOverride, knowledgeEntries)
 
   // Build Anthropic message params
   const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
