@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { setUserId, setUserEmail } from '@/lib/session'
 import Container from '@/components/Container'
@@ -41,6 +41,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(searchParams.get('error') ?? '')
   const [loading, setLoading] = useState(false)
+  const submitRef = useRef<HTMLButtonElement>(null)
+
+  const quickFill = (email: string, password: string) => {
+    setEmail(email)
+    setPassword(password)
+    setTimeout(() => submitRef.current?.focus(), 0)
+  }
 
   // Reflect URL error param changes (e.g. back from OAuth callback)
   useEffect(() => {
@@ -134,9 +141,33 @@ export default function LoginPage() {
               {error}
             </p>
           )}
-          <Button type="submit" disabled={loading}>
+          <Button ref={submitRef} type="submit" disabled={loading}>
             {loading ? 'Loading…' : 'Continue'}
           </Button>
+
+          {/* Quick access pills */}
+          <div className="pt-1">
+            <div className="border-t border-gray-200 mb-3" />
+            <p className="text-xs text-gray-400 mb-2">Quick access (click to fill)</p>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => quickFill('demo@printshop.test', 'Demo1234!')}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 border border-red-600/40 text-gray-300 text-xs hover:bg-red-600 hover:border-red-600 hover:text-white transition-all duration-150 cursor-pointer"
+              >
+                Demo Customer
+                <span className="text-red-400 text-[10px] font-semibold group-hover:text-white">Customer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => quickFill('admin@printshop.test', 'Admin1234!')}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-900 border border-red-600/40 text-gray-300 text-xs hover:bg-red-600 hover:border-red-600 hover:text-white transition-all duration-150 cursor-pointer"
+              >
+                Admin
+                <span className="text-red-400 text-[10px] font-semibold group-hover:text-white">Admin</span>
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </Container>
