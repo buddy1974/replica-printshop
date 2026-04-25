@@ -2,16 +2,18 @@ import Link from 'next/link'
 import { getSetting } from '@/lib/settings/settingsService'
 
 const SHOP_LINKS = [
-  { href: '/shop', label: 'All Products' },
+  { href: '/shop/textile', label: 'Textile print' },
+  { href: '/shop/dtf', label: 'DTF gang sheet' },
   { href: '/shop/banners', label: 'Banners' },
-  { href: '/shop/textile', label: 'Textile' },
-  { href: '/shop/vinyl', label: 'Vinyl' },
+  { href: '/shop/vinyl', label: 'Vinyl plot' },
+  { href: '/shop/sublimation', label: 'Sublimation' },
 ]
 
-const COMPANY_LINKS = [
-  { href: '/about', label: 'About' },
-  { href: '/shop/graphic-installation', label: 'Services' },
-  { href: '/contact', label: 'Contact' },
+const SERVICE_LINKS = [
+  { href: '/shop/graphic-design-layout', label: 'Graphic design' },
+  { href: '/shop/graphic-installation', label: 'Installation' },
+  { href: '/contact', label: 'Custom production' },
+  { href: '/shipping', label: 'EU Shipping' },
 ]
 
 const CMYK = ['var(--cyan)', 'var(--magenta)', 'var(--yellow)', 'var(--ink)']
@@ -45,11 +47,7 @@ export default async function Footer() {
 
   return (
     <footer style={{ background: 'var(--ink)' }}>
-      {/* Main grid */}
-      <div
-        className="max-w-6xl mx-auto px-8"
-        style={{ paddingTop: '4rem', paddingBottom: '2rem' }}
-      >
+      <div className="max-w-6xl mx-auto px-8" style={{ paddingTop: '4rem', paddingBottom: '2rem' }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
 
           {/* Col 1 — Brand */}
@@ -67,8 +65,8 @@ export default async function Footer() {
                 ))}
               </span>
             </div>
-            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(253,250,244,.4)' }}>
-              Premium Print Production
+            <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(253,250,244,.4)', lineHeight: 1.7 }}>
+              Custom textile, DTF, banners,<br />vinyl &amp; sublimation.<br />Small runs, big color.
             </p>
           </div>
 
@@ -82,10 +80,10 @@ export default async function Footer() {
             ))}
           </div>
 
-          {/* Col 3 — Company */}
+          {/* Col 3 — Services */}
           <div>
-            <p style={colHead}>Company</p>
-            {COMPANY_LINKS.map((l) => (
+            <p style={colHead}>Services</p>
+            {SERVICE_LINKS.map((l) => (
               <Link key={l.href} href={l.href} style={colLink} className="hover:text-white">
                 {l.label}
               </Link>
@@ -128,9 +126,14 @@ export default async function Footer() {
           <span style={{ fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase', letterSpacing: '.1em', fontSize: '.6rem', color: 'rgba(253,250,244,.4)' }}>
             © {new Date().getFullYear()} {companyName || 'PrintShop'} · All rights reserved
           </span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase', letterSpacing: '.1em', fontSize: '.6rem', color: 'var(--red)' }}>
-            Developed by Maxpromo.Digital
-          </span>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase', letterSpacing: '.1em', fontSize: '.6rem', color: 'rgba(253,250,244,.3)' }}>
+              Press ready · Color managed · ISO 12647
+            </span>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase', letterSpacing: '.1em', fontSize: '.6rem', color: 'var(--red)' }}>
+              Developed by Maxpromo.Digital
+            </span>
+          </div>
         </div>
       </div>
     </footer>

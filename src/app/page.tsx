@@ -8,16 +8,16 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: { absolute: BRANDING.name },
-  description: 'Large format, textile print, foil, banners, installation service. Fast in-house production, pickup or shipping.',
+  description: 'Custom textile, DTF transfers, banners, vinyl & sublimation — printed in our EU studio. No minimums.',
   openGraph: {
     title: BRANDING.name,
-    description: 'Large format, textile print, foil, banners, installation service.',
+    description: 'Custom textile, DTF, banners, vinyl & sublimation. Small runs, big color.',
     images: [{ url: '/frontpage-hero.png', width: 1200, alt: BRANDING.name }],
   },
   twitter: {
     card: 'summary_large_image',
     title: BRANDING.name,
-    description: 'Large format, textile print, foil, banners, installation service.',
+    description: 'Custom textile, DTF, banners, vinyl & sublimation. Small runs, big color.',
     images: ['/frontpage-hero.png'],
   },
   alternates: { canonical: '/' },
@@ -33,14 +33,14 @@ const WHY_CARDS = [
 ]
 
 const SERVICE_TILES = [
-  { emoji: '👕', title: 'Textile',     desc: 'Screen print & embroidery on all garments',      from: '€45' },
-  { emoji: '🖨️', title: 'DTF Transfer', desc: 'Direct-to-film, any design, any fabric',       from: '€12' },
-  { emoji: '🏳️', title: 'Banner',      desc: 'Large format PVC, mesh and fabric',              from: '€28' },
-  { emoji: '✂️', title: 'Vinyl',       desc: 'Cut and print for vehicles and signage',          from: '€18' },
-  { emoji: '🎨', title: 'Sublimation', desc: 'Full-colour dye on polyester and hard goods',    from: '€32' },
-  { emoji: '🖼️', title: 'Display',     desc: 'Pop-up stands, roller banners, exhibition',      from: '€85' },
-  { emoji: '✨', title: 'Foil Stamp',  desc: 'Hot foil for luxury packaging and cards',         from: '€60' },
-  { emoji: '🔧', title: 'Install',     desc: 'Site installation for large-format graphics',     from: 'POA' },
+  { emoji: '👕', title: 'Textile',     desc: 'DTF transfer, flex & embroidery on all garments',  from: '€45' },
+  { emoji: '🖨️', title: 'DTF Transfer', desc: 'Direct-to-film, any design, any fabric',          from: '€12' },
+  { emoji: '🏳️', title: 'Banner',      desc: 'Large format PVC, mesh and fabric',                from: '€28' },
+  { emoji: '✂️', title: 'Vinyl',       desc: 'Cut and print for vehicles and signage',            from: '€18' },
+  { emoji: '🎨', title: 'Sublimation', desc: 'Full-colour dye on polyester and hard goods',      from: '€32' },
+  { emoji: '🖼️', title: 'Display',     desc: 'Pop-up stands, roller banners, exhibition',        from: '€85' },
+  { emoji: '✨', title: 'Foil Stamp',  desc: 'Hot foil for luxury packaging and cards',           from: '€60' },
+  { emoji: '🔧', title: 'Install',     desc: 'Site installation for large-format graphics',       from: 'POA' },
 ]
 
 const MARQUEE_ITEMS = [
@@ -52,7 +52,17 @@ const MARQUEE_ITEMS = [
   'SHIPS ACROSS EUROPE',
 ]
 
-const CMYK_COLORS = ['#00AECC', '#CC0066', '#FFCC00', '#1A1208']
+const PRESSROOM_CARDS = [
+  { img: '/assets/hero-print-_HgdU6E5.jpg', dot: '#CC0066', name: 'Custom DTF tee',    spec: 'Textile · 180gsm',   price: '€18' },
+  { img: '/assets/dtf-Cf66fe-C.jpg',         dot: '#00AECC', name: 'DTF gang sheet A3', spec: 'Transfer film',      price: '€12' },
+  { img: '/assets/banner-D8oyCInn.jpg',      dot: '#CC2200', name: 'PVC banner 510g',   spec: 'Outdoor · per m²',   price: '€24' },
+  { img: '/assets/vinyl-DQscZ3-Q.jpg',       dot: '#1A1208', name: 'Vinyl lettering',   spec: 'Plot · matte',       price: '€2 ea' },
+  { img: '/assets/sublimation-CNsuIeaV.jpg', dot: '#FFCC00', name: 'Sublimation mug',   spec: 'Ceramic · 330ml',    price: '€9' },
+  { img: '/assets/display-C41dhRt6.jpg',     dot: '#00AECC', name: 'Roll-up 85×200',    spec: 'Display · alu',      price: '€89' },
+  { img: '/assets/foil-DWRdnGMV.jpg',        dot: '#CC0066', name: 'Window foil',        spec: 'Adhesive · per m²',  price: '€32' },
+  { img: '/assets/textile-DfVYkyFv.jpg',     dot: '#FFCC00', name: 'Tote bag DTF',       spec: 'Cotton · 280gsm',    price: '€11' },
+  { img: '/assets/banner-D8oyCInn.jpg',      dot: '#CC2200', name: 'Backlit banner',     spec: 'PET · per m²',       price: '€48' },
+]
 
 export default async function Home() {
   const featured = await db.product.findMany({
@@ -75,7 +85,23 @@ export default async function Home() {
 
             {/* Left */}
             <div>
-              <p className="mono-label mb-5">EST. 2024 — PREMIUM PRINT STUDIO</p>
+              {/* Issue label */}
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '.58rem',
+                color: 'var(--ink-soft)',
+                letterSpacing: '.12em',
+                textTransform: 'uppercase',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+              }}>
+                <span>ISSUE N°26 · SPRING 2026</span>
+                <span style={{ flex: 1, height: '1px', background: 'var(--cream-border)' }} />
+                <span>TEXTILE · DTF · SIGNAGE</span>
+              </div>
+
               <h1
                 style={{
                   fontFamily: "'Playfair Display', serif",
@@ -89,20 +115,23 @@ export default async function Home() {
                 <em style={{ color: 'var(--red)', fontStyle: 'italic' }}>Wear it</em><br />
                 Friday.
               </h1>
+
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: '1.05rem', maxWidth: 400, color: 'var(--ink-soft)', marginTop: '1.5rem', lineHeight: 1.6 }}>
-                From DTF transfer to embroidery, vinyl to sublimation — your artwork, production-ready in 48 hours.
+                Custom textile, DTF transfers, banners, vinyl &amp; sublimation — printed in our EU studio. No minimums. Press-ready in 24 hours, shipped across Europe.
               </p>
+
               <div className="flex items-center gap-4 flex-wrap" style={{ marginTop: '2rem' }}>
-                <Link href="/shop" className="btn-ink">Order Now →</Link>
-                <Link href="/shop/graphic-installation" className="btn-pub-outline">See Services</Link>
+                <Link href="/shop" className="btn-ink">↑ Upload Artwork</Link>
+                <Link href="/shop/graphic-installation" className="btn-pub-outline">Browse Services →</Link>
               </div>
+
               {/* CMYK readout */}
               <div className="flex items-center gap-2 flex-wrap" style={{ marginTop: '2rem' }}>
                 {[
-                  { label: 'C : 100', color: '#00AECC' },
-                  { label: 'M : 0',   color: '#CC0066' },
-                  { label: 'Y : 0',   color: '#FFCC00' },
-                  { label: 'K : 20',  color: '#1A1208' },
+                  { label: 'C 100', color: '#00AECC' },
+                  { label: 'M 87',  color: '#CC0066' },
+                  { label: 'Y 12',  color: '#FFCC00' },
+                  { label: 'K 04',  color: '#1A1208' },
                 ].map(({ label, color }) => (
                   <span
                     key={label}
@@ -119,44 +148,71 @@ export default async function Home() {
                     {label}
                   </span>
                 ))}
+                <span style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: '.55rem',
+                  letterSpacing: '.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--ink-soft)',
+                }}>
+                  ISO 12647 · COLOR MANAGED
+                </span>
               </div>
             </div>
 
-            {/* Right — sample print card */}
-            <div
-              className="relative text-center hidden lg:block"
-              style={{
-                background: '#E8DDD0',
+            {/* Right — hero photo card */}
+            <div style={{ position: 'relative' }} className="hidden lg:block">
+              {/* Corner badge */}
+              <div style={{
+                position: 'absolute', top: '-12px', right: '-12px', zIndex: 10,
+                background: 'var(--red)', color: '#fff',
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '.62rem', fontWeight: 600,
+                letterSpacing: '.1em', textTransform: 'uppercase',
+                padding: '.35rem .75rem',
+                transform: 'rotate(2deg)',
+                border: '1px solid var(--ink)',
+              }}>NO MINIMUMS</div>
+
+              {/* Main image card */}
+              <div style={{
                 border: '2px solid var(--ink)',
                 boxShadow: '5px 5px 0 var(--ink)',
-                padding: '3rem 2rem',
-              }}
-            >
-              {/* Corner badge */}
-              <div
-                className="absolute top-4 right-4"
-                style={{
-                  transform: 'rotate(-8deg)',
-                  background: 'var(--red)',
-                  color: '#fff',
-                  fontFamily: "'Playfair Display', serif",
-                  fontStyle: 'italic',
-                  fontSize: '.75rem',
-                  padding: '.3rem .8rem',
-                }}
-              >
-                PRINT READY
-              </div>
-              <p style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: '3rem', color: 'var(--red)', fontStyle: 'italic', lineHeight: 1.1 }}>
-                Your Design Here
-              </p>
-              <p className="mono-label mt-4">SAMPLE PRINT — 300 DPI — CMYK</p>
-              <div className="flex items-center justify-center gap-2 mt-4">
-                {CMYK_COLORS.map((bg, i) => (
-                  <span key={i} className="inline-block w-3 h-3 rounded-full" style={{ background: bg }} />
-                ))}
+                overflow: 'hidden',
+                background: '#E8DDD0',
+              }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/hero-print-_HgdU6E5.jpg"
+                  alt="Custom printed t-shirt"
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+                {/* Caption bar */}
+                <div style={{
+                  background: '#E8DDD0',
+                  borderTop: '1px solid var(--cream-border)',
+                  padding: '.6rem 1rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                  <span style={{
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: '.6rem',
+                    color: 'var(--ink-soft)',
+                    letterSpacing: '.08em',
+                    textTransform: 'uppercase',
+                  }}>JOB #PS-2841 · DTF · 1/1</span>
+                  <span style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontStyle: 'italic',
+                    fontSize: '.85rem',
+                    color: 'var(--red)',
+                  }}>in press</span>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -200,7 +256,6 @@ export default async function Home() {
               background: 'var(--ink)',
               border: '1px solid var(--ink)',
             }}
-            className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           >
             {WHY_CARDS.map((card) => (
               <div key={card.title} style={{ background: card.bg, padding: '2rem', position: 'relative' }}>
@@ -235,7 +290,6 @@ export default async function Home() {
               background: 'var(--ink)',
               border: '1px solid var(--ink)',
             }}
-            className="!grid-cols-2 lg:!grid-cols-4"
           >
             {SERVICE_TILES.map((tile) => (
               <div
@@ -281,9 +335,75 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── 6. POPULAR PRODUCTS ─────────────────────────────────────────── */}
+      {/* ── 6. FROM THE PRESSROOM (real product images) ─────────────────── */}
+      <section style={{ background: 'var(--cream-dark)', padding: '4rem 2rem' }}>
+        <div className="mx-auto" style={{ maxWidth: 1200 }}>
+          <div className="mb-10">
+            <p className="mono-label mb-3">FROM THE PRESSROOM</p>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', color: 'var(--ink)' }}>
+              Nine ways to <em style={{ color: 'var(--red)', fontStyle: 'italic' }}>print it.</em>
+            </h2>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '1px',
+              background: 'var(--ink)',
+              border: '1px solid var(--ink)',
+            }}
+            className="!grid-cols-2 lg:!grid-cols-3"
+          >
+            {PRESSROOM_CARDS.map((card, idx) => (
+              <Link
+                key={idx}
+                href="/shop"
+                className="card-ink block group"
+                style={{ padding: 0, overflow: 'hidden', background: 'var(--cream-dark)', border: 'none', boxShadow: 'none' }}
+              >
+                {/* Square image */}
+                <div style={{ aspectRatio: '1/1', overflow: 'hidden', borderBottom: '2px solid var(--ink)', position: 'relative' }}>
+                  {/* CMYK dot */}
+                  <span
+                    className="inline-block rounded-full absolute top-3 left-3 z-10"
+                    style={{ width: 10, height: 10, background: card.dot }}
+                  />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={card.img}
+                    alt={card.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .4s ease' }}
+                    className="group-hover:scale-105"
+                  />
+                </div>
+                {/* Info row */}
+                <div style={{ padding: '1rem 1.25rem', background: 'var(--cream-dark)' }}>
+                  <div className="flex items-end justify-between gap-2">
+                    <div>
+                      <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', lineHeight: 1.2 }}>
+                        {card.name}
+                      </h3>
+                      <p className="mono-label mt-1">{card.spec}</p>
+                    </div>
+                    <span style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontSize: '1.1rem', color: 'var(--red)', whiteSpace: 'nowrap' }}>
+                      {card.price}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center" style={{ marginTop: '2.5rem' }}>
+            <Link href="/contact" className="btn-pub-outline">Request custom quote →</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. POPULAR PRODUCTS (DB) ─────────────────────────────────────── */}
       {featured.length > 0 && (
-        <section style={{ background: 'var(--cream-dark)', padding: '6rem 2rem' }}>
+        <section style={{ background: 'var(--paper-white)', padding: '6rem 2rem' }}>
           <div className="mx-auto" style={{ maxWidth: 1200 }}>
             <div className="mb-10">
               <p className="mono-label mb-3">FROM THE CATALOGUE</p>
@@ -297,7 +417,6 @@ export default async function Home() {
                 const priceNum = basePrice ? Number(basePrice) : null
                 return (
                   <div key={p.id} className="card-ink relative" style={{ padding: '2rem' }}>
-                    {/* watermark number */}
                     <span
                       style={{
                         fontFamily: "'Playfair Display', serif",
@@ -340,7 +459,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ── 7. DARK CTA ─────────────────────────────────────────────────── */}
+      {/* ── 8. DARK CTA ─────────────────────────────────────────────────── */}
       <section
         style={{
           background: 'var(--ink)',
@@ -349,7 +468,6 @@ export default async function Home() {
           overflow: 'hidden',
         }}
       >
-        {/* grain overlay */}
         <div
           aria-hidden
           style={{
@@ -361,8 +479,6 @@ export default async function Home() {
         />
         <div className="mx-auto relative" style={{ maxWidth: 1100 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-
-            {/* Left */}
             <div>
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 900, fontSize: '3.5rem', color: '#fff', lineHeight: 1 }}>
                 Ready to<br />
@@ -380,15 +496,14 @@ export default async function Home() {
               </Link>
             </div>
 
-            {/* Right — sample quote panel */}
             <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.12)', padding: '2rem' }}>
               <p style={{ fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase', letterSpacing: '.1em', fontSize: '.6rem', color: 'rgba(255,255,255,.5)', marginBottom: '1.5rem' }}>
                 SAMPLE QUOTE — HOODIE ORDER
               </p>
               {[
-                ['50× Hoodies — Screen Print 2-col', '€320,00'],
-                ['Setup fee (1 screen)', '€45,00'],
-                ['Express production (+48h)', '€40,00'],
+                ['50× Hoodies — DTF transfer front', '€320,00'],
+                ['Setup fee (1 artwork)', '€25,00'],
+                ['Express production (+24h)', '€40,00'],
                 ['Shipping (tracked)', '€18,00'],
               ].map(([label, price]) => (
                 <div key={label} className="flex justify-between" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.73rem', color: 'rgba(255,255,255,.65)', marginBottom: '.6rem' }}>
@@ -399,7 +514,7 @@ export default async function Home() {
               <div style={{ borderTop: '1px solid rgba(255,255,255,.15)', margin: '.75rem 0' }} />
               <div className="flex justify-between" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.73rem', color: '#fff', fontWeight: 600 }}>
                 <span>TOTAL (netto zzgl. 19% MwSt.)</span>
-                <span>€423,00</span>
+                <span>€403,00</span>
               </div>
               <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.55rem', letterSpacing: '.06em', color: 'rgba(255,255,255,.35)', marginTop: '.75rem' }}>
                 All prices excl. VAT · Prices for illustration only
