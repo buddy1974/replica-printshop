@@ -1,7 +1,6 @@
 import { type Metadata } from 'next'
 import Link from 'next/link'
 import { db } from '@/lib/db'
-import Container from '@/components/Container'
 import { CategoryName } from '@/components/TName'
 
 export const revalidate = 60
@@ -43,94 +42,201 @@ export default async function ShopPage() {
   const visible = categories.filter((c) => c._count.products > 0)
 
   return (
-    <Container>
-      <div className="mb-8">
-        <h1 className="mb-1">Shop</h1>
-        <p className="text-sm text-gray-500">Browse our full range of print products and display solutions.</p>
+    <div>
+      {/* Page header */}
+      <div className="dot-grid-bg" style={{ padding: '4rem 2rem 3rem' }}>
+        <div className="mx-auto" style={{ maxWidth: 1200 }}>
+          <p className="mono-label mb-3">ALL PRODUCTS — CONFIGURE &amp; ORDER</p>
+          <h1
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontWeight: 900,
+              fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+              color: 'var(--ink)',
+              lineHeight: .95,
+            }}
+          >
+            The Catalogue
+          </h1>
+        </div>
       </div>
 
-      {visible.length === 0 ? (
-        <p className="text-sm text-gray-500">No products available.</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {visible.map((cat) => (
-            <Link
-              key={cat.id}
-              href={`/shop/${cat.slug}`}
-              className="group rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-300 hover:shadow-sm transition-all"
+      {/* Category filter bar */}
+      <div style={{ background: 'var(--paper-white)', borderBottom: '1px solid var(--cream-border)' }}>
+        <div className="mx-auto px-8 overflow-x-auto" style={{ maxWidth: 1200 }}>
+          <div className="flex items-center gap-2 py-3" style={{ whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '.62rem',
+                letterSpacing: '.1em',
+                textTransform: 'uppercase',
+                padding: '.35rem .9rem',
+                background: 'var(--ink)',
+                color: 'var(--paper-white)',
+                cursor: 'default',
+              }}
             >
-              <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
-                {cat.imageUrl ? (
-                  <img
-                    src={cat.imageUrl}
-                    alt={cat.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-red-200" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                )}
-              </div>
-              <div className="p-3">
-                <p className="font-semibold text-sm leading-tight"><CategoryName slug={cat.slug} fallback={cat.name} /></p>
-                {cat.description && (
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">{cat.description}</p>
-                )}
-                <p className="text-xs text-gray-400 mt-2 group-hover:text-gray-700 transition-colors">
-                  {cat._count.products} {cat._count.products === 1 ? 'product' : 'products'} →
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-      {/* ── Services ──────────────────────────────────────────────────────── */}
-      <div className="mt-12">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Services</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <Link
-            href="/shop/graphic-installation"
-            className="group rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-300 hover:shadow-sm transition-all"
-          >
-            <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
-              <img
-                src="/products/graphic-installation-hero.png"
-                alt="Graphic Installation"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-3">
-              <p className="font-semibold text-sm leading-tight">Graphic Installation</p>
-              <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">
-                Car lettering, window foil, signs, banners and event graphics.
-              </p>
-              <p className="text-xs text-gray-400 mt-2 group-hover:text-gray-700 transition-colors">View service →</p>
-            </div>
-          </Link>
-          <Link
-            href="/shop/graphic-design-layout"
-            className="group rounded-xl border border-gray-200 bg-white overflow-hidden hover:border-red-300 hover:shadow-sm transition-all"
-          >
-            <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
-              <img
-                src="/images/products/design-services.png"
-                alt="Graphic Design & Layout"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-3">
-              <p className="font-semibold text-sm leading-tight">Graphic Design &amp; Layout</p>
-              <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-snug">
-                Professional layout and design for flyers, brochures, banners, logos, and print materials.
-              </p>
-              <p className="text-xs text-gray-400 mt-2 group-hover:text-gray-700 transition-colors">View service →</p>
-            </div>
-          </Link>
+              ALL
+            </span>
+            {visible.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/shop/${cat.slug}`}
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: '.62rem',
+                  letterSpacing: '.1em',
+                  textTransform: 'uppercase',
+                  padding: '.35rem .9rem',
+                  border: '1px solid var(--ink)',
+                  color: 'var(--ink)',
+                  transition: 'all .15s ease',
+                }}
+                className="hover:bg-[var(--ink)] hover:text-[var(--paper-white)]"
+              >
+                <CategoryName slug={cat.slug} fallback={cat.name} />
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
-    </Container>
+
+      {/* Product grid */}
+      <div style={{ background: 'var(--cream)', padding: '3rem 2rem 5rem' }}>
+        <div className="mx-auto" style={{ maxWidth: 1200 }}>
+          {visible.length === 0 ? (
+            <p className="mono-label">No products available.</p>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '1px',
+                background: 'var(--ink)',
+                border: '1px solid var(--ink)',
+              }}
+              className="!grid-cols-2 lg:!grid-cols-4"
+            >
+              {visible.map((cat, idx) => (
+                <Link
+                  key={cat.id}
+                  href={`/shop/${cat.slug}`}
+                  className="block group"
+                  style={{ background: 'var(--cream-dark)', padding: '2rem', position: 'relative', transition: 'background .15s ease' }}
+                >
+                  {/* Watermark number */}
+                  <span
+                    aria-hidden
+                    style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontWeight: 900,
+                      fontSize: '5rem',
+                      color: 'var(--red)',
+                      opacity: .1,
+                      position: 'absolute',
+                      top: '.75rem',
+                      right: '1.25rem',
+                      lineHeight: 1,
+                      userSelect: 'none',
+                    }}
+                  >
+                    {String(idx + 1).padStart(2, '0')}
+                  </span>
+                  {/* Category image */}
+                  {cat.imageUrl && (
+                    <div
+                      style={{
+                        width: '100%',
+                        aspectRatio: '4/3',
+                        overflow: 'hidden',
+                        marginBottom: '1rem',
+                        border: '1px solid var(--cream-border)',
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .3s ease' }}
+                        className="group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <h3
+                    style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontWeight: 700,
+                      fontSize: '1rem',
+                      color: 'var(--ink)',
+                      marginBottom: '.4rem',
+                    }}
+                  >
+                    <CategoryName slug={cat.slug} fallback={cat.name} />
+                  </h3>
+                  {cat.description && (
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: '.8rem', color: 'var(--ink-soft)', lineHeight: 1.5, marginBottom: '.75rem' }}>
+                      {cat.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <p className="mono-label">
+                      {cat._count.products} {cat._count.products === 1 ? 'product' : 'products'}
+                    </p>
+                    <span
+                      style={{
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        fontSize: '.62rem',
+                        letterSpacing: '.06em',
+                        textTransform: 'uppercase',
+                        color: 'var(--red)',
+                      }}
+                    >
+                      Browse →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Services tiles */}
+          <div style={{ marginTop: '3rem' }}>
+            <p className="mono-label mb-5">SERVICES</p>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '1px',
+                background: 'var(--ink)',
+                border: '1px solid var(--ink)',
+              }}
+            >
+              {[
+                { href: '/shop/graphic-installation', title: 'Graphic Installation', desc: 'Vehicle graphics, window foil, signs, banners and event graphics.' },
+                { href: '/shop/graphic-design-layout', title: 'Graphic Design & Layout', desc: 'Professional layout and design for flyers, brochures, banners and logos.' },
+              ].map((svc) => (
+                <Link
+                  key={svc.href}
+                  href={svc.href}
+                  style={{ background: 'var(--cream-dark)', padding: '2rem', transition: 'background .15s ease' }}
+                  className="block group hover:bg-[var(--cream)]"
+                >
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginBottom: '.4rem' }}>
+                    {svc.title}
+                  </h3>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: '.8rem', color: 'var(--ink-soft)', lineHeight: 1.5, marginBottom: '.75rem' }}>
+                    {svc.desc}
+                  </p>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.62rem', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--red)' }}>
+                    View service →
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

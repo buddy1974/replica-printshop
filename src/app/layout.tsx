@@ -48,7 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#dc2626',
+  themeColor: '#CC2200',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -64,17 +64,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen">
         <BrandingProvider initial={branding}>
           <LocaleProvider>
-          <CartProvider>
-            <DemoBanner />
-            <Header />
-            <main>{children}</main>
-            <Footer />
-            <FloatingChat />
-            <CartDrawer />
-          </CartProvider>
+            <CartProvider>
+              <DemoBanner />
+              <Header />
+              <main>{children}</main>
+              <Footer />
+              <FloatingChat />
+              <CartDrawer />
+            </CartProvider>
           </LocaleProvider>
         </BrandingProvider>
       </body>
