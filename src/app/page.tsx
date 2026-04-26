@@ -33,14 +33,14 @@ const WHY_CARDS = [
 ]
 
 const SERVICE_TILES = [
-  { emoji: '👕', title: 'Textile',     desc: 'DTF transfer, flex & embroidery on all garments',  from: '€45' },
-  { emoji: '🖨️', title: 'DTF Transfer', desc: 'Direct-to-film, any design, any fabric',          from: '€12' },
-  { emoji: '🏳️', title: 'Banner',      desc: 'Large format PVC, mesh and fabric',                from: '€28' },
-  { emoji: '✂️', title: 'Vinyl',       desc: 'Cut and print for vehicles and signage',            from: '€18' },
-  { emoji: '🎨', title: 'Sublimation', desc: 'Full-colour dye on polyester and hard goods',      from: '€32' },
-  { emoji: '🖼️', title: 'Display',     desc: 'Pop-up stands, roller banners, exhibition',        from: '€85' },
-  { emoji: '✨', title: 'Foil Stamp',  desc: 'Hot foil for luxury packaging and cards',           from: '€60' },
-  { emoji: '🔧', title: 'Install',     desc: 'Site installation for large-format graphics',       from: 'POA' },
+  { img: '/assets/textile-DfVYkyFv.jpg',     dot: '#CC0066', title: 'Textile',     desc: 'DTF transfer, flex & embroidery on all garments',  from: '€45' },
+  { img: '/assets/dtf-Cf66fe-C.jpg',          dot: '#00AECC', title: 'DTF Transfer', desc: 'Direct-to-film, any design, any fabric',           from: '€12' },
+  { img: '/assets/banner-D8oyCInn.jpg',       dot: '#CC2200', title: 'Banner',      desc: 'Large format PVC, mesh and fabric',                from: '€28' },
+  { img: '/assets/vinyl-DQscZ3-Q.jpg',        dot: '#1A1208', title: 'Vinyl',       desc: 'Cut and print for vehicles and signage',            from: '€18' },
+  { img: '/assets/sublimation-CNsuIeaV.jpg',  dot: '#FFCC00', title: 'Sublimation', desc: 'Full-colour dye on polyester and hard goods',      from: '€32' },
+  { img: '/assets/display-C41dhRt6.jpg',      dot: '#00AECC', title: 'Display',     desc: 'Pop-up stands, roller banners, exhibition',        from: '€85' },
+  { img: '/assets/foil-DWRdnGMV.jpg',         dot: '#CC0066', title: 'Foil Stamp',  desc: 'Hot foil for luxury packaging and cards',           from: '€60' },
+  { img: '/assets/banner-D8oyCInn.jpg',       dot: '#CC2200', title: 'Install',     desc: 'Site installation for large-format graphics',       from: 'POA' },
 ]
 
 const MARQUEE_ITEMS = [
@@ -292,31 +292,41 @@ export default async function Home() {
             }}
           >
             {SERVICE_TILES.map((tile) => (
-              <div
+              <Link
                 key={tile.title}
-                style={{ background: 'var(--cream-dark)', padding: '2rem' }}
-                className="flex flex-col"
+                href="/shop"
+                className="block group"
+                style={{ background: 'var(--cream-dark)', overflow: 'hidden' }}
               >
-                <span className="text-3xl mb-3">{tile.emoji}</span>
-                <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginBottom: '.4rem' }}>
-                  {tile.title}
-                </h3>
-                <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: '.8rem', color: 'var(--ink-soft)', lineHeight: 1.55, flex: 1 }}>
-                  {tile.desc}
-                </p>
-                <div className="flex items-center justify-between mt-4">
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.65rem', letterSpacing: '.08em', color: 'var(--red)', textTransform: 'uppercase' }}>
-                    From {tile.from}
-                  </span>
-                  <Link
-                    href="/shop"
-                    style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.65rem', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--red)' }}
-                    className="hover:underline"
-                  >
-                    Order →
-                  </Link>
+                {/* Image */}
+                <div style={{ aspectRatio: '4/3', overflow: 'hidden', borderBottom: '2px solid var(--ink)', position: 'relative' }}>
+                  <span className="absolute top-2 left-2 z-10 inline-block w-2.5 h-2.5 rounded-full" style={{ background: tile.dot }} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={tile.img}
+                    alt={tile.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .4s ease' }}
+                    className="group-hover:scale-105"
+                  />
                 </div>
-              </div>
+                {/* Info */}
+                <div style={{ padding: '1rem 1.25rem' }} className="flex flex-col">
+                  <h3 style={{ fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: '1rem', color: 'var(--ink)', marginBottom: '.3rem' }}>
+                    {tile.title}
+                  </h3>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 300, fontSize: '.78rem', color: 'var(--ink-soft)', lineHeight: 1.5, flex: 1 }}>
+                    {tile.desc}
+                  </p>
+                  <div className="flex items-center justify-between mt-3">
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.62rem', letterSpacing: '.08em', color: 'var(--red)', textTransform: 'uppercase' }}>
+                      From {tile.from}
+                    </span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '.62rem', letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--red)' }}>
+                      Order →
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
